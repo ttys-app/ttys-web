@@ -1,0 +1,6081 @@
+(globalThis.TURBOPACK = globalThis.TURBOPACK || []).push([typeof document === "object" ? document.currentScript : undefined, {
+
+"[project]/src/app/store/useAppStore.ts [app-client] (ecmascript)": ((__turbopack_context__) => {
+"use strict";
+
+var { g: global, __dirname, k: __turbopack_refresh__, m: module } = __turbopack_context__;
+{
+__turbopack_context__.s({
+    "default": (()=>__TURBOPACK__default__export__)
+});
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$zustand$2f$esm$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/zustand/esm/index.mjs [app-client] (ecmascript) <locals>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$zustand$2f$esm$2f$middleware$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/zustand/esm/middleware.mjs [app-client] (ecmascript)");
+;
+;
+// 默认用户设置
+const defaultSettings = {
+    theme: 'system',
+    language: 'cn',
+    autoPlay: true,
+    videoQuality: 'auto'
+};
+// 创建持久化的全局状态
+const useAppStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$zustand$2f$esm$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["create"])()((0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$zustand$2f$esm$2f$middleware$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["persist"])((set, get)=>({
+        currentTab: 'movie',
+        filter: {},
+        activeCategory: 'all',
+        activeRegion: 'all',
+        activeYear: 'all',
+        activeType: 'all',
+        playHistory: [],
+        favorites: [],
+        playProgress: {},
+        searchHistory: [],
+        settings: defaultSettings,
+        isFirstVisit: true,
+        isOnline: true,
+        setCurrentTab: (tab)=>{
+            // 先重置筛选条件
+            get().resetFilter();
+            // 再设置当前标签
+            set({
+                currentTab: tab
+            });
+        },
+        setCurrentTabWithoutReset: (tab)=>{
+            // 只设置当前标签，不重置筛选条件
+            set({
+                currentTab: tab
+            });
+        },
+        setFilter: (filter)=>{
+            // 计算所有激活状态
+            const nextState = {
+                filter,
+                activeCategory: filter.type || 'all',
+                activeRegion: filter.region || 'all',
+                activeYear: filter.year || 'all',
+                activeType: filter.type || 'all'
+            };
+            // 使用单次更新设置所有状态
+            set(nextState);
+        },
+        updateFilter: (type, value)=>{
+            const currentFilter = {
+                ...get().filter
+            };
+            // 如果选择了全部，则从筛选条件中删除该类型
+            if (value === 'all') {
+                delete currentFilter[type];
+            } else {
+                // 否则更新对应类型的值
+                currentFilter[type] = value;
+            }
+            // 准备批量更新的状态
+            const nextState = {
+                filter: currentFilter
+            };
+            // 根据类型设置相应的激活状态
+            switch(type){
+                case 'type':
+                    nextState.activeCategory = value;
+                    nextState.activeType = value;
+                    break;
+                case 'region':
+                    nextState.activeRegion = value;
+                    break;
+                case 'year':
+                    nextState.activeYear = value;
+                    break;
+            }
+            // 使用单次set调用更新所有相关状态
+            set(nextState);
+            return currentFilter;
+        },
+        resetFilter: ()=>set({
+                filter: {},
+                activeCategory: 'all',
+                activeRegion: 'all',
+                activeYear: 'all',
+                activeType: 'all'
+            }),
+        setActiveCategory: (categoryId)=>{
+            set({
+                activeCategory: categoryId
+            });
+            return get().updateFilter('type', categoryId);
+        },
+        setActiveRegion: (regionId)=>{
+            set({
+                activeRegion: regionId
+            });
+            return get().updateFilter('region', regionId);
+        },
+        setActiveYear: (yearId)=>{
+            set({
+                activeYear: yearId
+            });
+            return get().updateFilter('year', yearId);
+        },
+        setActiveType: (typeId)=>{
+            set({
+                activeType: typeId,
+                activeCategory: typeId
+            });
+            return get().updateFilter('type', typeId);
+        },
+        addPlayHistory: (video)=>set((state)=>{
+                // 检查是否已存在，如果存在则移除旧记录
+                const filtered = state.playHistory.filter((item)=>item.id !== video.id);
+                // 添加到记录最前面
+                return {
+                    playHistory: [
+                        video,
+                        ...filtered
+                    ].slice(0, 50)
+                }; // 最多保存50条记录
+            }),
+        clearPlayHistory: ()=>set({
+                playHistory: []
+            }),
+        toggleFavorite: (video)=>set((state)=>{
+                const exists = state.favorites.some((item)=>item.id === video.id);
+                if (exists) {
+                    // 如果已收藏，则移除
+                    return {
+                        favorites: state.favorites.filter((item)=>item.id !== video.id)
+                    };
+                } else {
+                    // 如果未收藏，则添加
+                    return {
+                        favorites: [
+                            video,
+                            ...state.favorites
+                        ]
+                    };
+                }
+            }),
+        isFavorite: (videoId)=>{
+            return get().favorites.some((item)=>item.id === videoId);
+        },
+        updatePlayProgress: (videoId, progress, duration)=>set((state)=>{
+                return {
+                    playProgress: {
+                        ...state.playProgress,
+                        [videoId]: {
+                            videoId,
+                            progress,
+                            duration,
+                            lastPlayed: Date.now()
+                        }
+                    }
+                };
+            }),
+        getPlayProgress: (videoId)=>{
+            return get().playProgress[videoId];
+        },
+        addSearchHistory: (keyword)=>set((state)=>{
+                if (!keyword.trim()) return state;
+                // 移除重复的关键词
+                const filtered = state.searchHistory.filter((item)=>item !== keyword);
+                // 添加到历史记录最前面
+                return {
+                    searchHistory: [
+                        keyword,
+                        ...filtered
+                    ].slice(0, 10)
+                }; // 最多保存10条记录
+            }),
+        clearSearchHistory: ()=>set({
+                searchHistory: []
+            }),
+        updateSettings: (newSettings)=>set((state)=>({
+                    settings: {
+                        ...state.settings,
+                        ...newSettings
+                    }
+                })),
+        setFirstVisit: (value)=>set({
+                isFirstVisit: value
+            }),
+        setOnlineStatus: (isOnline)=>set({
+                isOnline
+            })
+    }), {
+    name: 'ttys-storage',
+    storage: (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$zustand$2f$esm$2f$middleware$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["createJSONStorage"])(()=>localStorage),
+    partialize: (state)=>({
+            playHistory: state.playHistory,
+            favorites: state.favorites,
+            playProgress: state.playProgress,
+            searchHistory: state.searchHistory,
+            settings: state.settings,
+            isFirstVisit: state.isFirstVisit,
+            filter: state.filter,
+            activeCategory: state.activeCategory,
+            activeRegion: state.activeRegion,
+            activeYear: state.activeYear,
+            activeType: state.activeType
+        })
+}));
+// 添加网络状态监听（仅在客户端执行）
+if ("TURBOPACK compile-time truthy", 1) {
+    // 初始化网络状态
+    useAppStore.getState().setOnlineStatus(navigator.onLine);
+    // 监听网络状态变化
+    window.addEventListener('online', ()=>{
+        useAppStore.getState().setOnlineStatus(true);
+    });
+    window.addEventListener('offline', ()=>{
+        useAppStore.getState().setOnlineStatus(false);
+    });
+}
+const __TURBOPACK__default__export__ = useAppStore;
+if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
+    __turbopack_context__.k.registerExports(module, globalThis.$RefreshHelpers$);
+}
+}}),
+"[project]/src/app/components/layout/BottomTabBar.tsx [app-client] (ecmascript)": ((__turbopack_context__) => {
+"use strict";
+
+var { g: global, __dirname, k: __turbopack_refresh__, m: module } = __turbopack_context__;
+{
+__turbopack_context__.s({
+    "default": (()=>__TURBOPACK__default__export__)
+});
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/jsx-dev-runtime.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/navigation.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$md$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/react-icons/md/index.mjs [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$store$2f$useAppStore$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/app/store/useAppStore.ts [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
+;
+var _s = __turbopack_context__.k.signature();
+'use client';
+;
+;
+;
+;
+const BottomTabBar = ({ labels })=>{
+    _s();
+    const router = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"])();
+    const pathname = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePathname"])();
+    const { currentTab, setCurrentTab, setCurrentTabWithoutReset } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$store$2f$useAppStore$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"])();
+    // 使用ref跟踪组件是否是首次渲染
+    const isFirstRender = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"])(true);
+    // 导航项配置
+    const tabs = [
+        {
+            id: 'movie',
+            icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$md$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["MdMovie"], {
+                size: 18
+            }, void 0, false, {
+                fileName: "[project]/src/app/components/layout/BottomTabBar.tsx",
+                lineNumber: 34,
+                columnNumber: 13
+            }, this),
+            label: labels.movie,
+            href: '/pages/movie'
+        },
+        {
+            id: 'tv',
+            icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$md$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["MdTv"], {
+                size: 18
+            }, void 0, false, {
+                fileName: "[project]/src/app/components/layout/BottomTabBar.tsx",
+                lineNumber: 40,
+                columnNumber: 13
+            }, this),
+            label: labels.tv,
+            href: '/pages/tv'
+        },
+        {
+            id: 'anime',
+            icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$md$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["MdAnimation"], {
+                size: 18
+            }, void 0, false, {
+                fileName: "[project]/src/app/components/layout/BottomTabBar.tsx",
+                lineNumber: 46,
+                columnNumber: 13
+            }, this),
+            label: labels.anime,
+            href: '/pages/anime'
+        },
+        {
+            id: 'short-drama',
+            icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$md$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["MdVideoLibrary"], {
+                size: 18
+            }, void 0, false, {
+                fileName: "[project]/src/app/components/layout/BottomTabBar.tsx",
+                lineNumber: 52,
+                columnNumber: 13
+            }, this),
+            label: labels.shortDrama,
+            href: '/pages/short-drama'
+        }
+    ];
+    // 根据路径更新当前标签
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "BottomTabBar.useEffect": ()=>{
+            let tabToSet = null;
+            if (pathname === '/' || pathname.includes('/pages/movie')) {
+                tabToSet = 'movie';
+            } else if (pathname.includes('/pages/tv')) {
+                tabToSet = 'tv';
+            } else if (pathname.includes('/pages/anime')) {
+                tabToSet = 'anime';
+            } else if (pathname.includes('/pages/short-drama')) {
+                tabToSet = 'short-drama';
+            }
+            if (tabToSet) {
+                // 如果是首次渲染（页面加载/刷新），使用不重置筛选条件的方法
+                if (isFirstRender.current) {
+                    setCurrentTabWithoutReset(tabToSet);
+                    isFirstRender.current = false;
+                } else {
+                    // 如果是用户导航，使用会重置筛选条件的方法
+                    setCurrentTab(tabToSet);
+                }
+            }
+        }
+    }["BottomTabBar.useEffect"], [
+        pathname,
+        setCurrentTab,
+        setCurrentTabWithoutReset
+    ]);
+    // 处理标签点击
+    const handleTabClick = (tab)=>{
+        // 设置当前标签（这会触发resetFilter）
+        setCurrentTab(tab);
+        // 跳转到不带参数的URL
+        const baseUrl = `/pages/${tab}`;
+        router.push(baseUrl);
+    };
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        className: "fixed bottom-0 left-0 right-0 bg-white dark:bg-neutral-900 shadow-md border-t border-gray-200 dark:border-gray-800",
+        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            className: "flex justify-around",
+            children: tabs.map((tab)=>{
+                const isActive = currentTab === tab.id;
+                return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                    className: `flex flex-col items-center py-1 flex-1 ${isActive ? 'text-[rgb(9,161,228)] font-bold' : 'text-gray-500 dark:text-gray-400'}`,
+                    onClick: ()=>handleTabClick(tab.id),
+                    children: [
+                        tab.icon,
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                            className: "text-xs mt-1",
+                            children: tab.label
+                        }, void 0, false, {
+                            fileName: "[project]/src/app/components/layout/BottomTabBar.tsx",
+                            lineNumber: 111,
+                            columnNumber: 15
+                        }, this)
+                    ]
+                }, tab.id, true, {
+                    fileName: "[project]/src/app/components/layout/BottomTabBar.tsx",
+                    lineNumber: 101,
+                    columnNumber: 13
+                }, this);
+            })
+        }, void 0, false, {
+            fileName: "[project]/src/app/components/layout/BottomTabBar.tsx",
+            lineNumber: 96,
+            columnNumber: 7
+        }, this)
+    }, void 0, false, {
+        fileName: "[project]/src/app/components/layout/BottomTabBar.tsx",
+        lineNumber: 95,
+        columnNumber: 5
+    }, this);
+};
+_s(BottomTabBar, "hiclyqJETw1UCG46bjZr8La5Yxo=", false, function() {
+    return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePathname"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$store$2f$useAppStore$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"]
+    ];
+});
+_c = BottomTabBar;
+const __TURBOPACK__default__export__ = BottomTabBar;
+var _c;
+__turbopack_context__.k.register(_c, "BottomTabBar");
+if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
+    __turbopack_context__.k.registerExports(module, globalThis.$RefreshHelpers$);
+}
+}}),
+"[project]/src/app/i18n/locales/cn.js [app-client] (ecmascript)": ((__turbopack_context__) => {
+"use strict";
+
+var { g: global, __dirname, k: __turbopack_refresh__, m: module } = __turbopack_context__;
+{
+__turbopack_context__.s({
+    "default": (()=>__TURBOPACK__default__export__)
+});
+const cn = {
+    config_app_name: '天天影视',
+    seo_app_title: '天天影视 - 在线观看电影,电视剧,动漫,短剧 - 正版APP',
+    seo_app_desc: '免费在线观看高清电影,电视剧,动漫,短剧,流畅体验最新影视内容,随时随地享受精彩!',
+    seo_page_title: '天天影视 - 免费{page} - 在线观看电影,电视剧,动漫,短剧 - 正版APP',
+    seo_page_desc: '天天影视 - 免费{page} - 免费在线观看高清电影,电视剧,动漫,短剧,流畅体验最新影视内容,随时随地享受精彩!',
+    seo_detail_title: '《{title}》- 免费在线观看',
+    seo_detail_desc: '《{title}》- {desc}',
+    seo_keywords: '在线电影,免费电视剧,高清影视,电影网站,免费影视,在线观看电影,视频网站,影视大全,电影在线,科幻电影,动作电影,爱情电影,悬疑电视剧,古装电视剧,综艺节目,动漫新番,战争电影,喜剧电影,纪录片在线',
+    homeTab: '好看',
+    hotTab: '热点',
+    recommend: '短剧',
+    shortVideo: '短视频',
+    mineTab: '我的',
+    homeChoice: '热门',
+    homeFilm: '电影',
+    homeTeleplay: '电视剧',
+    homeVariety: '综艺',
+    homeEntertainment: '动漫',
+    homeNews: '资讯',
+    vipAll: '全部',
+    vipWeek: '本周热门',
+    vipPopular: '人气排序',
+    vipTime: '时间排序',
+    artTypeFilm: '电影',
+    artTypeTeleplay: '电视剧',
+    artTypeVariety: '综艺',
+    artTypeEntertainment: '动漫',
+    artTypeNews: '资讯',
+    // 分类标签
+    category_type: '类型',
+    category_region: '地区',
+    category_year: '年份',
+    category_all: '全部',
+    all: '全部',
+    title_0: '精彩剧情',
+    title_1: '搞笑喜剧',
+    title_2: '高分动作',
+    title_3: '浪漫情感',
+    title_4: '科幻大片',
+    title_5: '动漫动画',
+    title_6: '悬疑烧脑',
+    title_7: '惊悚刺激',
+    title_8: '恐怖血腥',
+    title_9: '犯罪枪战',
+    title_10: '国内好片',
+    title_11: '美国大片',
+    title_12: '经典港片',
+    title_13: '台湾巨作',
+    title_14: '日本',
+    title_15: '韩国',
+    contentTypePlot: '剧情',
+    contentTypeComedy: '喜剧',
+    contentTypeAction: '动作',
+    contentTypeRomance: '爱情',
+    contentTypeScienceFiction: '科幻',
+    contentTypeCartoon: '动画',
+    contentTypeSuspense: '悬疑',
+    contentTypeThriller: '惊悚',
+    contentTypeHorror: '恐怖',
+    contentTypeCrime: '犯罪',
+    contentTypeHomosexual: '同性',
+    contentTypeMusic: '音乐',
+    contentTypeDance: '歌舞',
+    contentTypeBiopic: '传记',
+    contentTypeHistorical: '历史',
+    contentTypeWar: '战争',
+    contentTypeWestward: '西部',
+    contentTypeMagical: '奇幻',
+    contentTypeAdventure: '冒险',
+    contentTypeDisaster: '灾难',
+    contentTypeMartialArts: '武侠',
+    contentTypeOthers: '其他',
+    // reelsContentTypeTimeTravel: '穿越',
+    // reelsContentTypeFantasy: '玄幻',
+    // reelsContentTypeComedy: '搞笑',
+    // reelsContentTypeHorror: '恐怖',
+    // reelsContentTypeAction: '热血',
+    // reelsContentTypeMotivation: '励志',
+    // reelsContentTypeRomance: '爱情',
+    // reelsContentTypeWar: '战争',
+    // reelsContentTypeUrban: '都市',
+    // reelsContentTypeOvercome: '逆袭',
+    // reelsContentTypeSweet: '甜宠',
+    // reelsContentTypeRebirth: '重生',
+    // reelsContentTypeRevenge: '复仇',
+    // reelsContentTypeCEO: '总裁',
+    // reelsContentTypeAristocracy: '豪门',
+    // reelsContentTypeAdventure: '冒险',
+    // reelsContentTypeIntrigue: '权谋',
+    // reelsContentTypeEmotions: '情感',
+    // reelsContentTypeMarriage: '婚姻',
+    // reelsContentTypeMystery: '悬疑',
+    reelsContentTypeUrban: '都市',
+    reelsContentTypeTraverse: '穿越',
+    reelsContentTypeRebirth: '重生',
+    reelsContentTypeWarGod: '战神',
+    reelsContentTypeFantasy: '玄幻',
+    reelsContentTypeOverlord: '霸总',
+    reelsContentTypeTorturedLove: '虐恋',
+    reelsContentTypeBaby: '萌宝',
+    reelsContentTypeCostume: '古装',
+    reelsContentTypeDivineHealer: '神医',
+    reelsContentTypeFemale: '女频',
+    reelsContentTypeMale: '男频',
+    reelsContentTypeHeir: '豪门',
+    reelsContentTypeRepublic: '民国',
+    reelsContentTypeRise: '逆袭',
+    reelsContentTypeRomance: '言情',
+    reelsContentTypeHistory: '历史',
+    reelsContentTypeSweet: '甜宠',
+    reelsContentTypeRevenge: '复仇',
+    reelsContentTypeFamily: '家庭',
+    reelsContentTypeReality: '现实',
+    reelsContentTypeKinship: '亲情',
+    reelsContentTypeFeeling: '情感',
+    reelsContentTypeFlashMarriage: '闪婚',
+    reelsContentTypeOthers: '其他',
+    // reelsContentTypeYouth: '青春',
+    // reelsContentTypeEmpress: '女帝',
+    // reelsContentTypeRepublic: '民国',
+    // reelsContentTypeBaby: '萌宝',
+    // reelsContentTypeSuperpower: '超能',
+    // reelsContentTypeSweet: '甜宠',
+    // reelsContentTypeHeirDrama: '豪门恩怨',
+    // reelsContentTypeSurvival: '求生',
+    // reelsContentTypeVillain: '反派',
+    // reelsContentTypeFamilySearch: '寻亲',
+    // reelsContentTypeMindReading: '读心术',
+    // reelsContentTypeLaw: '律政',
+    // reelsContentTypeBusinessWar: '职场商战',
+    // reelsContentTypeFantasyCostume: '古装仙侠',
+    // reelsContentTypePowerPlay: '权谋',
+    // reelsContentTypeChildhoodLove: '青梅竹马',
+    // reelsContentTypeMyth: '神话',
+    // reelsContentTypeMasterLady: '女高手下山',
+    // reelsContentTypeCompetition: '竞赛',
+    // reelsContentTypeFrenemies: '欢喜冤家',
+    // reelsContentTypeEraDrama: '年代剧',
+    // reelsContentTypeComedy: '喜剧',
+    // reelsContentTypeTimeTravelModern: '古穿今',
+    // reelsContentTypeFamilyLove: '亲情剧',
+    // reelsContentTypeWealth: '致富',
+    // reelsContentTypeFantasyTwist: '奇幻脑洞',
+    // reelsContentTypeWarGod: '战神',
+    // reelsContentTypeStrongReturn: '强者回归',
+    // reelsContentTypeSystem: '系统',
+    // reelsContentTypeInspiration: '励志',
+    // reelsContentTypeModernFantasy: '现代奇幻',
+    // reelsContentTypeRevenge: '复仇',
+    // reelsContentTypeTactician: '毒士',
+    // reelsContentTypeChaseRegret: '追妻火葬场',
+    // reelsContentTypeMask: '马甲',
+    // reelsContentTypeConcubine: '王妃',
+    // reelsContentTypeKinship: '亲情',
+    // reelsContentTypeUnderdog: '小人物',
+    // reelsContentTypeInvincible: '无敌',
+    // reelsContentTypeWorkplace: '职场',
+    // reelsContentTypeAbandonedYouth: '弃少',
+    // reelsContentTypeMystery: '悬疑',
+    // reelsContentTypeCostume: '古装',
+    // reelsContentTypeMetaphysics: '玄学',
+    // reelsContentTypeFantasyImmortal: '玄幻仙侠',
+    // reelsContentTypeRelax: '轻松',
+    // reelsContentTypeLandlord: '包租公',
+    // reelsContentTypeWorthlessGirl: '废女',
+    // reelsContentTypeOperaDance: '戏曲歌舞',
+    // reelsContentTypeRise: '逆袭',
+    // reelsContentTypeSubstitute: '替身',
+    // reelsContentTypeOriginalWife: '原配',
+    // reelsContentTypeAnime: '动漫',
+    // reelsContentTypeGodEye: '神眼',
+    // reelsContentTypeImmortality: '长生',
+    // reelsContentTypeDivineHealer: '神医',
+    // reelsContentTypeCrush: '暗恋',
+    // reelsContentTypeSwapMarriage: '换亲',
+    // reelsContentTypeWomenGrowth: '女性成长',
+    // reelsContentTypeSpyWar: '抗战谍战',
+    // reelsContentTypeSeries: '电视剧',
+    // reelsContentTypeTimeTravel: '穿越时空',
+    // reelsContentTypeCultivation: '修仙',
+    // reelsContentTypeFlashMarriage: '闪婚',
+    // reelsContentTypeMasterDescent: '高手下山',
+    // reelsContentTypeTrueFakeHeiress: '真假千金',
+    // reelsContentTypeMiddleAgeLove: '中年婚恋',
+    // reelsContentTypeUrban: '都市',
+    // reelsContentTypeSpace: '空间',
+    // reelsContentTypeSports: '体育',
+    // reelsContentTypeBride: '婚女',
+    // reelsContentTypeMistakenIdentity: '误认',
+    // reelsContentTypeTreasureHunt: '鉴宝',
+    // reelsContentTypeChefGod: '厨神',
+    // reelsContentTypeFamily: '家庭',
+    // reelsContentTypeHousewife: '家庭主妇',
+    // reelsContentTypeLadyBoss: '女总裁',
+    // reelsContentTypeSlagAbuse: '虐渣',
+    // reelsContentTypeTycoon: '神豪',
+    // reelsContentTypeSciFi: '科幻',
+    // reelsContentTypeTimeLink: '今古连通',
+    // reelsContentTypeMovie: '电影',
+    // reelsContentTypeReality: '现实',
+    // reelsContentTypeRebirth: '重生',
+    // reelsContentTypeTeacherStudent: '师生情',
+    // reelsContentTypeHeiress: '千金',
+    // reelsContentTypeTraverse: '穿越',
+    // reelsContentTypeCEO: '总裁',
+    // reelsContentTypeMarriage: '婚姻',
+    // reelsContentTypePatrioticFeud: '家国情仇',
+    // reelsContentTypeTorturedLove: '虐恋',
+    // reelsContentTypeMiddleAge: '中年',
+    // reelsContentTypeEmotionFlow: '情感流',
+    // reelsContentTypeLegacyAwaken: '传承觉醒',
+    // reelsContentTypeMartialArts: '功夫武打',
+    // reelsContentTypeGroupSweet: '团宠',
+    // reelsContentTypeFeeling: '情感',
+    // reelsContentTypeModernRomance: '现代言情',
+    // reelsContentTypeRegret: '后悔流',
+    areaTypeChinaMainland: '中国',
+    areaTypeUnitedStates: '美国',
+    areaTypeHongKong: '香港',
+    areaTypeTaiwan: '台湾',
+    areaTypeJapan: '日本',
+    areaTypeKorea: '韩国',
+    areaTypeUnitedKingdom: '英国',
+    areaTypeFrance: '法国',
+    areaTypeGermany: '德国',
+    areaTypeItaly: '意大利',
+    areaTypeSpain: '西班牙',
+    areaTypeIndia: '印度',
+    areaTypeThailand: '泰国',
+    areaTypeRussia: '俄罗斯',
+    areaTypeIran: '伊朗',
+    areaTypeCanada: '加拿大',
+    areaTypeAustralia: '澳大利亚',
+    areaTypeIreland: '爱尔兰',
+    areaTypeSweden: '瑞典',
+    areaTypeBrazil: '巴西',
+    areaTypeDenmark: '丹麦',
+    areaTypeOthers: '其他',
+    center_btn_chinese: '中文',
+    center_btn_english: '欧美',
+    center_btn_asian: '日韩',
+    center_btn_china: '中国',
+    center_btn_outback: '内地',
+    center_btn_cantonese: '港台',
+    center_btn_Reality: '真人秀',
+    center_btn_international: '国际',
+    center_btn_Asia: '亚洲',
+    center_btn_UsTeleplay: '美剧',
+    main_noData: '暂无内容',
+    main_more: '更多',
+    main_not_open: '暂未开放',
+    main_lang_cn: '简体中文',
+    main_lang_tw: '繁体中文',
+    main_lang_en: '英语',
+    main_message_all: '所有人',
+    main_message_friend: '仅好友',
+    main_message_followed: '仅关注我的人',
+    mine_register: '注册',
+    mine_login: '登录',
+    mine_ing: '中',
+    mine_username: '请输入手机号或邮箱',
+    mine_password: '请输入密码',
+    mine_password_again: '请再次输入密码',
+    mine_password_not_same: '两次输入密码不一致',
+    mine_password_invalid: '密码请使用6-20位字母加数字组成',
+    mine_agree: '同意协议并注册',
+    mine_tips: '点击"同意协议并注册"即表示您已阅读并同意《用户协议》《隐私政策》',
+    mine_password_forgot: '忘记密码?',
+    mine_show_email: '请邮件联系管理员: %{contactEmail}',
+    mine_login_summary: '登录一下，内容更精彩',
+    mine_watch_history: '观看历史',
+    mine_recently_played: '最近播放',
+    mine_recently_favorites: '最近收藏',
+    mine_create_list: '作品',
+    mine_activity: '动态',
+    mine_favorite: '喜欢',
+    mine_downloads: '我的下载',
+    mine_favorites: '我的收藏',
+    mine_weblink: '官网地址',
+    set_up_account: '账号与安全',
+    set_up_my_coin: '我的积分',
+    set_up_cellphone: '手机绑定',
+    set_up_third: '第三方帐号绑定',
+    set_up_realname: '实名认证',
+    set_up_shield: '屏蔽设置',
+    set_up_delete: '账号删除',
+    set_up_block_list: '黑名单',
+    report_text: '举报',
+    report_block: '加入黑名单',
+    report_add_block_list: '已加入黑名单, 你可以在设定中取消黑名单',
+    report_remove_block_list: '成功移出黑名单',
+    report_unblock: '解除黑名单',
+    report_question: '请输入你的举报理由',
+    report_blocked_noData: '已屏蔽,暂无可查看内容',
+    report_type_image: '举报图片或标题',
+    report_type_video: '举报视频',
+    report_type_comment: '举报评论',
+    report_type_user: '举报用户',
+    report_thanks: '感谢您的举报',
+    report_issue: '问题',
+    report_content_1: '您好!感谢您的举报。如果此内容违反了%{appName}的',
+    report_content_2: '我们会将其移除。详细了解如何屏蔽评论或用户,以及我们为保护您在%{appName}上的安全而设置的其他政策和工具。',
+    report_issue_0: '色情内容',
+    report_issue_1: '暴力或令人反感的内容',
+    report_issue_2: '仇恨或侮辱他人的内容',
+    report_issue_3: '有害或危险行为',
+    report_issue_4: '垃圾内容或误导性内容',
+    report_issue_5: '骚扰或欺凌',
+    report_issue_6: '虐待儿童',
+    report_issue_7: '侵犯了我的权利',
+    report_issue_8: '宣扬恐怖主义',
+    report_issue_9: '版权问题',
+    report_issue_10: '隐私问题',
+    report_issue_11: '商标侵权或仿冒',
+    report_issue_12: '其他法律问题',
+    ad_skip: '跳过广告',
+    ad_remove: '去掉广告',
+    download_tips: '温馨提示: 观看缓存视频时，请不要断开网络',
+    download_progress: '下载进度',
+    download_delete: '删除',
+    download_delete_sure: '确定删除?',
+    download_deleted: '已成功删除',
+    download_delete_tip: '下载完成后才能删除',
+    download_complete: '已完成 %{progress}%',
+    download_free_storage: '剩余 %{free}G 可用',
+    download_play_cache: ' (正在播放缓存)',
+    download_added: '已加入下载任务',
+    download_downloading: '正在下载中,进入[我的-我的下载]查看',
+    download_throw_err: '下载出错了,请重启App重试',
+    download_state_downloading: '下载中',
+    download_state_stop: '下载中断',
+    download_state_complete: '下载完成',
+    download_source_cannot: '本播放源无法下载,请更换播放源重试',
+    download_source_error: '当前播放源下载错误，请切换其他播放源或重启App重试',
+    download_cannot_play: '如果下载完成后无法观看，请重启app,或切换播放源重新下载.',
+    download_max_error: '下载数量已达到最大限制,请升级vip后重试',
+    set_up_play: '播放',
+    set_up_autoplay: '自动跳过片头片尾',
+    set_up_net_play: '运营商网络自动播放',
+    set_up_net_upload: '允许运营商网络上传',
+    set_up_general: '通用',
+    set_up_get_message: '接收推送通知',
+    set_up_change_lang: '切换语言',
+    set_up_push_other: '允许将我推送给好友',
+    set_up_who_push: '谁可以发消息给我',
+    set_up_about: '关于',
+    set_up_help: '反馈与帮助',
+    set_up_sla: '用户协议',
+    set_up_privacy: '隐私政策',
+    general_summary: '简介',
+    general_starring: '主演',
+    general_type: '类型',
+    general_all_comment: '全部评论',
+    general_sets_title: '选集',
+    general_like: '点赞',
+    general_comment: '评论',
+    general_sets: '选集',
+    general_share: '分享',
+    general_collect: '收藏',
+    general_comment_any: '我来说几句',
+    general_publish_comment: '发表评论',
+    general_picture: '图片',
+    general_video: '视频',
+    general_publish: '发表',
+    general_submit: '提交',
+    general_modify: '修改资料',
+    general_comment_num: '条',
+    general_comments: '评论',
+    general_reply: '回复',
+    general_replies: '回复',
+    general_follow: '关注',
+    general_unfollow: '取消关注',
+    general_likes: '点赞',
+    general_followering: '关注',
+    general_followers: '粉丝',
+    general_friends: '好友',
+    general_ensure: '确认',
+    general_cancel: '取消',
+    general_hot_search: '热搜',
+    general_search_place: '输入视频名称',
+    general_publishing: '评论提交中',
+    general_input_content: '请输入内容',
+    general_logout: '退出账号',
+    general_input_question: '请输入您的问题',
+    general_noInterest: '不感兴趣',
+    general_shield: '屏蔽所有',
+    general_report: '举报',
+    general_operate: '操作',
+    general_close: '关闭',
+    general_years: '年代',
+    general_success: '成功',
+    general_fail: '失败',
+    general_user_not_exist: '用户名不存在',
+    general_user_exist: '用户名已存在',
+    general_auth_fail: '身份验证失败，请登陆',
+    general_wrong_character: '错误的字符,请检查',
+    general_net_slow: '您的网络较慢,请稍后再试',
+    general_login_faild: '登录失败,账号或密码错误,请重试!',
+    general_net_wrong: '网络异常,请稍后再试',
+    general_net_unconnected: '网络已断开,请检查网络连接情况',
+    general_net_fault: '系统升级中,预计24小时内恢复',
+    general_net_link_fault: '网络连接错误',
+    general_fresh_btn: '刷新一下',
+    general_retry: '重试',
+    general_time_one: '1天前',
+    general_hour_number: '小时前',
+    general_go_login: '去登录',
+    general_go_share: '去分享',
+    general_after_login: '请登录后再分享',
+    general_must_share: '此视频需要登录才能观看',
+    general_coin_invalid: '积分不足,分享给好友可获得积分',
+    general_need_share: '分享后可免费观看这个vip视频',
+    general_need_coin: '此视频需要',
+    general_coin: '积分',
+    general_coin_account: '您的积分:',
+    general_reach_end: '已经到底啦',
+    general_load_err: '视频加载错误!',
+    general_search: '搜索',
+    general_watch_to: '观看至',
+    general_watch_episode: '第%{index}集',
+    general_avatar: '头像',
+    general_cover: '封面',
+    general_upload_err: '上传错误,请重试',
+    general_camera_err: '相册打开失败,请重试',
+    general_input_title: '请输入标题',
+    general_upload_cover: '请上传封面',
+    general_auth_err: '身份验证失败',
+    general_loading: '加载中..',
+    general_director: '导演',
+    general_watch_now: '立即观看',
+    general_hold: '稍后',
+    // 下载APP弹框相关文本
+    download_app_title: '下载APP观看完整内容',
+    download_app_desc: '安装APP即可观看全部高清视频，无广告，支持离线缓存',
+    download_app_btn: '立即下载',
+    download_app_cancel: '取消',
+    download_app_short_title: '下载APP观看短剧',
+    download_app_short_desc: '安装我们的APP即可观看海量精彩短剧，支持无限观看和离线缓存',
+    download_app_detail_title: '下载APP观看完整视频',
+    download_app_detail_desc: '安装我们的APP即可流畅观看完整视频，支持离线缓存，高清无广告',
+    general_update_backend: '后台更新',
+    general_if_update: '有新版本了，是否更新?',
+    general_must_update: '有新版本了，需要更新',
+    general_continue_update: '后台更新',
+    general_update_title: '更新提示',
+    general_edit_info: '编辑个人资料',
+    general_edit_confirm: '确定修改',
+    general_delete_info: '删除账户',
+    general_delete_confirm: '确认',
+    general_delete_warning: '请注意，根据相关法律政策，这一步操作将永久删除或注销您的账户，您将不能访问您的所有资料和登陆，请慎重考虑后再做操作',
+    general_add_opus: '添加作品',
+    general_click_upload: '点击上传封面',
+    general_uploading: '上传中',
+    general_title: '标题',
+    general_nickname: '昵称',
+    general_upload_result: '视频上传成功,正在审核中',
+    general_download_faild: '本视频因为版权原因暂无法下载',
+    general_warning_title: '温馨提示:',
+    general_warning_content: '如遇到网络一直无法连接，提示网络错误，闪退，卡死等问题，请尝试在官网下载最新版本安装。',
+    general_warning_download_url: '官网下载地址:',
+    general_warning_enter_play: '点击进入谷歌商店',
+    general_no_image: '无图片',
+    general_player_next_episode: '进入下一集',
+    general_player_rate: '倍速',
+    general_player_source: '播放源',
+    general_player_src: '源',
+    general_sets_count_label: '全%{count}集',
+    general_agree: '同意',
+    general_agree_not: '不同意',
+    general_sla_privacy: '用户协议与隐私保护',
+    general_sla_agree: '需要获得你的同意后才可继续使用%{appName}提供的服务',
+    general_a: '感谢您选择%{appName}产品和服务',
+    general_b: '我们非常重视您的个人信息和隐私保护。为了更好地保障您的个人权益，在您使用我们的产品前，请您务必审慎阅读',
+    general_c: '1，我们对您的个人信息的收集/保存/使用/对外提供/保护等规则条款，以及您的用户权利等条款；',
+    general_d: '2，约定我们的限制责任，免责条款；',
+    general_e: '3，其他加粗或下划线进行标识的重要条款；',
+    general_f: '您点击"同意"的行为即表示您已阅读完毕并同意以上协议的全部内容。',
+    general_rate_title: '给五星好评后系统将推送更多优质电影电视剧',
+    general_rate_submit: '现在提交',
+    general_rate_cancle: '以后',
+    general_comment_placeholder: '在这里输入建议',
+    general_empty_error: '建议内容为空',
+    general_share_content: '复制下面链接,使用手机自带浏览器打开,即可下载安装APP,免费观看此视频',
+    general_privacy: '隐私政策',
+    general_sla: '用户服务协议',
+    general_eula: '最终用户许可协议',
+    general_update_time: '更新时间',
+    general_valid_time: '生效时间',
+    general_privacy_content: `
+    更新内容
+1.变更我们收集的个人信息。
+
+隐私政策目录
+本政策将帮助您了解以下内容：
+适用范围
+运营主体、联系方式与重要入口提示
+重要词语定义
+我们收集哪些您的个人信息
+我们如何使用您的信息
+如何访问和控制您的信息
+我们如何分享您的信息
+我们如何存储与保护您的信息
+有关共享信息的提示
+COOKIES、日志档案和WEB BEACON
+广告
+我们向您发送的推送与公告
+我们如何处理儿童的个人信息
+本政策如何更新
+争议解决
+
+欢迎您使用%{appName}平台服务，请在使用%{appName}服务前仔细阅读并了解本政策，其中的重要条款将以加粗形式提示您注意，您应重点阅读。如果您不同意本政策的内容，您应立即停止使用%{appName}服务。您使用或继续使用我们提供的服务，均表示您同意我们按照本政策收集、使用、分享、储存与保护您的信息。
+ %{appName}深知个人信息对您的重要性，并会尽全力保护您的个人信息安全可靠。我们致力于维持您对我们的信任，恪守以下原则，保护您的个人信息：权责一致原则、目的明确原则、选择同意原则、最小必要原则、确保安全原则、主体参与原则、公开透明原则等。同时，%{appName}承诺，我们将按业界成熟的安全标准，采取相应的安全保护措施来保护您的个人信息。
+本政策中所述的%{appName}平台服务可能会根据您所使用的手机型号、系统版本、软件应用程序版本等因素而有所不同。最终的产品和服务以您所使用的%{appName}平台服务为准。
+
+1. 适用范围
+1.1. 本政策适用于%{appName}提供的所有产品和服务，包括：
+1.1.1. %{appName}网站（%{WEB_LINK}），含其他任何由%{appName}直接所有或运营的任何网站平台（下称"%{appName}网站"）；
+1.1.2. %{appName}直接拥有或运营的客户端，包括但不限于PC、平板、手机等全部终端客户端产品平台（下称"%{appName}客户端"）；
+1.1.3. %{appName}的其他技术和/或服务（下称"%{appName}其他技术和服务"）。
+1.2. 请您注意，本政策不适用于以下情况：
+1.2.1. 其他独立第三方向您提供的服务。若您通过%{appName}平台服务接入了第三方服务，此时您受第三方服务条款约束，请注意阅读第三方服务所提供的用户协议及隐私政策，并妥善保护自己的个人信息。例如，您点击%{appName}平台的贴吧热议板块可跳转至百度贴吧APP，在跳转前，我们将以弹窗形式提醒您，如您确认跳转，请点击确定，此时您受百度贴吧服务条款约束，请妥善保护自己的个人信息。
+1.2.2. %{appName}平台中已另行独立设置法律声明及隐私政策的产品或服务。
+2. 运营主体、联系方式与重要入口提示
+2.1. 运营主体
+2.1.1. 因%{appName}APP开发与运营需要，%{appName}所有产品与服务由%{WEB_LINK}向您提供，您可通过国家企业信用信息公示系统网站（http://www.gsxt.gov.cn/）查询并获取最新的公司基本信息。
+2.1.2. 我们将选择上述两个主体的任一主体作为部分应用市场的开发者，在您通过应用市场下载安装%{appName}APP时，请注意识别。
+2.2. 联系方式
+2.2.1. 如您需要删除个人信息、更正个人信息或有其他关于个人信息的需求，可通过隐私投诉功能（路径：我的-设置-关于我们-隐私投诉）进行反馈。
+2.2.2. 如您有其他需求，可选择：
+1) 通过反馈与帮助功能（路径：我的-反馈与帮助）进行反馈；
+2) 联系客服（路径：我的-反馈与帮助-联系客服）；
+3) 发送邮件至%{contactEmail}进行反馈。
+2.3. 重要入口提示
+2.3.1. 如您需要注销账号，可通过注销账号功能（路径：我的-设置-账号管理-账号注销）进行操作。
+2.3.2. 如您需要关闭个性化推荐，可通过隐私权限设置（路径：我的-设置-隐私权限设置）进行关闭。
+3. 重要词语定义
+3.1. 除本政策另有规定外，本政策所用词语与%{appName}《用户协议》词语具有相同的定义。
+3.2. 个人信息：指以电子或者其他方式记录的能够单独或者与其他信息结合识别特定自然人身份或者反映特定自然人活动情况的各种信息。
+3.3. 个人敏感信息：指一旦泄露、非法提供或滥用可能危害人身和财产安全，极易导致个人名誉、身心健康受到损害或歧视性待遇的个人信息。您同意您的个人敏感信息按本政策所述的目的和方式来处理。请您注意，您在%{appName}服务中所提供、上传或发布的内容和信息，可能会泄露您的个人敏感信息。您需要谨慎地考虑此种情况发生的可能性，从而考虑是否选择停止提供、上传或发布行为。
+3.4. 共享信息：指您在我们的服务中自愿与您的社交网络及使用该服务的所有用户公开分享的有关您的信息，或其他方分享的与您有关的信息。
+3.5. 非个人身份信息：指任何与您有关但实际上不可直接或间接辨认您身份的信息，包括以汇集、匿名或化名方式提供的个人信息。您知悉并同意，无法识别出您的个人身份的信息不属于个人信息。
+3.6. 匿名化：通过对个人信息的技术处理，使得个人信息主体无法被识别或者关联，且处理后的信息不能被复原的过程。
+3.7. 去标识化：通过对个人信息的技术处理，使其在不借助额外信息的情况下，无法识别或者关联个人信息主体的过程。
+3.8. Cookie：包含字符串的小文件，在您访问网站或其他网络内容时发送到您的计算机、移动电话或其他装置内。
+3.9. Web Beacon：装嵌在网站或电邮之内的电子影像档案或其他技术，可用于计算访客数目、记录是否及何时浏览电邮或网站、或使用某些cookies。
+3.10. 设备信息：包括设备型号、唯一设备标识符（IMEI信息、安卓 ID、安卓OAID、Mac地址、iccid、imsi、idfa、idfv等）、操作系统版本、网络设备硬件、地址MAC等软硬件特征信息。
+4. 我们收集哪些您的个人信息
+本条内容可能涉及必要信息、非必要信息与系统权限，为便于您阅读，我们用"【】"符号进行了明确标识。
+4.1. 账号注册或登录
+4.1.1. 必要信息：%{appName}为您提供的账号注册或登录功能需要依赖部分信息才得以运行。您选择使用该功能，需要向我们提供或允许我们收集的必要信息为【手机号码】。如您拒绝提供，将导致注册不成功，您可以退出注册页面后以"游客"身份使用%{appName}。
+4.2. 第三方登录
+4.2.1. 必要信息：%{appName}为您提供的使用第三方平台（如QQ、新浪微博、微信、抖音）账号登录功能需要依赖部分信息才得以运行。您选择使用该功能，则需要向我们提供或允许我们收集的必要信息为【第三方账号下的相关信息（包括用户名、昵称、头像等）、手机号码（用于绑定及认证）】。
+4.2.2. 非必要信息：您可自主选择向我们提供或允许我们收集非必要信息，包括【设备信息（其定义见第3.10条）】，这些信息并非该业务功能运行所必需，但这些信息对改善服务质量有非常重要的意义，我们不会强制要求您提供这些信息，如您拒绝不会对使用该业务功能产生不利影响。
+4.2.3. 系统权限：在您使用该业务功能时，您可自主选择是否授予%{appName}【电话/设备信息权限】，如果您不授权，将不会对使用该业务功能产生不利影响。
+4.3. 视频展示和播放
+4.3.1. 非必要信息：您可自主选择向我们提供或允许我们收集非必要信息，包括【设备型号、设备名称、唯一设备识别码、浏览器类型和设置、语言设置、操作系统和应用程序版本、登录IP地址、接入网络的方式、网络质量数据、移动网络信息、产品版本号、网络日志信息（如操作日志、服务日志）】，这些信息并非该业务功能运行所必需，但这些信息对改善服务质量有非常重要的意义，我们不会强制要求您提供这些信息，如您拒绝不会对使用该业务功能产生不利影响。
+4.3.2. 系统权限：在您使用该业务功能时，%{appName}会向您申请与个人信息相关的系统权限为【电话/设备信息权限】，如果您不授权，将不会对使用该业务功能产生不利影响。
+4.4. 视频缓存
+4.4.1. 非必要信息：您可自主选择向我们提供或允许我们收集非必要信息，包括【设备信息（其定义见第3.10条）】，这些信息并非该业务功能运行所必需，但这些信息对改善服务质量有非常重要的意义，我们不会强制要求您提供这些信息，如您拒绝不会对使用该业务功能产生不利影响。
+4.4.2. 系统权限：在您使用该业务功能时，%{appName}会向您申请与个人信息相关的系统权限为【设备存储权限】，如果您不授权，将会导致我们无法提供该业务功能。除上述权限之外，您可自主选择是否额外授予%{appName}其他的系统权限，如【电话/设备信息权限】，如果您不授权，将不会对使用该业务功能产生不利影响。
+4.5. 搜索
+4.5.1. 非必要信息：您可自主选择向我们提供或允许我们收集非必要信息，包括【设备信息（其定义见第3.10条）、日志信息（包括搜索的字或词、浏览记录和时间、搜索的时间以及次数）】，这些信息并非该业务功能运行所必需，但这些信息对改善服务质量有非常重要的意义，我们不会强制要求您提供这些信息，如您拒绝不会对使用该业务功能产生不利影响。
+4.5.2. 系统权限：在您使用该业务功能时，您可自主选择是否授予%{appName}【电话/设备信息权限】，如果您不授权，将不会对使用该业务功能产生不利影响。
+4.6. 浏览、关注
+4.6.1. 非必要信息：您可自主选择向我们提供或允许我们收集非必要信息，包括【设备信息（其定义见第3.10条）】，这些信息并非该业务功能运行所必需，但这些信息对改善服务质量有非常重要的意义，我们不会强制要求您提供这些信息，如您拒绝不会对使用该业务功能产生不利影响。
+4.6.2. 系统权限：在您使用该业务功能时，您可自主选择是否授予%{appName}【电话/设备信息权限】，如果您不授权，将不会对使用该业务功能产生不利影响。
+4.7. 信息发布
+4.7.1. 系统权限：在您使用该业务功能时，您可自主选择是否授予%{appName}【设备相册权限、设备相机权限】，如果您不授权，将无法使用从相册选取图片功能或使用相机拍摄图片上传功能，但不会对使用该业务的其他功能产生不利影响。
+4.8. 商品交易
+4.8.1. 必要信息：%{appName}为您提供的购买商品或服务功能需要依赖部分信息才得以运行。如您选择使用该功能，您需要向我们提供或允许我们收集的必要信息为【收货人姓名（名称）、地址、联系电话，支付时间、支付金额、支付渠道】，请您注意，其中【收货人姓名（名称）、地址、联系电话】为个人敏感信息。
+4.8.2. 非必要信息：您可自主选择向我们提供或允许我们收集非必要信息，包括【设备信息（其定义见第3.10条）】，这些信息并非该业务功能运行所必需，但这些信息对改善服务质量有非常重要的意义，我们不会强制要求您提供这些信息，如您拒绝不会对使用该业务功能产生不利影响。
+4.8.3. 系统权限：在您使用该业务功能时，您可自主选择是否授予%{appName}【电话/设备信息权限】，如果您不授权，将不会对使用该业务功能产生不利影响。
+4.9. 反馈或投诉
+4.9.1. 必要信息：%{appName}为您提供的反馈或投诉功能需要依赖部分信息才得以运行。如您选择使用该功能，您需要向我们提供或允许我们收集的必要信息为【账号信息、手机号码】。
+4.9.2. 非必要信息：您可自主选择向我们提供或允许我们收集非必要信息，包括【设备信息（其定义见第3.10条）】，这些信息并非该业务功能运行所必需，但这些信息对改善服务质量有非常重要的意义，我们不会强制要求您提供这些信息，如您拒绝不会对使用该业务功能产生不利影响。
+4.9.3. 系统权限：在您使用该业务功能时，您可自主选择是否授予%{appName}【电话/设备信息权限】，如果您不授权，将不会对使用该业务功能产生不利影响。
+4.10. 客服服务
+4.10.1. 必要信息：%{appName}为您提供的客服服务功能需要依赖部分信息才得以运行。如您选择使用该功能，您需要向我们提供或允许我们收集的必要信息为【账号信息】。
+4.10.2. 系统权限：在您使用该业务功能时，您可自主选择是否授予%{appName}【录音（麦克风）权限】，如果您不授权，将无法使用客服对话页面的语音输入功能，但不会对使用该业务的其他功能产生不利影响。
+4.11. 入驻
+4.11.1. 必要信息
+%{appName}为您提供的%{appName}up主入驻功能（入口为PC端首页右上角）需要依赖部分信息才得以运行。选择使用该功能时：
+1) 如您为个人UP主，您需要向我们提供或允许我们收集的必要信息为【姓名、手机号码、邮箱、身份证号码】，请您注意，其中【身份证号码】为个人敏感信息。
+2) 如您为机构UP主，您需要向我们提供或允许我们收集的必要信息为【机构名称、公司全称、联系人姓名、联系人职务、手机号码、邮箱】。
+4.11.2. 非必要信息
+您可自主选择向我们提供或允许我们收集非必要信息：
+1) 如您为个人UP主，这些非必要信息包括【联系方式（QQ、微信）、收益账户】。
+2) 如您为机构UP主，这些非必要信息包括【联系方式（QQ、微信、微博）、收益账户】。
+这些信息并非该业务功能运行所必需，但这些信息对改善服务质量有非常重要的意义，我们不会强制要求您提供这些信息，如您拒绝不会对使用该业务功能产生不利影响。
+4.12. 更换头像
+4.12.1. 必要信息：%{appName}为您提供的更换头像功能需要依赖部分信息才得以运行。如您选择使用该功能，您需要向我们提供或允许我们收集的必要信息为【图片信息】。
+4.12.2. 系统权限：在您使用该业务功能时，%{appName}会向您申请与个人信息相关的系统权限为【设备相册权限】，如果您不授权，将会导致我们无法提供该业务功能。除上述权限之外，您可自主选择是否额外授予%{appName}其他的系统权限。
+4.13. 支付
+4.13.1. 必要信息
+%{appName}为您提供的支付功能（开通会员服务、购买商品等）需要依赖部分信息才得以运行。如您选择使用该功能：
+1) 如您是安卓用户，您需要向我们提供或允许我们收集的必要信息为【设备信息（其定义见第3.10条）、第三方支付渠道的user ID（如支付宝user ID、微信open ID）】；
+2) 如您是iOS用户，您需要向我们提供或允许我们收集的必要信息为【Apple Pay ID】。
+4.13.2. 非必要信息：您可自主选择向我们提供或允许我们收集非必要信息，包括【个人位置信息，网络信息】，这些信息并非该业务功能运行所必需，但这些信息对改善服务质量有非常重要的意义，我们不会强制要求您提供这些信息，如您拒绝不会对使用该业务功能产生不利影响。
+4.13.3. 系统权限：在您使用该业务功能时，如您是安卓用户，%{appName}会向您申请与个人信息相关的系统权限为【电话/设备信息权限】，如果您不授权，将会导致我们无法提供该业务功能。除上述权限之外，您可自主选择是否额外授予%{appName}其他的系统权限，如【位置权限】，如果您不授权，将不会对使用该业务功能产生不利影响。
+4.14. 广告
+4.14.1. 必要信息
+%{appName}为您提供的展示广告功能需要依赖部分信息才得以运行。如您选择使用该功能：
+1) 如您是安卓用户，您需要向我们提供或允许我们收集的必要信息为【IMEI信息、Mac地址】；
+2) 如您是iOS用户，您需要向我们提供或允许我们收集的必要信息为【IDFA】。
+4.14.2. 在此提示您，您可通过阅读本政策第7.2条，了解我们接入的第三方SDK广告服务商所收集的信息种类、用途、个人信息保护的规则及退出机制等。
+4.15. 个性化推荐
+4.15.1. 必要信息：%{appName}为您提供的个性化推荐功能需要依赖部分信息才得以运行。如您选择使用该功能，您需要向我们提供或允许我们收集的必要信息为【设备信息（其定义见第3.10条）、浏览器型号、日志信息、浏览记录、点赞/分享/评论/互动的对象、搜索的字词、个人位置信息、设备的IP地址、搜索记录、浏览记录、收藏记录、观看时长、订单信息、设备信息、点赞/分享/评论/互动的对象、偏向网络行为、兴趣偏好等信息】。在此基础上，安卓用户需额外提供【精准定位信息】，请您注意，【精准定位信息】为个人敏感信息。
+4.15.2. 系统权限：在您使用该业务功能时，%{appName}会向您申请与个人信息相关的系统权限为【电话/设备信息权限、位置权限】，如果您不授权，将会导致我们无法提供该业务功能。除上述权限之外，您可自主选择是否额外授予%{appName}其他的系统权限。
+4.15.3. 在此提示您，您可通过本政策第5.2条提供的方式，关闭个性化推荐功能。
+4.16. 投屏
+4.16.1. 必要信息：%{appName}为您提供的投屏功能需要依赖部分信息才得以运行。如您选择使用该功能，您需要向我们提供或允许我们收集的必要信息为【本地网络的访问权限、收集该本地网络中的设备信息（包括硬件型号、生产厂家、设备解码器信息）Mac地址，wifi权限，蓝牙信息】。
+4.16.2. 非必要信息：您可自主选择向我们提供或允许我们收集非必要信息，包括【设备信息（其定义见第3.10条）】，这些信息并非该业务功能运行所必需，但这些信息对改善服务质量有非常重要的意义，我们不会强制要求您提供这些信息，如您拒绝不会对使用该业务功能产生不利影响。
+4.16.3. 系统权限：在您使用该业务功能时，您可自主选择是否授予%{appName}【电话/设备信息权限】，如果您不授权，将不会对使用该业务功能产生不利影响。
+4.17. 使用蓝牙设备
+4.17.1. 必要信息：%{appName}为您提供的使用蓝牙设备功能需要依赖部分信息才得以运行。如您选择使用该功能且您是安卓用户，则您需要向我们提供或允许我们收集的必要信息为【设备目前正在使用中的蓝牙设备连接状态（包括蓝牙耳机音量调节等功能）】。
+4.18. 安全保障
+4.18.1. 为提高您使用我们及我们关联公司、合作伙伴提供服务的安全性，保护您或其他用户或公众的人身财产安全免受侵害，更好的预防钓鱼网站、欺诈、网络漏洞、计算机病毒、网络攻击、网络入侵等安全风险，我们会收集为实现安全保障功能的必要信息。 我们可能使用或整合您的帐号信息、交易信息、设备信息（其定义见第3.10条）、服务日志信息以及我们关联公司、合作伙伴取得您授权或依据法律共享的信息，来综合判断您帐号交易风险、进行身份验证、检测及防范安全事件。
+4.18.2. 为了保障软件与服务的安全运行，我们会收集您的设备信息（包括设备型号、唯一设备标识符、操作系统版本、网络设备硬件、地址MAC等软硬件特征信息）、设备所在位置信息（包括IP地址、GPS位置以及能够提供相关信息的WLAN接入点、蓝牙和基站等传感器信息）、网络接入方式、类型、状态、网络质量数据、操作、使用、服务日志。
+4.18.3. 为了预防恶意程序及安全运营所必需，我们会收集安装的应用信息或正在运行的进程信息、应用程序的总体运行、使用情况与频率、应用崩溃情况、总体安装使用情况、性能数据、应用来源。
+4.18.4. 我们可能使用您的帐号信息、交易信息、设备信息（其定义见第3.10条）、服务日志信息以及我们关联方、合作方在获得您授权或依法可以共享的信息，用于判断账户安全、进行身份验证、检测及防范安全事件。
+4.19. 重要权限列表
+4.19.1. 使用%{appName}的各类服务场景需要您提供不同信息，我们在此向安卓用户列示我们获取的重要权限（包含权限、功能及场景说明）：
+序号
+权限列表
+功能
+场景说明
+1
+com.photofly.android.permission.JPUSH_MESSAGE
+读取系统日志（读取系统底层日志）
+推送消息时，确保app可以被推送
+2
+android.permission.RECEIVE_USER_PRESENT
+获取任务信息（允许程序获取当前或最近运行的应用）
+推送消息时，确保app可以被推送
+3
+android.permission.WAKE_LOCK
+唤醒锁定（允许程序在手机屏幕关闭后后台进程仍然运行）
+播放视频时保持屏幕常亮
+4
+android.permission.READ_EXTERNAL_STORAGE
+读取外部存储权限
+缓存视频时，需要存储权限
+5
+android.permission.MOUNT_UNMOUNT_FILESYSTEMS
+挂载文件系统
+缓存视频时，需要创建文件夹
+6
+android.permission.SYSTEM_ALERT_WINDOW
+显示系统窗口（显示系统窗口）
+申请权限需要弹窗权限
+7
+android.permission.RECEIVE_BOOT_COMPLETED
+系统开机通知
+推送消息时，确保app可以被推送
+8
+android.permission.DOWNLOAD_WITHOUT_NOTIFICATION
+获取大致位置
+缓存/播放视频时，根据用户所在地区切换数据源，提升缓存/播放速度
+9
+android.permission.ACCESS_DOWNLOAD_MANAGER
+下载管理器权限
+缓存视频时，需要通知用户缓存进度
+10
+android.permission.INTERNET
+网络权限
+使用app时，需要联网
+11
+android.permission.ACCESS_WIFI_STATE
+获取WiFi状态
+播放视频时监听网络变化，以便随时通知用户
+12
+android.permission.CHANGE_WIFI_STATE
+获取MAC地址
+辅助用户唯一标识，辅助识别用户身份
+13
+android.permission.ACCESS_NETWORK_STATE
+获取网络状态（获取网络信息状态，如当前的网络连接是否有效）
+播放视频时监听网络变化，以便随时通知用户
+14
+android.permission.WRITE_EXTERNAL_STORAGE
+写入外部存储
+缓存视频时，需要写入外部存储
+15
+android.permission.READ_PHONE_STATE
+读取电话状态
+用户唯一标识，辅助识别用户身份
+16
+android.permission.BROADCAST_STICKY
+连续广播
+推送消息时，提高推送成功率
+17
+android.permission.REQUEST_INSTALL_PACKAGES
+请求安装未知应用
+app内更新安装app / 缓存文件安装 申请允许未知应用安装
+18
+android.permission.CHANGE_NETWORK_STATE
+改变网络状态
+播放视频时监听网络变化，以便随时通知用户
+19
+android.permission.BLUETOOTH
+使用蓝牙
+视频投屏时，通过蓝牙寻找可投屏设备，增加投屏成功率
+20
+android.permission.CHANGE_WIFI_MULTICAST_STATE
+改变WiFi广播状态（改变WiFi广播状态）
+视频投屏时，通过WIFI广播寻找可投屏设备，增加投屏成功率
+21
+android.permission.RECORD_AUDIO
+录音（录制声音通过手机或耳机的麦克）
+客服系统支持语音输入
+22
+com.zhongduomei.rrmj.society.permission.JPUSH_MESSAGE
+连续广播
+推送消息时，提高推送成功率
+23
+com.zhongduomei.rrmj.society.permission.MIPUSH_RECEIVE
+MIUI系统推送应答
+推送消息时，提高推送成功率
+24
+com.coloros.mcs.permission.RECIEVE_MCS_MESSAGE
+消息应答权限
+推送消息时，提高推送成功率
+25
+android.permission.ACCESS_FINE_LOCATION
+获取精确位置
+见本政策第3.2.4条
+26
+android.permission.CAMERA
+拍照权限（允许访问摄像头进行拍照）
+用户可以拍摄照片上传头像
+27
+android.permission.FOREGROUND_SERVICE
+允许前台服务
+app进入后台缓存视频时，允许app前台服务运行，提高下载成功率
+4.19.2. 此外，我们可能因第三方接入服务而向您收集其他信息，您可阅读本政策第7.2条，了解我们接入的第三方SDK服务商所收集的信息种类、用途、个人信息保护的规则及退出机制等。
+4.20. 个人敏感信息
+4.20.1. 本政策收集的部分信息为个人敏感信息，我们已在涉及个人敏感信息的条款中用"【】"符号明确标识并提醒您注意。
+4.20.2. 在向%{appName}提供任何个人敏感信息前，请您考虑该等提供是恰当的并且同意您的个人敏感信息可按本政策所述的目的和方式进行处理。
+4.20.3. 我们会在得到您的同意后收集和使用您的个人敏感信息，以实现与%{appName}业务相关的功能，并允许您对这些敏感信息的收集与使用做出不同意的选择，但是拒绝%{appName}收集或使用这些信息可能会影响您使用相关功能。
+4.21. 征得授权同意的例外
+您理解并同意，在以下情形中，我们可以在不征得您授权同意的情况下收集、使用您的个人信息：
+4.21.1. 与我们履行法律法规规定的义务相关的；
+4.21.2. 与国家安全、国防安全直接相关的；
+4.21.3. 与公共安全、公共卫生、重大公共利益直接相关的；
+4.21.4. 与刑事侦查、起诉、审判和判决执行等直接相关的；
+4.21.5. 出于维护您或其他个人的生命、财产等重大合法权益但又很难得到本人同意的；
+4.21.6. 所收集的个人信息是您自行向社会公众公开的；
+4.21.7. 根据您的要求签订和履行合同所必需的（本政策不视为本条所述合同）；
+4.21.8. 从合法公开披露的信息中收集到您的个人信息的，如合法的新闻报道、政府信息公开等渠道；
+4.21.9. 维护%{appName}的产品和/或服务的安全稳定运行所必需的，如发现、处置产品或服务的故障；
+4.21.10. 新闻单位开展合法的新闻报道所必需的；
+4.21.11. 学术研究机构出于公共利益开展统计或学术研究所必要，且其对外提供学术研究或描述的结果时，对结果中所包含的个人信息进行去标识化处理的；
+4.21.12. 法律法规规定的其他情形。
+5. 我们如何使用您的信息
+5.1. 我们可能将在向您提供服务的过程之中所收集的信息用作下列用途：
+5.1.1. 用于数据分析和研发，以便向您提供更加优质的服务；
+5.1.2. 在我们提供服务时，用于身份验证、客户服务、安全防范、诈骗监测、存档和备份用途，确保我们向您提供的产品和服务的安全性；
+5.1.3. 帮助我们设计新服务，改善我们现有服务；
+5.1.4. 使我们更加了解您如何接入和使用%{appName}服务；
+5.1.5. 向您提供定制的个性化广告以替代普遍投放的广告；
+5.1.6. 评估我们服务中的广告和其他促销及推广活动的效果，并加以改善；
+5.1.7. 软件认证或管理软件升级；
+5.1.8. 让您参与有关我们产品和服务或通过我们的产品和服务发起的调查，是否参与调查将由您全权决定，并且由您自行选择提供哪些信息；
+5.1.9. 处于安全、合法调查等目的；
+5.1.10. 我们可能使用您的数据做数据汇总、分析、挖掘（包括商业化利用），但这些信息都采用匿名化形式，不能识别您的身份。
+5.2. 我们向您提供的个性化推荐
+5.2.1. 关于广告的个性化推荐
+1) %{appName}致力为您提供有价值的信息，使用大数据和推荐算法为您匹配您可能感兴趣的广告，即向您提供个性化广告推荐服务。
+2) 您可以通过%{appName}APP内的设置关闭个性化广告推荐，当您选择关闭时，我们会同时关闭%{appName}的个性化广告与第三方SDK的个性化广告。关闭后，您看到的广告数量将保持不变，但是展示广告的相关度会降低。
+3) 我们接入的第三方SDK提供广告推荐服务的情况如下：
+序号
+广告推荐服务
+（第三方SDK）
+是否涉及个性化推荐
+1
+穿山甲广告
+是
+2
+广点通广告
+是
+3
+新数广告
+否
+4
+视连通广告
+否
+5
+倍业广告
+是
+6
+湛乘
+否
+7
+Appicplay广告
+是
+4) 关于上述第三方SDK所收集的信息种类、用途、个人信息保护的规则及退出机制等，我们在本政策第7.2条提供了详细说明。
+5.2.2. 关于内容的个性化推荐
+1) %{appName}致力为您提供有价值的内容，使用大数据和推荐算法为您匹配您可能感兴趣的内容，即向您提供个性化内容推荐服务。
+2) 您可以通过%{appName}APP内的设置关闭个性化内容推荐，关闭后，您看到的内容数量将保持不变，但是展示内容的相关度会降低。
+3) 为避免误解，在此向您说明：
+①%{appName}iPad端不提供关于内容的个性化推荐；
+②%{appName}安卓端与iOS端存在关于内容的个性化推荐，但并非所有内容推荐都为个性化推荐，部分内容推荐使用随机推荐或人工编辑推荐的方式，在此过程中不会使用您的个人信息，不属于个性化推荐，具体情况如下：
+序号
+内容推荐服务
+位置
+
+③在您关闭个性化推荐后，我们将使用随机推荐或人工编辑推荐的方式，为您推荐内容。
+5.3. 请您注意，除非您撤回同意，您在使用%{appName}服务时所提供的所有个人信息，将在您使用%{appName}服务期间持续授权我们在符合本政策的范围内使用。
+5.4. 在您注销账号后，我们将停止为您提供%{appName}服务，根据您的要求删除您的个人信息或做匿名化处理，但法律法规另有规定的除外。
+6. 如何访问和控制您的信息
+6.1. 访问
+您可以通过如下方式访问您的个人信息：
+6.1.1. 账号信息：您可以随时登录您的个人账号，访问或编辑您的账号中的个人资料信息、更改您的密码、进行账号关联等；
+6.1.2. 使用信息：您可以在%{appName}平台中查阅您的历史播放记录、搜索记录、上传内容、订单信息等；
+6.1.3. 其他信息：如您在此访问过程中遇到操作问题的或如需获取其他前述无法获知的个人信息内容，您可通过隐私投诉功能提交您的访问申请，我们将在15个工作日内完成核查处理并向您发送结果，但法律法规另有约定的除外。
+6.2. 查询
+6.2.1. 您可以查询下列信息，请通过隐私投诉功能提交您的查询申请，我们将在15个工作日内完成核查处理并向您发送结果：
+1) 我们所持有的关于您的个人信息或个人信息的类型；
+2) 上述个人信息的来源、所用于的目的；
+3) 已经获得上述个人信息的第三方身份或类型。
+如您需要查询非您主动提供的个人信息，我们将在综合考虑不响应请求可能对您的合法权益带来的风险和损害，以及技术可行性、实现请求的成本等因素后，在15个工作日内作出是否响应的决定，并向您解释说明。
+6.3. 更正
+6.3.1. 经对您的身份进行验证，且更正不影响信息的客观性和准确性的情况下，您有权对错误或不完整的信息作出更正或更新，您可以自行在%{appName}平台中进行更正，或在特定情况下，尤其是数据错误时，通过隐私投诉功能提交您的更正申请，要求我们更正或更新您的数据，我们将在15个工作日内完成核查处理并向您发送结果。
+6.3.2. 出于安全性和身份识别的考虑，您可能无法修改注册时提交的某些初始注册信息。
+6.4. 删除
+6.4.1. 您可以通过隐私投诉功能提交您的删除申请，如请求退出某服务类型，或请求删除您的个人信息，我们将在15个工作日内完成核查处理并向您发送结果，但已做数据匿名化处理或法律法规另有规定的除外。
+6.5. 获取个人信息副本
+6.5.1. 如您需要您的个人数据的副本，您可以通过隐私投诉功能提交申请，在核实您的身份后，我们将我们将在15个工作日内完成核查处理并向您提供您在%{appName}服务中的个人信息副本（例如基本资料、身份信息），但法律法规另有规定的除外。
+6.6. 撤回同意
+6.6.1. 如您想更改相关功能的授权范围，您可以通过您的硬件设备修改个人设置、或在我们的产品或服务中的相关功能设置界面进行操作处理。如您在此过程中遇到操作问题的，可以通过隐私投诉功能提交撤回申请，我们将在15个工作日内完成核查处理并向您发送结果。
+6.6.2. 当您取消相关个人信息收集的授权后，我们将不再收集该信息，也无法再为您提供上述与之对应的服务。
+6.6.3. 您知悉并同意，除非您行使前述"删除权"，否则您的该行为不会影响我们基于您之前的授权进行的个人信息的处理、存储。
+6.7. 注销
+6.7.1. 您可以使用%{appName}的注销功能（路径可参照第2.3条）进行账号注销，我们将在15个工作日内完成核查处理并注销您的账号。一旦您注销账号，将无法使用%{appName}服务，因此请您谨慎操作。为了保护您与他人的合法权益，我们会结合您对%{appName}提供的各产品的使用情况判断是否支持您的注销请求，若您的账号涉及尚未处理的问题，%{appName}会先提示您处理。
+6.7.2. 除法律法规另有规定外，注销账号之后我们将停止为您提供服务，您该账户内的所有信息将被清空，并根据您的要求删除或匿名化处理您的个人信息。
+6.8. 停止运营
+6.8.1. 若因特殊原因导致部分或全部%{appName}服务停止运营，我们将：
+1) 及时停止继续收集您的个人信息；
+2) 将停止运营的通知以逐一送达或公告的形式通知您；
+3) 对我们所持有的个人信息进行删除或匿名化处理，法律法规另有规定的除外。
+6.9. 例外情形
+6.9.1. 您理解并同意，如有以下情形，我们可能不会响应您提出的查询、更正、删除、撤回同意、注销、索取副本信息的请求：
+1) 与我们履行法律法规规定的义务相关的；
+2) 与国家安全、国防安全直接相关的；
+3) 与公共安全、公共卫生、重大公共利益直接相关的；
+4) 与刑事侦查、起诉、审判和执行判决等直接相关的；
+5) 我们有充分证据表明您存在主观恶意或滥用权利的（如您的请求将危害公共安全和其他人合法权益，或您的请求超出了一般技术手段和商业成本可覆盖的范围）；
+6) 出于维护您或其他个人的生命、财产等重大合法权益但又很难得到您的授权同意的；
+7) 响应您的请求将导致您或其他个人、组织的合法权益受到严重损害的；
+8) 涉及商业秘密的；
+6.9.2. 如我们决定不响应您的请求，我们将向您告知该决定的理由，您可通过隐私投诉功能进行投诉，我们将在15个工作日内完成核查处理并向您发送结果。
+7. 我们如何分享您的信息
+您理解并同意，我们可能与我们的关联公司分享您必要的个人信息，以提供和发展我们的产品和服务。除以下情形外，未经您同意，我们以及我们的关联公司不会与任何第三方分享您的个人信息：
+7.1. 我们以及我们的关联公司可能将您的个人信息与我们的关联公司、合作伙伴及第三方服务供应商分享，用作下列用途：
+7.1.1. 向您提供%{appName}服务及广告服务；
+7.1.2. 实现"我们如何使用您的信息"部分所述目的；
+7.1.3. 履行我们在《用户协议》或本政策中的义务和行使我们的权利；
+7.1.4. 理解、维护和改善%{appName}服务。
+7.2. 我们接入的第三方SDK服务商
+为了向您提供优质服务，%{appName}可能会集成第三方SDK或其他类似的应用程序。为了您的信息安全，我们已与第三方SDK服务商约定严格的数据安全保密义务，这些公司会严格遵守我们的数据隐私和安全要求。
+为便于您更好地了解第三方SDK服务商所收集的信息种类、用途、个人信息保护的规则及退出机制等，我们在下表中进行了详细描述，供您查阅：
+ 
+序号
+客户端
+第三方SDK
+所属公司
+收集信息
+使用目的
+1
+安卓
+支付宝支付SDK
+支付宝（中国）网络技术有限公司
+关于支付宝支付SDK所收集的信息种类、用途、个人信息保护的规则及退出机制等，详见支付宝（https://www.alipay.com）上《支付宝隐私权政策》（https://render.alipay.com/p/c/k2cx0tg8）
+
+2
+安卓、iOS
+乐播投屏SDK
+深圳乐播科技有限公司
+关于乐播投屏SDK所收集的信息种类、用途、个人信息保护的规则及退出机制等，详见乐播投屏（https://www.hpplay.com.cn/）上《乐播投屏隐私政策》（http://m.hpplay.com.cn/privacy.jsp）
+供智能电视投屏功能
+3
+安卓
+OAID设备码
+移动安全联盟
+（Mobile Security Alliance）
+手机号码、运营商、地区、网络制式、IMSI、IMIE 、设备型号、系统版本
+个性化推送、监测广告效果
+4
+安卓、iOS
+智齿客服SDK
+北京智齿博创科技有限公司
+关于智齿客服SDK所收集的信息种类、用途、个人信息保护的规则及退出机制等，详见智齿（www.sobot.com）上《隐私政策》（https://www.sobot.com/clause.html）
+客服服务（包括拍照和录音等）
+5
+iOS
+极光一键登录
+深圳市和讯华谷信息技术有限公司
+关于极光一键登录所收集的信息种类、用途、个人信息保护的规则及退出机制等，详见极光（https://www.jiguang.cn/）上《极光隐私政策》（https://www.jiguang.cn/license/privacy）
+一键登录
+6
+安卓、iOS
+数美SDK
+北京数美时代科技有限公司
+关于数美SDK所收集的信息种类、用途、个人信息保护的规则及退出机制等，详见数美（https://www.ishumei.com）上《数美科技隐私政策》（https://www.ishumei.com/legal/cn/privacy.html）
+*如：设备 MAC 地址、蓝牙 MAC 地址、SIM 卡信息（如 ICCID、IMSI、运营商信息等）、唯一设备识别码（如 IMEI、IDFA、安卓 ID 等）、设备的基本配置信息（如 CPU、内存、屏幕、型号、操作系统等）、网络信息（如 WIFI 及蜂窝网络信息、IP 地址、时间戳等）、安装软件列表、系统及软件相关配置信息等。具体以《数美科技隐私政策》为准。
+用于风险控制和反欺诈，以保障账户和交易安全
+7
+安卓、iOS
+友盟社会化分享SDK
+友盟同欣（北京）科技有限公司
+关于友盟社会化分享SDK、友盟一键登录SDK、友盟统计、友盟push所收集的信息种类、用途、个人信息保护的规则及退出机制等，详见友盟（https://www.umeng.com/）上《隐私政策》（https://www.umeng.com/policy）
+*注1：友盟理解并尊重您的选择权，如果您不愿参与友盟+大数据计算，可以访问https://outdip.umeng.com/opt_out.html行使opt-out权利。
+*注2：应友盟服务商要求，向您明示：
+我们的产品集成友盟+SDK，友盟+SDK需要收集您的设备Mac地址、唯一设备识别码（IMEI/android ID/IDFA/OPENUDID/GUID、SIM 卡 IMSI 信息）以提供统计分析服务，并通过地理位置校准报表数据准确性，提供基础反作弊能力。
+社交平台分享、第三方登录
+8
+安卓
+友盟一键登录SDK
+一键登录
+9
+安卓、iOS
+友盟统计
+%{appName}用户使用效果统计分析
+10
+安卓、iOS
+友盟push
+推送服务
+11
+安卓、iOS
+TalkingData统计
+北京腾云天下科技有限公司
+关于TalkingData统计所收集的信息种类、用途、个人信息保护的规则及退出机制等，详见TalkingData（https://www.talkingdata.com）上《隐私政策》（https://www.talkingdata.com/privacy.jsp）
+%{appName}用户使用效果统计分析
+12
+安卓、iOS
+新数广告
+上海新数网络科技股份有限公司
+关于新数广告所收集的信息种类、用途、个人信息保护的规则及退出机制等，详见新数网络（http://www.datamaster.cn/）上《隐私政策》（http://www.datamaster.cn/index.php?r=site/politic）
+广告位展示、监测广告效果
+13
+安卓、iOS
+穿山甲广告
+湖北今日头条科技有限公司
+关于穿山甲广告所收集的信息种类、用途、个人信息保护的规则及退出机制等，详见穿山甲（https://ad.oceanengine.com/union/media/login）上《穿山甲（Pangle）隐私政策》（https://ad.oceanengine.com/union/media/privacy）
+广告位展示、监测广告效果
+14
+安卓、iOS
+广点通广告
+深圳市腾讯计算机系统有限公司
+关于广点通广告所收集的信息种类、用途、个人信息保护的规则及退出机制等，详见腾讯广告（https://e.qq.com/ads/）上《隐私权政策》（https://e.qq.com/optout.html）
+广告位展示、监测广告效果
+15
+安卓、iOS
+倍业广告
+上海明睿信息技术有限公司
+关于倍业广告所收集的信息种类、用途、个人信息保护的规则及退出机制等，详见倍业科技（http://www.bayescom.com/）上《隐私政策》（http://www.bayescom.com/privacy.html）
+广告位展示、监测广告效果
+16
+安卓、iOS
+MobTech
+上海游昆信息技术有限公司
+关于MobTech所收集的信息种类、用途、个人信息保护的规则及退出机制等，详见MobTech（https://www.mob.com/）上《隐私政策》（http://www.mob.com/about/policy）
+快捷打开app到指定页面
+17
+安卓、iOS
+Appicplay广告
+北京金域互动科技有限公司
+关于Appicplay广告所收集的信息种类、用途、个人信息保护的规则及退出机制等，详见Appicplay（http://www.appicplay.com/）上《隐私政策》（http://www.appicplay.com/privacy-policy/?lang=zh）
+广告位展示、监测广告效果
+18
+安卓、iOS
+阿里云SDK
+阿里云计算有限公司
+关于阿里云sdk所收集的信息种类、用途、个人信息保护的规则及退出机制等，详见阿里云（https://www.aliyun.com/）上《法律声明及隐私权政策》（http://terms.aliyun.com/legal-agreement/terms/suit_bu1_ali_cloud/suit_bu1_ali_cloud201902141711_54837.html?spm=5176.12825654.7y9jhqsfz.86.318b2c4aQDlZlP）
+%{appName}用户使用效果统计分析
+19
+安卓、iOS
+腾讯即时通讯SDK
+深圳市腾讯计算机系统有限公司
+关于腾讯即时通讯SDK、腾讯云播放器所收集的信息种类、用途、个人信息保护的规则及退出机制等，详见腾讯云（https://cloud.tencent.com）上《腾讯云隐私声明》（https://cloud.tencent.com/document/product/301/11470）
+即时通讯
+20
+安卓、iOS
+腾讯云播放器
+腾讯云播放器
+21
+安卓
+华为HMS推送服务
+华为终端有限公司
+关于华为HMS推送服务所收集的信息种类、用途、个人信息保护的规则及退出机制等，详见华为开发者联盟（https://developer.huawei.com/consumer/cn/develop/）上《隐私声明》（https://consumer.huawei.com/cn/privacy/privacy-policy/）
+推送服务
+22
+安卓
+小米推送服务
+小米科技有限责任公司
+关于小米推送服务所收集的信息种类、用途、个人信息保护的规则及退出机制等，详见小米开放平台（https://dev.mi.com/console/doc/）上《隐私政策》（https://dev.mi.com/console/doc/detail?pId=1822）
+推送服务
+23
+安卓、iOS
+新浪微博SDK
+北京微梦创科网络技术有限公司
+关于新浪微博SDK所收集的信息种类、用途、个人信息保护的规则及退出机制等，详见新浪开发者平台（https://open.weibo.com/wiki/%E9%A6%96%E9%A1%B5）上《开发者协议》的隐私相关条款（https://open.weibo.com/wiki/%E5%BC%80%E5%8F%91%E8%80%85%E5%8D%8F%E8%AE%AE#.E9.9A.90.E7.A7.81.E7.9B.B8.E5.85.B3.E6.9D.A1.E6.AC.BE）
+社交平台分享、第三方登录
+24
+安卓
+阿里百川热修复
+阿里云计算有限公司
+关于阿里百川热修复所收集的信息种类、用途、个人信息保护的规则及退出机制等，详见阿里云（https://help.aliyun.com）上《服务条款》中"用户数据"相关条款（https://help.aliyun.com/document_detail/51417.html）
+热更新
+25
+安卓、iOS
+湛乘
+上海湛乘信息科技有限公司
+设备信息（包括设备识别码、设备平台、设备厂商、设备品牌）、网络信息、位置信息
+广告位展示、监测广告效果
+26
+安卓、iOS
+微信分享SDK
+腾讯科技（深圳）有限公司
+关于微信分享SDK所收集的信息种类、用途、个人信息保护的规则及退出机制等，详见腾讯隐私保护平台（https://privacy.qq.com/）上《微信隐私保护指引》（https://weixin.qq.com/cgi-bin/readtemplate?lang=zh_CN&t=weixin_agreement&s=privacy）
+社交平台分享、第三方登录
+27
+安卓、iOS
+阿里播放器
+阿里云计算有限公司
+关于阿里播放器所收集的信息种类、用途、个人信息保护的规则及退出机制等，详见阿里云（https://www.alibabacloud.com）上《服务条款》中第4条（https://www.alibabacloud.com/help/zh/doc-detail/51685.htm?spm=a2c63.p38356.b99.484.5a2160fdllwN87）
+阿里播放器
+28
+安卓、iOS
+腾讯分享SDK
+腾讯科技（深圳）有限公司
+关于QQ分享SDK所收集的信息种类、用途、个人信息保护的规则及退出机制等，详见腾讯隐私保护平台（https://privacy.qq.com/）上《QQ隐私保护指引》（https://ti.qq.com/agreement/qqface.html?appname=mqq_2019）
+社交平台分享、第三方登录
+29
+安卓
+网易易盾一键登陆SDK
+广州网易计算机系统有限公司
+手机号码、运营商、地区、网络制式、IMSI、IMIE 、设备型号、系统版本
+一键登陆身份验证
+30
+安卓
+视联通广告
+北京视连通科技有限公司
+设备信息（包括设备识别码、设备平台、设备厂商、设备品牌）、网络信息、位置信息
+广告位展示、监测广告效果
+31
+安卓
+bugly
+深圳市腾讯计算机系统有限公司
+SDK/API/JS代码版本、浏览器、互联网服务提供商、IP地址、平台、时间戳、应用标识符、应用程序版本、应用分发渠道、独立设备标识符、iOS广告标识符（IDFA）、安卓广告主标识符、MAC地址、IMEI、设备型号、传感器参数、终端制造厂商、终端设备操作系统版本、会话启动/停止时间、语言所在地、时区和网络状态（WiFi等）、硬盘、CPU和电池使用情况
+监控线上bug，定位问题
+32
+安卓
+video++sdk
+上海极链网络科技有限公司
+IMEI
+广告位展示、监测广告效果
+33
+安卓、iOS
+QuestMobile统计
+北京贵士信息科技有限公司
+关于QuestMobile统计所收集的信息种类、用途、个人信息保护的规则及退出机制等，详见QuestMobile（www.questmobile.com.cn）上《QuestMobile隐私政策》（www.questmobile.com.cn/privacy）
+%{appName}用户使用效果统计分析
+34
+安卓、iOS
+抖音登录SDK
+北京微播视界科技有限公司
+关于抖音登录SDK所收集的信息种类、用途、个人信息保护的规则及退出机制等，详见抖音（www.douyin.com）上《"抖音"隐私政策》（https://www.douyin.com/agreements/?id=6773901168964798477）
+第三方登录
+35
+安卓、iOS
+网易七鱼SDK
+杭州网易质云科技有限公司
+关于网易七鱼SDK所收集的信息种类、用途、个人信息保护的规则及退出机制等，详见网易七鱼（https://qiyukf.com/）上《隐私政策》（https://reg.163.com/agreement_mobile_ysbh_wap.shtml?v=20171127）
+客服服务
+  
+7.3. 如我们或我们的关联公司与任何上述第三方分享您的个人信息，我们将努力确保该等第三方在使用您的个人信息时遵守本政策及我们要求其遵守的其他适当的保密和安全措施，我们会对其数据安全能力与环境进行调查，与其签署严格的保密协定，并只会分享特定用途所必要的个人信息。
+7.4. 随着我们业务的持续发展，我们以及我们的关联公司有可能进行合并、收购、资产转让或类似的交易，而您的个人信息有可能作为此类交易的一部分而被转移，我们会要求新持有人继续遵守本政策，否则我们将要求其重新获取您的授权同意。
+7.5. 您理解并同意，在以下情形中，我们共享、转让、公开披露您的个人信息时，不必事先征得您的授权同意：
+7.5.1. 与我们履行法律法规规定的义务相关的；
+7.5.2. 与国家安全、国防安全直接相关的
+7.5.3. 与公共安全、公共卫生、公共利益直接相关的；
+7.5.4. 与刑事侦查、起诉、审判和执行判决等直接相关的；
+7.5.5. 出于维护您或其他个人的生命、财产等重大合法权益但又很难得到您的授权同意的；
+7.5.6. 您自行向社会公众公开的个人信息；
+7.5.7. 从合法公开披露的信息中收集个人信息的，如合法的新闻报道、政府信息公开等渠道；
+7.5.8. 法律法规规定的其他情形。
+8. 我们如何存储与保护您的信息
+8.1. 我们依照法律法规的规定，将您的个人信息存储于中华人民共和国境内（不含港澳台）。
+8.2. 我们在为提供%{appName}服务之目的所必需的期间内保留您的个人信息，直至您撤回同意或注销账户为止，但对已匿名化的信息或法律法规另有规定的除外。
+8.3. 我们会严格遵循相关法律法规的要求，收集、使用、存储和传输用户信息，并通过本政策告知您相关信息的使用目的和范围。
+8.4. 公司非常重视信息安全，我们努力为您的信息安全提供保障，以防止您的信息被不当使用或被未经授权的访问、使用或泄漏。我们会采取适当的符合业界标准的安全措施和技术手段存储和保护您的个人信息。
+8.5. 对个人信息泄露等安全事件，我们会启动应急预案，阻止安全事件扩大。一旦发生用户信息安全事件（泄露、丢失等）后，我们将按照法律法规的要求，及时向您告知安全事件的基本情况和可能的影响、我们已经采取或将要采取的处置措施、您可自主防范和降低风险的建议、对您的补救措施等。我们将及时将事件相关情况以推送通知、邮件、信函、短信等形式告知您，难以逐一告知时，我们会采取合理、有效的方式发布公告。同时，我们还将按照相关监管部门要求，上报用户信息安全事件的处置情况。
+8.6. 当您通过使用%{appName}服务中的社交功能与其他用户交互您的相关个人信息时，请注意确保您个人信息的安全。
+8.7. 尽管已经采取了上述合理有效措施，并已经遵守了相关法律规定要求的标准，但请您理解，由于技术的限制以及可能存在的各种恶意手段，您接入%{appName}服务所用的系统和通讯网络，有可能因%{appName}可控范围外的因素而出现问题。因此，您应采取积极措施保护个人信息的安全（包括但不限于定期修改密码、不将账号密码信息随意告知他人等）。
+9. 有关共享信息的提示
+9.1. 我们的多项服务可让您与您的社交网络及使用该服务的所有用户公开分享您的相关信息，例如，您在%{appName}服务中所上传或发布的信息及您对其他人上传或发布的信息作出的回应。使用我们服务的其他用户也有可能分享与您有关的信息。只要您不删除共享信息，有关信息便一直留存在公众领域；即使您删除共享信息，有关信息仍可能由其他用户或不受我们控制的非关联第三方独立地缓存、复制或储存，或由其他用户或该等第三方在公众领域保存。
+9.2. 请您认真考虑您通过%{appName}服务上传、发布和交流的信息内容。如您要求从%{appName}服务中删除您的个人信息，请自行操作或通过本政策提供的方式联系我们。
+10. COOKIES、日志档案和WEB BEACON
+10.1. 我们和第三方合作伙伴可能通过cookies和web beacon收集和使用您的信息，并将该等信息储存为日志信息。
+10.2. 我们使用cookies和web beacon，目的是为您提供更个性化的用户体验和服务，并用于以下用途：
+10.2.1. 记住您的身份。例如：cookies和web beacon有助于我们辨认您作为我们的注册用户的身份，或保存您向我们提供有关您的喜好或其他信息；
+10.2.2. 分析您使用我们服务的情况。我们可利用cookies和web beacon来了解您使用%{appName}服务进行什么活动、或哪些网页或服务最受欢迎；
+10.2.3. 广告优化。Cookies和web beacon有助于我们根据您的信息，向您提供与您相关的广告而非进行普遍的广告投放。
+10.3. 我们为上述目的使用cookies和web beacon的同时，可能将通过cookies和web beacon收集的非个人身份信息汇总提供给广告商和其他伙伴，用于分析您和其他用户如何使用%{appName}服务并用于广告服务。
+10.4. 我们的产品和服务上可能会有广告商和其他合作方放置的cookies和web beacon，详见本政策关于第三方SDK的条款。如该类cookies和web beacon已向您明示收集使用个人信息的目的、方式、范围，并在征得您的明确同意后，收集与您相关的信息，则该类收集和使用行为不受本政策约束，而是受到第三方平台自身的隐私政策约束。
+11. 广告
+11.1. 我们可能使用您的信息，向您提供与您更加相关的广告，详见本政策关于个性化推荐的条款。
+11.2. 我们也可能使用您的信息，通过%{appName}服务、短信或其他方式向您发送营销信息，提供或推广我们或第三方的如下商品和服务：
+11.2.1. 我们的商品和服务，以及我们的关联公司和合营伙伴的商品和服务；
+11.2.2. 第三方互联网服务供应商的商品和服务。
+11.3. 如您不希望我们将您的个人信息用作前述广告用途，您可以通过隐私权限设置进行关闭。
+12. 我们向您发送的推送与公告
+12.1. 信息推送
+您使用我们服务时，我们可能使用您的信息向您的设备发送推送通知。如您不希望收到这些信息，您可以通过隐私权限设置进行关闭。
+12.2. 与服务有关的公告
+我们可能在必需时（如当我们由于系统维护而暂停某一项服务时）向您发出与服务有关的公告。您可能无法取消这些与服务有关、性质不属于推广的公告。
+13. 我们如何处理儿童的个人信息
+13.1. 本条所称儿童，是指未满14周岁的未成年人。
+13.2. %{appName}将遵循正当必要、知情同意、目的明确、安全保障、依法利用的原则，收集、存储、使用、转移、披露儿童个人信息。
+13.3. 如您是年满14周岁的未成年人，您应与您的监护人一同阅读本政策，且应在监护人明确同意和指导下提交个人信息。如果您或您的监护人不同意本政策的内容，请您立即停止使用%{appName}服务。
+13.4. 如您是未满14周岁的未成年人，您应告知您的监护人仔细阅读本政策，且应在监护人明确同意和指导下提交您的个人信息。如果您的监护人不同意本政策的内容，请您立即停止使用%{appName}服务。
+13.5. %{appName}将依据《儿童个人信息网络保护规定》的其他要求，对儿童信息进行保护与处理。
+13.6. 如有未满14周岁的未成年人未经监护人同意提交了个人信息，一经发现，%{appName}将立刻删除相关数据，并对其账号设限。
+14. 本政策如何更新
+14.1. 为了给您提供更好的服务，我们可能随时更新本政策的条款，该等更新构成本政策的一部分。如该等更新造成您在本政策下权利的实质减少或重大变更，我们将在修改生效前以书面形式（包括但不限于首页弹窗形式、站内信形式等）告知您并再次征得您的同意。
+14.2. 我们将在文首载明更新时间、生效时间与更新内容，帮助您快速了解更新信息。
+14.3. 如您在本政策更新生效后明示同意并继续使用%{appName}服务，即表示您已充分阅读、理解及接受更新后的文本并愿意受更新后的文本约束。
+14.4. 上述的重大变更包括但不限于：
+1) %{appName}服务模式发生重大变化。如处理个人信息的目的、处理的个人信息的类型、个人信息的使用方式等；
+2) 我们在所有权结构、组织架构等方面发生重大变化。如业务调整、破产并购等引起的所有变更等；
+3) 个人信息共享、转让或公开披露的主要对象发生变化；
+4) 您参与个人信息处理方面的权利及其行使方式发生重大变化；
+5) 我们负责处理个人信息安全的责任部门、联络方式及投诉渠道发生变化时。
+15. 争议解决
+15.1. 本政策的解释及争议解决均应适用中华人民共和国大陆地区法律。
+15.2. 与本政策相关的任何纠纷，双方应协商友好解决；若不能协商解决，您同意将争议提交至武汉市江岸区有管辖权的人民法院诉讼解决。
+15.3. 双方同意，解决争议时，应以您同意的最新《隐私政策》为准。
+  `,
+    general_sla_content: `
+    欢迎您使用%{appName}平台服务！各条款标题仅为帮助您理解该条款表达的主旨之用，不影响或限制本协议条款的含义或解释。为维护您自身权益，建议您仔细阅读各条款具体表述（重要条款已使用加粗字体标明，请重点阅读）。
+1 服务条款的接受与修改
+1.1本协议是用户（下或称"您"）与%{WEB_LINK}（下合称"%{appName}"）之间的协议（下称"本协议"）。本协议条款构成您（无论个人或者单位）使用%{appName}所提供的服务及其衍生服务之先决条件，通过访问和/或使用%{appName}提供的网站、客户端及其他服务，您表示接受同意本协议的全部条款；如果您不愿意接受本协议的全部条款，您应不使用或主动取消%{appName}的服务。
+1.2 如果您为未满18周岁的未成年人，请在法定监护人的陪同下阅读本协议，并特别注意未成年人使用条款；如果您为未满14周岁的儿童，特别提醒您注意《隐私政策》中针对您提供的保护。未成年人或其监护人应主动选择未成年模式，并设置监护口令。未成年人行使和履行本协议项下的权利和义务视为已获得了法定监护人的认可。
+1.3 %{appName}有权随时对本协议进行修改，如您不同意修改后的内容，您应不使用或主动取消%{appName}的服务，否则即视为您接受本协议的修改。
+1.4 您可以通过下列渠道联系我们：
+1.4.1 关于举报事宜，请发送邮件至%{contactEmail}；
+1.4.2 关于侵权投诉事宜，请发送邮件至%{contactEmail}；
+1.4.3 关于建议、反馈与账号注销事宜，请发送邮件至%{contactEmail}。
+2 服务说明
+2.1 适用本协议的%{appName}平台包括但不限于以下服务：
+2.1.1 %{appName}网站（%{WEB_LINK}），含其他任何由%{appName}直接所有或运营的任何网站平台（下称"%{appName}网站"）；
+2.1.2 %{appName}直接拥有或运营的客户端包括但不限于PC、平板、手机、电视、机顶盒等全部终端客户端产品平台（下称"%{appName}客户端"）；
+2.1.3 %{appName}的其他技术和/或服务（下称"%{appName}其他技术和服务"）。
+（以上服务统称为"%{appName}服务"，上述服务所在的平台统称"%{appName}平台"）。
+2.2 %{appName}所提供的服务，均仅限于用户在上述平台使用，任何方式将%{appName}内容与平台分离、隐藏的使用行为，均不属于本协议中约定的%{appName}服务。由此引起的一切法律后果由行为人负责，%{appName}将依法追究行为人的法律责任，并停止向其提供服务。
+3 使用规则
+3.1 用户在申请使用%{appName}服务时，必须向%{appName}提供完整、真实、准确、最新的个人资料。如果上述信息发生变化，用户应及时更改。
+3.2 用户应妥善保管自己的帐号、密码，不得转让、出借、出租或分享予他人使用。否则%{appName}有权选择根据实际情况暂时封停或永久查封此帐号，当用户的帐号或密码遭到未经授权的使用时，用户应当立即通知%{appName}。但无论如何，账号的所有使用行为均视为用户本人的行为。
+3.3 用户同意%{appName}在提供服务的过程中以各种方式投放商业性广告或其他任何类型的商业信息（包括但不限于在%{appName}平台的任何位置上投放广告，在用户上传、传播的内容中投放广告），用户同意接受%{appName}通过电子邮件或其他方式向用户发送商品促销或其他相关商业信息。
+3.4%{appName}服务可能会提供与其他互联网网站或资源进行链接。除非另有声明，%{appName}无法对第三方网站之服务进行控制，用户对广告信息应审慎判断其真实性、可靠性。用户如因使用或依赖上述网站或资源与第三方产生纠纷，由用户自行解决，除法律规定由广告发布者承担的责任外，%{appName}不承担任何额外责任。
+3.5 用户在使用%{appName}服务过程中，应遵守相关法律法规。在任何情况下，%{appName}一旦合理地认为用户的行为可能违反上述法律、法规，可以在任何时候，不经事先通知终止向该用户提供服务。
+3.6 禁止用户利用%{appName}平台从事以下行为：
+（1）制作、上传、复制、传送、传播包含任何反对宪法所确定的基本原则、危害国家安全、泄露国家秘密、颠覆国家政权、破坏国家统一、破坏民族团结、损害国家荣誉和利益、煽动民族仇恨、民族歧视、破坏民族团结、破坏国家宗教政策、宣扬邪教和封建迷信、淫秽、色情、赌博、暴力、凶杀、恐怖或者教唆犯罪、侮辱或者诽谤他人，侵害他人合法权益的等法律、行政法规禁止的内容或其他另人反感的包括但不限于资讯、资料、文字、软件、音乐、照片、图形、信息或其他资料；
+（2）以任何方式危害未成年人；
+（3）冒充任何人或机构，或以虚伪不实的方式谎称或使人误认为与任何人或任何机构有关；
+（4）伪造标题或以其他方式操控识别资料，使人误认为该内容为%{appName}所传送；
+（5）将无权传送的内容（例如内部资料、机密资料）进行上载、张贴、发送电子邮件或以其他方式传送；
+（6）发送任何未获邀约或未经授权的垃圾电邮、广告或宣传资料，或任何其他商业通讯；
+（7）未经%{appName}明确许可，使用%{appName}平台服务用于任何商业用途或为任何第三方的利益；
+（8）跟踪或以其他方式骚扰他人；
+（9）参与任何非法或有可能非法（由%{appName}判断）的活动或交易，包括传授犯罪方法、出售任何非法药物、洗钱活动、诈骗等；
+（10）赌博、提供赌博数据或透过任何方法诱使他人参与赌博活动；
+（11）使用或利用%{appName}知识产权（包括商标、品牌、标志、任何其他专有数据或任何网页的布局或设计），或在其他方面侵犯%{appName}任何知识产权（包括试图对%{appName}平台客户端或所使用的软件进行逆向工程）；
+（12）通过使用任何自动化程序、软件、引擎、网络爬虫、网页分析工具、数据挖掘工具或类似工具，接入%{appName}平台服务、收集或处理通过%{appName}平台服务所提供的内容；
+（13）对%{appName}平台服务所用的软件进行解编、反向编译或逆向工程，或试图作出上述事项；
+（14）为破坏或滥用的目的开设多个账户，或恶意上传重复的、无效的大容量数据和信息；
+（15）利用%{appName}平台进行商业宣传或其他商业行动；
+（16）其他侵权或违法行为。
+3.7 就用户违反本协议的行为，%{appName}保留视情节严重程度对该用户做出查封ID，暂时封禁、永久封禁其使用%{appName}服务的权利。
+3.8 %{appName}的后台记录有可能作为用户违反法律法规、违约、侵权的证据，%{appName}可能根据权利人或相关行政机构的要求，披露用户的上述信息以及身份信息，用户同意免除%{appName}因此可能承担的所有法律责任。
+3.9 用户拥有合法获得的%{appName}账号、账号下服务和产品的使用权，但前述账号、服务、产品及其衍生物的所有权及知识产权均归%{appName}所有。
+3.10 如用户未遵守本协议，%{appName}有权根据本协议约定对其账号采取相应措施。
+4 用户的上传与分享
+4.1 用户可通过%{appName}平台服务在%{appName}平台上传、发布或传输相关内容，包括但不限于文字、软件、程序、图形、图片、声音、音乐、视频、音视频、链接等信息或其他资料（下称"内容"），但用户需对此内容承担相关的法律责任。除非有相反证明，%{appName}将用户视为用户在%{appName}平台上传、发布或传输的内容的版权拥有人或相关权利人。
+4.2用户使用%{appName}平台服务上传、发布或传输内容即代表了用户有权且同意在全世界范围内，永久性的、不可撤销的、免费的授予%{appName}对该内容的存储、使用、发布、复制、修改、改编、出版、翻译、据以创作衍生作品、传播、表演和展示等权利；将内容的全部或部分编入其他任何形式的作品、媒体、技术中的权利；对用户的上传、发布的内容进行商业开发的权利；通过有线或无线网络向用户的计算机终端、移动通讯终端（包括但不限于便携式通讯设备如手机和智能平板电脑等）、手持数字影音播放设备、电视接收设备（模拟信号接收设备、数字信号接收设备、数字电视、IPTV、带互联网接入功能的播放设备等）等提供信息的下载、点播、数据传输、移动视频业务（包括但不限于SMS、MMS、WAP、IVR、Streaming、3G、手机视频等无线服务）、及其相关的宣传和推广等服务的权利；以及再授权给其他第三方以上述方式使用的权利。
+4.3 用户理解并保证用户在%{appName}平台上传、发布或传输的内容（包括用户的账户名称等信息）不含有以下内容：
+（1）反对宪法确定的基本原则的；
+（2）危害国家统一、主权和领土完整的；
+（3）泄露国家秘密、危害国家安全或者损害国家荣誉和利益的；
+（4）煽动民族仇恨、民族歧视，破坏民族团结，或者侵害民族风俗、习惯的；
+（5）宣扬邪教、迷信的；
+（6）扰乱社会秩序，破坏社会稳定的；
+（7）诱导未成年人违法犯罪和渲染暴力、色情、赌博、恐怖活动的；
+（8）侮辱或者诽谤他人，侵害公民个人隐私等他人合法权益的；
+（9）危害社会公德，损害民族优秀文化传统的；
+（10）有关法律、行政法规和国家规定禁止的其他内容。
+4.4 %{appName}鼓励各位用户在弹幕、评论中发表个人的意见和观点，但发表的内容应当不包含涉及种族、宗教信仰、性别、年龄、国籍、残障、性取向等针对特定对象或群体的语言人身攻击、也不允许由以上原因煽动仇恨。针对评论、弹幕里发送与视频无关的第三方网址、社交平台、网盘代码等的垃圾广告信息的行为，一经发现，%{appName}有权对发垃圾广告的账号永久封禁或作出其他处罚措施。
+4.5 如果用户上传、发布或传输的内容含有以上违反法律法规的信息或内容，或者侵犯任何第三方的合法权益，用户将直接承担以上行为导致的一切不利后果。如因此给%{appName}造成不利后果的，用户应负责消除影响，并且赔偿%{appName}因此导致的一切损失，包括且不限于财产损害赔偿、名誉损害赔偿、律师费等因维权而产生的合理费用。
+4.6 提交投稿申请并通过审核的用户（下或称为"up主"）应知悉并确认：
+4.6.1 up主确认与%{appName}的运营方或关联方不存在任何性质的长期雇佣关系，up主仅就某具体素材完成后，向%{appName}提供时，方就该素材建立合作关系。Up主确认不会直接或间接以%{appName}的名义从事任何活动。对于因拍摄活动产生的设备损耗、毁坏，对他人以及up主自身人身财产安全造成的损害等相关风险，%{appName}不承担责任。
+4.6.2 up主确认提供给%{appName}的素材（包括但不限于视频、图片、文字等）的真实性与合法性，不存在任何虚假、具有误导性的内容，不侵犯任何其他第三方的权益，不违反法律法规，不违背社会公序良俗，否则因此给%{appName}带来损失的，up主愿意承担所有责任并赔偿损失。
+4.6.3 up主确认所有素材的稿费（如有）根据%{appName}的稿费计算方式以及支付方式结算，up主确认向%{appName}提供素材前，已经明确知晓并同意%{appName}的稿费计算方式以及支付方式。
+4.6.4 up主保证其所提供的素材资源均为有权提供，如因此导致%{appName}被诉讼或处罚的，up主应承担%{appName}全部损失及解决争议的诉讼费、律师费、公证费、鉴定费及其他合理费用。
+4.6.5 若有不可抗力原因导致up主与%{appName}的合作终止，双方将不承担任何后果。
+5 用户个人信息保护
+5.1 个人信息是指以电子或者其他方式记录的能够单独或者与其他信息结合识别特定自然人身份或者反映特定自然人活动情况的各种信息。
+5.2 %{appName}将按照平台公布的《隐私政策》的约定，处理和保护用户的个人信息。
+6 账号注销
+6.1 用户可以使用%{appName}的注销功能或通过本协议提供的方式联系%{appName}进行账号注销（但法律法规另有规定的除外），一旦用户注销账号，将无法使用%{appName}服务。为保护用户或第三人的合法权益，%{appName}会结合用户对%{appName}提供的各产品的使用情况判断是否支持用户的注销请求，若用户的账号涉及尚未处理的问题，%{appName}会先提示用户处理。
+6.2 除法律法规另有规定外，注销账号之后%{appName}将停止为用户提供服务，用户账户内的所有信息将被清空，并根据用户的要求删除或匿名化处理其个人信息。
+7 知识产权
+7.1 除非另有约定或%{appName}另行声明，%{appName}平台内的所有内容（用户依法享有版权的内容除外）、技术、软件、程序、数据及其他信息（包括但不限于文字、图像、图片、照片、音频、视频、图表、色彩、版面设计、电子文档）的所有知识产权（包括但不限于版权、商标权、专利权、商业秘密等）及相关权利，均归%{appName}或%{appName}关联公司所有。未经%{appName}许可，任何人不得擅自使用（包括但不限于复制、传播、展示、镜像、上载、下载、修改、出租）。
+7.2%{appName}对%{appName}专有内容、原创内容和其他通过授权取得的内容享有知识产权。未经%{appName}许可，任何单位和个人不得私自转载、传播和提供观看服务或者有其他侵犯%{appName}知识产权的行为，否则将承担所有相关的法律责任。
+8 免责声明
+8.1 %{appName}对于任何包含、经由或连接、下载或从任何与有关本网络服务所获得的任何内容、信息或广告，不声明或保证其正确性或可靠性；并且对于用户经本服务上的广告、展示而购买、取得的任何产品、信息或资料，%{appName}不负保证责任。用户自行承担使用本服务的风险。
+8.2 %{appName}有权利但无义务，改善或更正%{appName}服务任何部分之任何疏漏、错误。
+8.3 %{appName}对如下事项不做担保（包括但不限于）：
+（1）%{appName}提供的网站、客户端等软件虽然均已经过%{appName}测试，但由于技术本身的局限性，%{appName}不能保证其与其他软硬件、系统完全兼容。如果出现不兼容的情况，用户可将情况报告%{appName}，以获得技术支持。如果无法解决问题，用户可以选择卸载、停止使用%{appName}服务。
+（2）使用%{appName}服务涉及到Internet服务，可能会受到各个环节不稳定因素的影响。因不可抗力、黑客攻击、系统不稳定、网络中断、用户关机、通信线路等原因，均可能造成%{appName}服务中断或不能满足用户要求的情况，%{appName}不保证服务适合用户的使用要求。
+（3）由于%{appName}提供的客户端等软件可以通过网络途径下载、传播，因此对于从非%{appName}指定官方站点下载、非%{appName}指定途径获得的%{appName}服务相关软件，%{appName}无法保证其是否感染计算机病毒、是否隐藏有伪装的木马程序等黑客软件，也不承担用户由此遭受的一切直接或间接损害赔偿等法律责任。
+（4）%{appName}不做出任何与%{appName}服务的安全性、可靠性、及时性和性能有关的担保，但%{appName}承诺将不断提升服务质量及服务水平，为用户提供更加优质的服务。
+8.4 基于以下原因而造成的利润、商业信誉、资料损失或其他有形或无形损失，%{appName}不承担任何直接、间接、附带、衍生或惩罚性的赔偿：
+（1）%{appName}服务使用或无法使用；
+（2）经由%{appName}购买或取得的任何产品、资料或服务；
+（3）用户资料遭到未授权的使用或修改；
+（4）其他与%{appName}服务相关的事宜。
+%{appName}对于用户所发布或由其他第三方发布的内容所引发的版权、署名权纠纷，不承担任何责任。如果您认为用户通过%{appName}所上载、传播的视听内容侵犯了您的相关权益，请您向%{appName}发出权利通知（邮箱：%{contactEmail}），权利通知应含有相关法律法规所要求的内容。收到通知后，%{appName}将根据相关法律规定采取措施对相关内容进行处理。%{appName}转载、链接的内容，出于传递更多信息之目的，并不意味着赞同其观点或对其真实性负责，转载信息版权属于原媒体及作者。
+版权相关事宜请联系：%{contactEmail}
+8.5 用户应妥善保管自己的帐号和密码，加强密码安全性，谨防帐号泄露或被盗。因用户帐号被泄露或被盗而造成的任何损失，%{appName}不承担补偿或赔偿责任。
+8.6 用户因缺少身份认证或认证信息不真实而导致帐号、帐号内财产等丢失、减少而无法找回的，%{appName}不承担任何法律责任。
+9 用户的违约及处理
+9.1 用户在%{appName}平台上发布的内容和信息构成违约的，%{appName}可根据相应规则立即对相应内容和信息进行删除、屏蔽等处理或对用户的账户进行暂停使用、查封、注销等处理。
+9.2 用户在%{appName}平台上实施的行为，或虽未在%{appName}平台上实施但对%{appName}平台及其用户产生影响的行为构成违约的，%{appName}可依据相应规则对用户的账户执行限制参加活动、中止向用户提供部分或全部服务等处理措施。如用户的行为构成根本违约的，%{appName}可查封用户的账户，终止向用户提供服务。
+9.3 如果用户在%{appName}平台上的行为违反相关的法律法规，%{appName}可依法向相关主管机关报告并提交用户的使用记录和其他信息。
+9.4 如用户的行为使%{appName}及/或其关联公司遭受损失（包括自身的直接经济损失、商誉损失及对外支付的赔偿金、和解款、律师费、诉讼费等间接经济损失），用户应赔偿%{appName}及/或其关联公司的上述全部损失。
+10 服务的变更和终止
+10.1 %{appName}有权在任何时候，暂时或永久地变更或终止服务（或任何一部分），无论是否通知用户，%{appName}对服务的变更或终止对用户和任何第三人不承担任何责任。
+11 法律的适用和管辖
+11.1 本条款的生效、履行、解释及争议的解决均适用中华人民共和国法律（不包括冲突法），本条款因与中华人民共和国现行法律相抵触而导致部分无效，不影响其他部分的效力。
+11.2 如就本协议内容或其执行发生任何争议，应尽量友好协商解决；协商不成时，则争议各方一致同意将发生的争议提交本协议签订地（即中华人民共和国武汉市江岸区）有管辖权的人民法院进行诉讼。
+11.3双方同意，解决争议时，应以用户同意的最新《用户协议》为准。
+
+投诉指引
+
+%{appName}作为网络服务提供者，十分重视内容版权和其他知识产权的保护；为有效保护权利人，对于其中可能涉嫌侵犯权利人合法权益的信息，根据相关法律法规，特制定本指引。如果您作为权利人认为本平台上的信息侵犯了您的合法权益，您可依据本指引通知我们，我们将审查核实后予以处理。
+
+投诉流程：
+
+下载《举报投诉表》，按要求填写投诉信息，将《举报投诉表》及相关证明材料，发送至%{contactEmail}电子邮箱进行投诉；
+
+1.1 权利人主体信息和相关证明材料
+
+(1)个人投诉： 权利人的真实姓名、联系电话及邮箱、联系地址、身份证(中国公民)或护照(外国公民)的照片或扫描件等。
+
+(2)单位投诉： 权利人的名称、住所地、联系人、联系电话及邮箱、投诉通知(加盖公章)、营业执照(加盖公章)等。
+
+(3)代他人投诉： 除上述(1)(2)中要求的投诉人和权利人双方的主体身份信息和证明材料外，还需提供权利人签名或盖章的委托书。
+
+1.2 投诉内容
+
+(1)被投诉内容的完整标题/名称和视频链接等足以准确定位侵权内容的相关信息。
+
+(2)要求主张包括可以要求断开侵权作品的访问链接、删除或更正涉嫌侵权的文字介绍。
+
+1.3 构成侵权的初步证明材料
+
+需要举报投诉人就被举报视频的具体侵权内容进行说明。如涉及盗版或抄袭的，需简要对比被举报视频与自身权利作品之间的同一性或者抄袭的具体内容；涉及针对其他民事权利（名誉权、肖像权及隐私权等）的投诉，应提供具体内容在被举报视频中的截图。您所提供的材料的准确性，有助于加速审核工作人员的处理速度，能更好的维护您的合法权益。
+
+1.4 权利人保证
+
+权利人应在通知书中保证：权利人在通知书中的陈述和所提供材料皆是真实、有效和合法的，保证承担和赔偿本平台因根据权利人通知书对被投诉内容进行处理而遭受的全部损失。
+
+2、对合法投诉通知的处理
+
+2.1 本平台收到权利人符合本指引要求的投诉通知后，会尽快依法对被投诉内容做删除或断开链接等处理。
+
+2.2 对不符合本指引要求的投诉通知，本平台有权在权利人补正前暂不处理。
+
+2.3 对于侵犯权利人信息网络传播权的投诉通知，本平台在进行处理投诉的同时可依法将投诉通知转送被投诉人。若被投诉人依法提交了申述证明及相关材料，本平台会将反通知转送权利人。若权利人对反通知持有异议，依据法律规定，权利人应当且能够通过行政或司法程序直接和被投诉人处理相关争议。
+
+《举报投诉表》下载链接如下：
+https://ent-disk-1252816746.cos.ap-shanghai.myqcloud.com/%E4%B8%BE%E6%8A%A5%E6%8A%95%E8%AF%89%E8%A1%A8.docx
+
+请复制链接后在电脑上操作
+  `,
+    general_eula_content: `
+a。许可范围：许可方授予您不可转让的使用许可在您拥有或控制的任何 Apple 品牌产品上的应用程序使用规则。本标准 EULA 的条款将管辖任何内容、材料或服务可从许可应用程序访问或在许可应用程序中购买，以及由许可应用程序提供的升级替换或补充原始许可应用程序的许可方，除非此类升级是随附自定义 EULA。除使用规则另有规定外，您不得通过网络分发或使许可应用程序可用多个设备同时进行。您不得转让、重新分发或再许可许可应用程序，如果您将您的 Apple 设备出售给第三方，您必须删除许可在这样做之前从 Apple 设备应用程序。您不得复制（除非经本许可证和使用规则）、逆向工程、反汇编、尝试导出源代码许可应用程序的代码、修改或创建衍生作品、任何更新或任何其中的一部分（除非并且仅在任何前述限制被禁止的情况下）适用法律或在管理任何使用的许可条款允许的范围内许可应用程序中包含的开源组件）。
+
+b. 同意使用数据：您同意许可方可以收集和使用技术数据和相关信息——包括但不限于关于您的设备的技术信息，系统和应用软件，以及外围设备——定期收集以促进向您提供与本服务相关的软件更新、产品支持和其他服务（如果有）许可的应用程序。许可方可以使用这些信息，只要它的形式不识别您的个人身份，以改进其产品或向您提供服务或技术。
+
+c。终止。本标准 EULA 在您或许可方终止之前一直有效。你的如果您不遵守以下任何条款，本标准 EULA 下的权利将自动终止它的条款。
+
+d. 外部服务。许可应用程序可能允许访问许可方和/或第三方的派对服务和网站（统称为"外部服务"）。您同意使用外部服务的风险由您自行承担。许可方不负责检查或评估任何第三方外部服务的内容或准确性，并且不承担任何责任对于任何此类第三方外部服务。任何许可应用程序显示的数据或外部服务，包括但不限于财务、医疗和位置信息，用于仅供一般参考之用，许可方或其代理人不作保证。你会不得以任何与本标准条款不一致的方式使用外部服务EULA 或侵犯许可方或任何第三方知识产权的内容。你同意不使用外部服务骚扰、辱骂、跟踪、威胁或诽谤任何个人或实体，并且许可方不对任何此类使用负责。外部服务可能无法在所有语言或在您的祖国，并且可能不适合或可用于任何特定位置。在您选择使用此类外部服务的范围内，您仅是负责遵守任何适用的法律。许可方保留更改的权利，暂停、删除、禁用或对任何外部服务施加访问限制或限制任何时间，恕不另行通知或对您负责。
+
+e. 无保证：您明确承认并同意使用许可应用程序的风险由您自行承担。达到最大适用法律、许可应用程序和许可应用程序执行或提供的任何服务按"原样"和"可用"提供，不存在任何缺陷任何形式的保证，许可方在此否认所有关于被许可人的保证和条件应用程序和任何服务，无论是明示的、暗示的或法定的，包括但不限于默示保证和/或适销性、质量令人满意、适用性的条件出于特定目的、准确、安静的享受，以及不侵犯第三方权利。没有口头或书面许可人或其授权人提供的信息或建议代表应创建保证。应该被许可应用程序或服务被证明有缺陷，您承担全部所有必要服务、维修或纠正的成本。一些司法管辖区不允许排除暗示保证或对消费者适用法定权利的限制，因此上述排除和限制可能不适用于您。
+
+f。责任限制。在法律不禁止的范围内，在任何情况下许可方是否应对人身伤害或任何意外事故负责，任何特殊的、间接的或后果性的损害，包括但不限于利润损失、数据、业务中断或任何其他商业损害或因您使用或无法使用而引起或与之相关的损失许可的应用程序，无论是由什么原因引起的，无论责任理论（合同、侵权或其他），即使许可人已被告知此类损害的可能性。一些司法管辖区不允许限制个人责任伤害，或偶然或间接损害，所以这限制可能不适用于您。在任何情况下，许可方均不对您承担全部责任所有损害赔偿（适用法律在涉及人身伤害的情况下可能要求的除外）伤）超过五十美元（$50.00）。即使在以下情况下，上述限制也将适用上述补救措施未能达到其基本目的。
+
+g。您不得使用或以其他方式出口或再出口许可应用程序，除非美国法律和被许可人所在司法管辖区的法律授权获得了申请。特别是但不限于，许可应用程序可以不得出口或再出口 (a) 到任何美国禁运的国家或 (b) 任何人美国财政部特别指定国民名单或美国财政部商务拒绝人员名单或实体名单。通过使用许可应用程序，您声明并保证您不在任何此类国家或任何此类列表中。你也是同意您不会将这些产品用于美国法律禁止的任何目的，包括但不限于核能的开发、设计、制造或生产，导弹，或化学或生物武器。
+
+h。许可应用程序和相关文件是"商业项目"，作为该术语
+
+在 48 CFR §2.101 中定义，包括"商业计算机软件"和"商业计算机软件文档"，因为此类术语在 48 CFR 中使用§12.212 或 48 CFR §227.7202（如适用）。符合 48 CFR §12.212 或 48 CFR§227.7202-1 至 227.7202-4（如适用）商业计算机软件和商业计算机软件文档被授权给美国政府端用户 (a) 仅作为商业项目和 (b) 仅具有授予所有其他人的权利最终用户根据此处的条款和条件。保留未发表的权利美国版权法。
+
+i。除以下段落中明确规定的范围外，本协议和您与 Apple 之间的关系应受加利福尼亚州法律管辖，排除其法律规定的冲突。您和 Apple 同意向个人和加利福尼亚州圣克拉拉县法院的专属管辖权，解决因本协议引起的任何争议或索赔。如果 (a) 您不是美国公民；(二)您不居住在美国；(c) 您不是从美国访问服务；(d) 你是下列国家之一的公民，您在此同意任何争议或由本协议引起的索赔应受以下适用法律管辖，在不考虑任何法律冲突的情况下，您在此不可撤销地服从非位于下列州、省或国家的法院的专属管辖权其法律管辖：如果您是任何欧盟国家或瑞士、挪威或冰岛的公民，管辖法律和法院应为您常住地的法律和法院。明确排除在本协议适用范围之外的是被称为联合联合国国际货物销售公约。
+  `
+};
+const __TURBOPACK__default__export__ = cn;
+if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
+    __turbopack_context__.k.registerExports(module, globalThis.$RefreshHelpers$);
+}
+}}),
+"[project]/src/app/i18n/locales/en.js [app-client] (ecmascript)": ((__turbopack_context__) => {
+"use strict";
+
+var { g: global, __dirname, k: __turbopack_refresh__, m: module } = __turbopack_context__;
+{
+__turbopack_context__.s({
+    "default": (()=>__TURBOPACK__default__export__)
+});
+const en = {
+    config_app_name: 'ttys.app',
+    "seo_app_title": "ttys.app - Watch Movies, TV Shows, Anime, Short Dramas Online",
+    "seo_app_desc": "Watch HD movies, TV shows, anime, and short dramas online for free, enjoy smooth streaming of the latest content anytime, anywhere!",
+    "seo_page_title": "ttys.app - Free {page} - Watch Movies, TV Shows, Anime, Short Dramas Online",
+    "seo_page_desc": "ttys.app - Free {page} - Watch HD movies, TV shows, anime, and short dramas online for free, enjoy smooth streaming of the latest content anytime, anywhere!",
+    "seo_detail_title": "《{title}》- Free Online Watching",
+    "seo_detail_desc": "《{title}》- {desc}",
+    "seo_keywords": "online movies, free TV shows, HD streaming, movie website, free streaming, watch movies online, video website, movie collection, movies online, sci-fi movies, action movies, romance movies, thriller series, historical dramas, variety shows, new anime, war movies, comedy movies, documentaries online",
+    homeTab: 'Movie',
+    hotTab: 'Trending',
+    recommend: 'Reels',
+    shortVideo: 'Shorts',
+    mineTab: 'Mine',
+    homeChoice: 'Popular',
+    homeFilm: 'Movie',
+    homeTeleplay: 'Series',
+    homeVariety: 'Variety',
+    homeEntertainment: 'Anime',
+    homeNews: 'News',
+    vipAll: 'All',
+    vipWeek: 'Week',
+    vipPopular: 'Popular',
+    vipTime: 'Time',
+    artTypeFilm: 'Movie',
+    artTypeTeleplay: 'Series',
+    artTypeVariety: 'Variety',
+    artTypeEntertainment: 'Anime',
+    artTypeNews: 'News',
+    // Category labels
+    category_type: 'Type',
+    category_region: 'Region',
+    category_year: 'Year',
+    category_all: 'All',
+    all: 'All',
+    title_0: 'Exciting Plot',
+    title_1: 'Comedy',
+    title_2: 'High-Rated Action',
+    title_3: 'Romantic Drama',
+    title_4: 'Sci-Fi Blockbusters',
+    title_5: 'Anime & Animation',
+    title_6: 'Mystery & Thriller',
+    title_7: 'Suspense & Excitement',
+    title_8: 'Horror & Gore',
+    title_9: 'Crime & Gunfights',
+    title_10: 'Top Domestic Films',
+    title_11: 'Hollywood Blockbusters',
+    title_12: 'Classic Hong Kong Films',
+    title_13: 'Taiwan Masterpieces',
+    title_14: 'Japan',
+    title_15: 'South Korea',
+    contentTypePlot: 'Drama',
+    contentTypeComedy: 'Comedy',
+    contentTypeAction: 'Action',
+    contentTypeRomance: 'Romance',
+    contentTypeScienceFiction: 'SciFi',
+    contentTypeCartoon: 'Animation',
+    contentTypeSuspense: 'Suspense',
+    contentTypeThriller: 'Thriller',
+    contentTypeHorror: 'Horror',
+    contentTypeCrime: 'Crime',
+    contentTypeHomosexual: 'LGBTQ',
+    contentTypeMusic: 'Music',
+    contentTypeDance: 'Musical',
+    contentTypeBiopic: 'Biography',
+    contentTypeHistorical: 'History',
+    contentTypeWar: 'War',
+    contentTypeWestward: 'Western',
+    contentTypeMagical: 'Fantasy',
+    contentTypeAdventure: 'Adventure',
+    contentTypeDisaster: 'Disaster',
+    contentTypeMartialArts: 'MartialArts',
+    contentTypeOthers: 'Others',
+    // reelsContentTypeTimeTravel: 'TimeTravel',
+    // reelsContentTypeFantasy: 'Fantasy',
+    // reelsContentTypeComedy: 'Comedy',
+    // reelsContentTypeHorror: 'Horror',
+    // reelsContentTypeAction: 'Action',
+    // reelsContentTypeMotivation: 'Motivation',
+    // reelsContentTypeRomance: 'Romance',
+    // reelsContentTypeWar: 'War',
+    // reelsContentTypeUrban: 'Urban',
+    // reelsContentTypeOvercome: 'Overcome',
+    // reelsContentTypeSweet: 'Sweet',
+    // reelsContentTypeRebirth: 'Rebirth',
+    // reelsContentTypeRevenge: 'Revenge',
+    // reelsContentTypeCEO: 'CEO',
+    // reelsContentTypeAristocracy: 'Aristocracy',
+    // reelsContentTypeAdventure: 'Adventure:',
+    // reelsContentTypeIntrigue: 'Intrigue',
+    // reelsContentTypeEmotions: 'Emotions',
+    // reelsContentTypeMarriage: 'Marriage',
+    // reelsContentTypeMystery: 'Mystery',
+    reelsContentTypeUrban: 'Urban',
+    reelsContentTypeTraverse: 'Traverse',
+    reelsContentTypeRebirth: 'Rebirth',
+    reelsContentTypeWarGod: 'WarGod',
+    reelsContentTypeFantasy: 'Fantasy',
+    reelsContentTypeOverlord: 'Overlord',
+    reelsContentTypeTorturedLove: 'TorturedLove',
+    reelsContentTypeBaby: 'Baby',
+    reelsContentTypeCostume: 'Costume',
+    reelsContentTypeDivineHealer: 'DivineHealer',
+    reelsContentTypeFemale: 'Female',
+    reelsContentTypeMale: 'Male',
+    reelsContentTypeHeir: 'Heir',
+    reelsContentTypeRepublic: 'Republic',
+    reelsContentTypeRise: 'Rise',
+    reelsContentTypeRomance: 'Romance',
+    reelsContentTypeHistory: 'History',
+    reelsContentTypeSweet: 'Sweet',
+    reelsContentTypeRevenge: 'Revenge',
+    reelsContentTypeFamily: 'Family',
+    reelsContentTypeReality: 'Reality',
+    reelsContentTypeKinship: 'Kinship',
+    reelsContentTypeFeeling: 'Feeling',
+    reelsContentTypeFlashMarriage: 'FlashMarriage',
+    reelsContentTypeOthers: 'Others',
+    // reelsContentTypeYouth: 'Youth',
+    // reelsContentTypeEmpress: 'Empress',
+    // reelsContentTypeRepublic: 'Republic',
+    // reelsContentTypeBaby: 'Baby',
+    // reelsContentTypeSuperpower: 'Superpower',
+    // reelsContentTypeSweet: 'Sweet',
+    // reelsContentTypeHeirDrama: 'HeirDrama',
+    // reelsContentTypeSurvival: 'Survival',
+    // reelsContentTypeVillain: 'Villain',
+    // reelsContentTypeFamilySearch: 'FamilySearch',
+    // reelsContentTypeMindReading: 'MindReading',
+    // reelsContentTypeLaw: 'Law',
+    // reelsContentTypeBusinessWar: 'BusinessWar',
+    // reelsContentTypeFantasyCostume: 'FantasyCostume',
+    // reelsContentTypePowerPlay: 'PowerPlay',
+    // reelsContentTypeChildhoodLove: 'ChildhoodLove',
+    // reelsContentTypeMyth: 'Myth',
+    // reelsContentTypeMasterLady: 'MasterLady',
+    // reelsContentTypeCompetition: 'Competition',
+    // reelsContentTypeFrenemies: 'Frenemies',
+    // reelsContentTypeEraDrama: 'EraDrama',
+    // reelsContentTypeComedy: 'Comedy',
+    // reelsContentTypeTimeTravelModern: 'TimeTravelModern',
+    // reelsContentTypeFamilyLove: 'FamilyLove',
+    // reelsContentTypeWealth: 'Wealth',
+    // reelsContentTypeFantasyTwist: 'FantasyTwist',
+    // reelsContentTypeWarGod: 'WarGod',
+    // reelsContentTypeStrongReturn: 'StrongReturn',
+    // reelsContentTypeSystem: 'System',
+    // reelsContentTypeInspiration: 'Inspiration',
+    // reelsContentTypeModernFantasy: 'ModernFantasy',
+    // reelsContentTypeRevenge: 'Revenge',
+    // reelsContentTypeTactician: 'Tactician',
+    // reelsContentTypeChaseRegret: 'ChaseRegret',
+    // reelsContentTypeMask: 'Mask',
+    // reelsContentTypeConcubine: 'Concubine',
+    // reelsContentTypeKinship: 'Kinship',
+    // reelsContentTypeUnderdog: 'Underdog',
+    // reelsContentTypeInvincible: 'Invincible',
+    // reelsContentTypeWorkplace: 'Workplace',
+    // reelsContentTypeAbandonedYouth: 'AbandonedYouth',
+    // reelsContentTypeMystery: 'Mystery',
+    // reelsContentTypeCostume: 'Costume',
+    // reelsContentTypeMetaphysics: 'Metaphysics',
+    // reelsContentTypeFantasyImmortal: 'FantasyImmortal',
+    // reelsContentTypeRelax: 'Relax',
+    // reelsContentTypeLandlord: 'Landlord',
+    // reelsContentTypeWorthlessGirl: 'WorthlessGirl',
+    // reelsContentTypeOperaDance: 'OperaDance',
+    // reelsContentTypeRise: 'Rise',
+    // reelsContentTypeSubstitute: 'Substitute',
+    // reelsContentTypeOriginalWife: 'OriginalWife',
+    // reelsContentTypeAnime: 'Anime',
+    // reelsContentTypeGodEye: 'GodEye',
+    // reelsContentTypeImmortality: 'Immortality',
+    // reelsContentTypeDivineHealer: 'DivineHealer',
+    // reelsContentTypeCrush: 'Crush',
+    // reelsContentTypeSwapMarriage: 'SwapMarriage',
+    // reelsContentTypeWomenGrowth: 'WomenGrowth',
+    // reelsContentTypeSpyWar: 'SpyWar',
+    // reelsContentTypeSeries: 'Series',
+    // reelsContentTypeTimeTravel: 'TimeTravel',
+    // reelsContentTypeCultivation: 'Cultivation',
+    // reelsContentTypeFlashMarriage: 'FlashMarriage',
+    // reelsContentTypeMasterDescent: 'MasterDescent',
+    // reelsContentTypeTrueFakeHeiress: 'TrueFakeHeiress',
+    // reelsContentTypeMiddleAgeLove: 'MiddleAgeLove',
+    // reelsContentTypeUrban: 'Urban',
+    // reelsContentTypeSpace: 'Space',
+    // reelsContentTypeSports: 'Sports',
+    // reelsContentTypeBride: 'Bride',
+    // reelsContentTypeMistakenIdentity: 'MistakenIdentity',
+    // reelsContentTypeTreasureHunt: 'TreasureHunt',
+    // reelsContentTypeChefGod: 'ChefGod',
+    // reelsContentTypeFamily: 'Family',
+    // reelsContentTypeHousewife: 'Housewife',
+    // reelsContentTypeLadyBoss: 'LadyBoss',
+    // reelsContentTypeSlagAbuse: 'SlagAbuse',
+    // reelsContentTypeTycoon: 'Tycoon',
+    // reelsContentTypeSciFi: 'SciFi',
+    // reelsContentTypeTimeLink: 'TimeLink',
+    // reelsContentTypeMovie: 'Movie',
+    // reelsContentTypeRebirth: 'Rebirth',
+    // reelsContentTypeTeacherStudent: 'TeacherStudent',
+    // reelsContentTypeHeiress: 'Heiress',
+    // reelsContentTypeTraverse: 'Traverse',
+    // reelsContentTypeCEO: 'CEO',
+    // reelsContentTypeMarriage: 'Marriage',
+    // reelsContentTypePatrioticFeud: 'PatrioticFeud',
+    // reelsContentTypeTorturedLove: 'TorturedLove',
+    // reelsContentTypeMiddleAge: 'MiddleAge',
+    // reelsContentTypeEmotionFlow: 'EmotionFlow',
+    // reelsContentTypeLegacyAwaken: 'LegacyAwaken',
+    // reelsContentTypeMartialArts: 'MartialArts',
+    // reelsContentTypeGroupSweet: 'GroupSweet',
+    // reelsContentTypeFeeling: 'Feeling',
+    // reelsContentTypeModernRomance: 'ModernRomance',
+    // reelsContentTypeRegret: 'Regret',
+    areaTypeChinaMainland: 'China',
+    areaTypeUnitedStates: 'US',
+    areaTypeHongKong: 'HongKong',
+    areaTypeTaiwan: 'Taiwan',
+    areaTypeJapan: 'Japan',
+    areaTypeKorea: 'Korea',
+    areaTypeUnitedKingdom: 'UK',
+    areaTypeFrance: 'France',
+    areaTypeGermany: 'Germany',
+    areaTypeItaly: 'Italy',
+    areaTypeSpain: 'Spain',
+    areaTypeIndia: 'India',
+    areaTypeThailand: 'Thailand',
+    areaTypeRussia: 'Russia',
+    areaTypeIran: 'Iran',
+    areaTypeCanada: 'Canada',
+    areaTypeAustralia: 'Australia',
+    areaTypeIreland: 'Ireland',
+    areaTypeSweden: 'Sweden',
+    areaTypeBrazil: 'Brazil',
+    areaTypeDenmark: 'Denmark',
+    areaTypeOthers: 'Others',
+    center_btn_chinese: 'Chinese',
+    center_btn_english: 'English',
+    center_btn_asian: 'Asian',
+    center_btn_china: 'China',
+    center_btn_outback: 'China',
+    center_btn_cantonese: 'Cantonese',
+    center_btn_Reality: 'Reality',
+    center_btn_international: 'Global',
+    center_btn_Asia: 'Asian',
+    center_btn_UsTeleplay: 'American',
+    main_noData: 'No Content',
+    main_more: 'More',
+    main_not_open: 'Not open',
+    main_lang_cn: 'Chinese Simplified',
+    main_lang_tw: 'Chinese Traditional',
+    main_lang_en: 'English',
+    main_message_all: 'All of them',
+    main_message_friend: 'Friends only',
+    main_message_followed: 'Only followed me',
+    mine_register: 'Register',
+    mine_login: 'Login',
+    mine_ing: 'ing',
+    mine_username: 'email/whatsapp/telegram',
+    mine_password: 'password',
+    mine_password_again: 'password again',
+    mine_password_not_same: 'Entering the password twice is inconsistent',
+    mine_password_invalid: 'The password should be composed of more than 6-20 letters and numbers',
+    mine_agree: 'Agree and register',
+    mine_tips: 'By clicking "Agree and register" means you have read and agreed to the User Agreement Privacy Policy',
+    mine_password_forgot: 'Forgot your password?',
+    mine_show_email: 'Please contact: %{contactEmail}',
+    mine_login_summary: "Sign in and it's more exciting",
+    mine_watch_history: 'Watch history',
+    mine_recently_played: 'Recently',
+    mine_recently_favorites: 'Recently Favorites',
+    mine_create_list: 'Posts',
+    mine_activity: 'Moments',
+    mine_favorite: 'Likes',
+    mine_downloads: 'Downloads',
+    mine_favorites: 'Favorites',
+    mine_weblink: 'Official Link',
+    set_up_account: 'Account & security',
+    set_up_my_coin: 'My points',
+    set_up_cellphone: 'Phone binding',
+    set_up_third: 'Third-party binding',
+    set_up_realname: 'Real-name auth',
+    set_up_shield: 'Block settings',
+    set_up_delete: 'Account delete',
+    set_up_block_list: 'Blocked',
+    report_text: 'Report',
+    report_block: 'Block',
+    report_add_block_list: 'Blacklisted, you can unseal in settings',
+    report_remove_block_list: 'user was removed from blacklist successfully',
+    report_unblock: 'Unblock',
+    report_question: 'Please enter your reason for reporting',
+    report_blocked_noData: 'Blocked, no content at this time',
+    report_type_image: 'Report a picture or title',
+    report_type_video: 'Report the video',
+    report_type_comment: 'Report a comment',
+    report_type_user: 'Report a user',
+    report_thanks: 'Thank you for your report',
+    report_issue: 'issue',
+    report_content_1: 'Hello! Thank you for your report. If this content violates %{appName}',
+    report_content_2: "We'll remove it. Learn more about blocking comments or users, and other policies and tools we set up to keep you safe on %{appName}.",
+    report_issue_0: 'Pornography',
+    report_issue_1: 'Violent or objectionable content',
+    report_issue_2: 'Content that hates or insults others',
+    report_issue_3: 'Harmful or dangerous behavior',
+    report_issue_4: 'Junk or misleading content',
+    report_issue_5: 'Harassment or bullying',
+    report_issue_6: 'child abuse',
+    report_issue_7: 'violated my rights',
+    report_issue_8: 'Promote terrorism',
+    report_issue_9: 'Copyright issues',
+    report_issue_10: 'Privacy issues',
+    report_issue_11: 'Trademark infringement or counterfeiting',
+    report_issue_12: 'Other legal issues',
+    ad_skip: 'Skip Ads',
+    ad_remove: 'Remove Ads',
+    download_tips: 'Tips: Do not disconnect network when watching cached videos',
+    download_progress: 'Download Progress',
+    download_delete: 'Delete',
+    download_delete_sure: 'Are you sure delete?',
+    download_deleted: 'Deleted succeed',
+    download_delete_tip: 'It cannot be deleted until the download is completed',
+    download_complete: '%{progress} % completed',
+    download_free_storage: '%{free}G remaining',
+    download_play_cache: ' (Playing Cache)',
+    download_added: 'Add download task succeed',
+    download_downloading: 'Downloading, check it in [Mine -My Downloads]',
+    download_throw_err: 'Download error, please restart the app and try again',
+    download_state_downloading: 'downloading',
+    download_state_stop: 'interrupted',
+    download_state_complete: 'completed',
+    download_source_cannot: 'This source cannot download,change source try again',
+    download_source_error: 'Current source download error, please switch to another source or restart the app and try again',
+    download_cannot_play: 'If can not play, restart the app, or switch play source to re-download.',
+    download_max_error: 'Downloading reached the maximum, please upgrade!',
+    set_up_play: 'Play',
+    set_up_autoplay: 'Skip auto',
+    set_up_net_play: 'Carrier networks play auto',
+    set_up_net_upload: 'Allow carrier network upload',
+    set_up_general: 'General',
+    set_up_get_message: 'Receive push notifications',
+    set_up_change_lang: 'Switch languages',
+    set_up_push_other: 'Allow push to friend',
+    set_up_who_push: 'Who can send me?',
+    set_up_about: 'About',
+    set_up_help: 'Feedback & help',
+    set_up_sla: 'Terms & Conditions',
+    set_up_privacy: 'Privacy policy',
+    general_summary: 'Brief',
+    general_starring: 'Starring',
+    general_type: 'Type',
+    general_all_comment: 'All comments',
+    general_sets_title: 'Choose episode',
+    general_like: 'like ',
+    general_comment: 'comment ',
+    general_sets: 'episodes',
+    general_share: 'share ',
+    general_collect: 'collect',
+    general_comment_any: 'Let me say a few words',
+    general_publish_comment: 'Comment',
+    general_picture: 'Image',
+    general_video: 'Video',
+    general_publish: 'Publish ',
+    general_submit: 'Submit ',
+    general_modify: 'Modify the information',
+    general_comment_num: '',
+    general_comments: 'comments',
+    general_reply: 'reply ',
+    general_replies: 'replies',
+    general_follow: 'Follow',
+    general_unfollow: 'Unfollow',
+    general_likes: 'likes',
+    general_followering: 'following',
+    general_followers: 'followers',
+    general_friends: 'friends',
+    general_ensure: 'Confirm ',
+    general_cancel: 'Cancel ',
+    general_hot_search: 'Hot search',
+    general_search_place: 'The Video Name',
+    general_publishing: 'Comment submission',
+    general_input_content: 'Please enter the content',
+    general_logout: 'Exit account',
+    general_input_question: 'Please enter your question',
+    general_noInterest: 'uninterest',
+    general_shield: 'block all',
+    general_report: 'report',
+    general_operate: 'operate ',
+    general_close: 'close',
+    general_years: `'s`,
+    general_success: ' succeed',
+    general_fail: ' failed',
+    general_user_not_exist: 'user not exist',
+    general_user_exist: 'The user name already exists',
+    general_auth_fail: 'Authentication failed, sign in please',
+    general_wrong_character: 'The wrong character, please check',
+    general_net_slow: 'Your network is slow, please try again later',
+    general_login_faild: 'Login failed, account number or password error, please try again!',
+    general_net_wrong: 'Network exception, please try again later',
+    general_net_unconnected: 'Network is disconnected, please check',
+    general_net_fault: 'System upgrading, expected to resume within 24 hours',
+    general_net_link_fault: 'The network connection is wrong',
+    general_fresh_btn: 'Refresh',
+    general_retry: 'Retry',
+    general_time_one: '1 day ago',
+    general_hour_number: ' hours ago',
+    general_go_login: 'Sign in',
+    general_go_share: 'To share',
+    general_after_login: 'Sign in and share again',
+    general_must_share: 'This video requires login to watch',
+    general_coin_invalid: 'Points not enough,you can earn it by share to your friends',
+    general_need_share: 'Watch this vip video for free after shared',
+    general_need_coin: 'This video is required ',
+    general_coin: ' points',
+    general_coin_account: 'Your points:',
+    general_reach_end: "It's over",
+    general_load_err: 'The video loaded incorrectly!',
+    general_search: 'Search',
+    general_watch_to: 'Watch to',
+    general_watch_episode: 'Episode %{index}',
+    general_avatar: 'avatar',
+    general_cover: 'cover',
+    general_upload_err: 'Upload error, please try again',
+    general_camera_err: 'The album failed to open, please try again',
+    general_input_title: 'enter the title',
+    general_upload_cover: 'upload the cover page',
+    general_auth_err: 'Authentication failed',
+    general_loading: 'loading..',
+    general_director: 'Director',
+    general_watch_now: 'Watch now',
+    general_hold: 'Later',
+    general_update_backend: 'Background updates',
+    general_if_update: 'The new version, do you want to update it?',
+    general_must_update: 'The new version,need you update it',
+    general_continue_update: 'Background updates',
+    general_update_title: 'Update tips',
+    general_edit_info: 'Edit your profile',
+    general_delete_info: 'Delete your account',
+    general_delete_confirm: 'Confirm',
+    general_delete_warning: 'Warning! Please note that according to relevant legal policies, this step will permanently delete or cancel your account, and you will not be able to access all your information and login! please consider carefully before doing it！',
+    general_edit_confirm: 'Determine the modification',
+    general_add_opus: 'Add a work',
+    general_click_upload: 'Click upload cover',
+    general_uploading: 'uploading',
+    general_title: 'title',
+    general_nickname: 'Nickname',
+    general_upload_result: 'Uploaded successfully and is under reviewing',
+    general_download_faild: 'This video cannot be downloaded for copyright reasons',
+    general_warning_title: 'Warm tips:',
+    general_warning_content: 'If you got problems such as network unable to connect, network errors, crash, stuck, etc., try download the latest version on the official website。',
+    general_warning_download_url: 'Download address:',
+    general_warning_enter_play: 'Click this enter Google Store',
+    general_no_image: 'No image',
+    general_player_next_episode: 'Enter next episode',
+    general_player_rate: 'Rate',
+    general_player_source: 'Play source',
+    general_player_src: 'Source',
+    general_sets_count_label: '%{count} episodes',
+    general_agree: 'Agree',
+    general_agree_not: 'Disagree',
+    general_sla_privacy: 'Privacy Policy and Terms & Conditions',
+    general_sla_agree: 'You need your agree before you can continue to use the services provided by %{appName}',
+    general_a: 'Thank you for choosing to %{appName} products and services',
+    general_b: 'We take your personal information and privacy very seriously. To better protect your personal interests, be sure to carefully read all the terms of the User Agreement and The Privacy Policy before you use our products, in particular:',
+    general_c: '1, we collect/save/use/provide/protect your personal information and other rules and conditions, as well as your user rights and other terms;',
+    general_d: '2, agree on our limitation of liability, disclaimers;',
+    general_e: '3, other bold or underlined to identify the important provisions;',
+    general_f: 'By clicking "Agree", you have read and agreed to the full contents of the above agreement.',
+    general_rate_title: 'After giving five-star, the system will push for more high-quality movies and TV series',
+    general_rate_submit: 'Rate',
+    general_rate_cancle: 'Not now',
+    general_comment_placeholder: 'Enter the suggestion here',
+    general_empty_error: 'The suggestion is empty',
+    general_share_content: "Copy this link, open it with your phone's own browser, download and install the APP, watch this video for free",
+    general_privacy: 'Privacy policy',
+    general_sla: 'Terms & Conditions',
+    general_eula: 'End User License Agreement',
+    general_update_time: 'Updated time',
+    general_valid_time: 'The effective time',
+    general_privacy_content: `
+    PRIVACY NOTICE
+
+Last updated February 02, 2023
+
+
+
+This privacy notice for %{WEB_LINK} ("Company," "we," "us," or "our"), describes how and why we might collect, store, use, and/or share ("process") your information when you use our services ("Services"), such as when you:
+Download and use our mobile application (%{appName}), or any other application of ours that links to this privacy notice
+Engage with us in other related ways, including any sales, marketing, or events
+Questions or concerns? Reading this privacy notice will help you understand your privacy rights and choices. If you do not agree with our policies and practices, please do not use our Services. If you still have any questions or concerns, please contact us at %{contactEmail}.
+
+
+SUMMARY OF KEY POINTS
+
+This summary provides key points from our privacy notice, but you can find out more details about any of these topics by clicking the link following each key point or by using our table of contents below to find the section you are looking for. You can also click here to go directly to our table of contents.
+
+What personal information do we process? When you visit, use, or navigate our Services, we may process personal information depending on how you interact with %{WEB_LINK} and the Services, the choices you make, and the products and features you use. Click here to learn more.
+
+Do we process any sensitive personal information? We do not process sensitive personal information.
+
+Do we receive any information from third parties? We do not receive any information from third parties.
+
+How do we process your information? We process your information to provide, improve, and administer our Services, communicate with you, for security and fraud prevention, and to comply with law. We may also process your information for other purposes with your consent. We process your information only when we have a valid legal reason to do so. Click here to learn more.
+
+In what situations and with which parties do we share personal information? We may share information in specific situations and with specific third parties. Click here to learn more.
+
+How do we keep your information safe? We have organizational and technical processes and procedures in place to protect your personal information. However, no electronic transmission over the internet or information storage technology can be guaranteed to be 100% secure, so we cannot promise or guarantee that hackers, cybercriminals, or other unauthorized third parties will not be able to defeat our security and improperly collect, access, steal, or modify your information. Click here to learn more.
+
+What are your rights? Depending on where you are located geographically, the applicable privacy law may mean you have certain rights regarding your personal information. Click here to learn more.
+
+How do you exercise your rights? The easiest way to exercise your rights is by filling out our data subject request form available here, or by contacting us. We will consider and act upon any request in accordance with applicable data protection laws.
+
+Want to learn more about what %{WEB_LINK} does with any information we collect? Click here to review the notice in full.
+
+
+TABLE OF CONTENTS
+
+1. WHAT INFORMATION DO WE COLLECT?
+2. HOW DO WE PROCESS YOUR INFORMATION?
+3. WHAT LEGAL BASES DO WE RELY ON TO PROCESS YOUR PERSONAL INFORMATION?
+4. WHEN AND WITH WHOM DO WE SHARE YOUR PERSONAL INFORMATION?
+5. WHAT IS OUR STANCE ON THIRD-PARTY WEBSITES?
+6. HOW LONG DO WE KEEP YOUR INFORMATION?
+7. HOW DO WE KEEP YOUR INFORMATION SAFE?
+8. WHAT ARE YOUR PRIVACY RIGHTS?
+9. CONTROLS FOR DO-NOT-TRACK FEATURES
+10. DO CALIFORNIA RESIDENTS HAVE SPECIFIC PRIVACY RIGHTS?
+11. DO VIRGINIA RESIDENTS HAVE SPECIFIC PRIVACY RIGHTS?
+12. DO WE MAKE UPDATES TO THIS NOTICE?
+13. HOW CAN YOU CONTACT US ABOUT THIS NOTICE?
+14. HOW CAN YOU REVIEW, UPDATE, OR DELETE THE DATA WE COLLECT FROM YOU?
+
+
+1. WHAT INFORMATION DO WE COLLECT?
+
+Personal information you disclose to us
+
+In Short: We collect personal information that you provide to us.
+
+We collect personal information that you voluntarily provide to us when you register on the Services, express an interest in obtaining information about us or our products and Services, when you participate in activities on the Services, or otherwise when you contact us.
+
+Personal Information Provided by You. The personal information that we collect depends on the context of your interactions with us and the Services, the choices you make, and the products and features you use. The personal information we collect may include the following:
+usernames
+passwords
+Sensitive Information. We do not process sensitive information.
+
+Application Data. If you use our application(s), we also may collect the following information if you choose to provide us with access or permission:
+Geolocation Information. We may request access or permission to track location-based information from your mobile device, either continuously or while you are using our mobile application(s), to provide certain location-based services. If you wish to change our access or permissions, you may do so in your device's settings.
+Mobile Device Access. We may request access or permission to certain features from your mobile device, including your mobile device's camera, storage, and other features. If you wish to change our access or permissions, you may do so in your device's settings.
+This information is primarily needed to maintain the security and operation of our application(s), for troubleshooting, and for our internal analytics and reporting purposes.
+
+All personal information that you provide to us must be true, complete, and accurate, and you must notify us of any changes to such personal information.
+
+Information automatically collected
+
+In Short: Some information — such as your Internet Protocol (IP) address and/or browser and device characteristics — is collected automatically when you visit our Services.
+
+We automatically collect certain information when you visit, use, or navigate the Services. This information does not reveal your specific identity (like your name or contact information) but may include device and usage information, such as your IP address, browser and device characteristics, operating system, language preferences, referring URLs, device name, country, location, information about how and when you use our Services, and other technical information. This information is primarily needed to maintain the security and operation of our Services, and for our internal analytics and reporting purposes.
+
+The information we collect includes:
+Log and Usage Data. Log and usage data is service-related, diagnostic, usage, and performance information our servers automatically collect when you access or use our Services and which we record in log files. Depending on how you interact with us, this log data may include your IP address, device information, browser type, and settings and information about your activity in the Services (such as the date/time stamps associated with your usage, pages and files viewed, searches, and other actions you take such as which features you use), device event information (such as system activity, error reports (sometimes called "crash dumps"), and hardware settings).
+Device Data. We collect device data such as information about your computer, phone, tablet, or other device you use to access the Services. Depending on the device used, this device data may include information such as your IP address (or proxy server), device and application identification numbers, location, browser type, hardware model, Internet service provider and/or mobile carrier, operating system, and system configuration information.
+Location Data. We collect location data such as information about your device's location, which can be either precise or imprecise. How much information we collect depends on the type and settings of the device you use to access the Services. For example, we may use GPS and other technologies to collect geolocation data that tells us your current location (based on your IP address). You can opt out of allowing us to collect this information either by refusing access to the information or by disabling your Location setting on your device. However, if you choose to opt out, you may not be able to use certain aspects of the Services.
+2. HOW DO WE PROCESS YOUR INFORMATION?
+
+In Short: We process your information to provide, improve, and administer our Services, communicate with you, for security and fraud prevention, and to comply with law. We may also process your information for other purposes with your consent.
+
+We process your personal information for a variety of reasons, depending on how you interact with our Services, including:
+To facilitate account creation and authentication and otherwise manage user accounts. We may process your information so you can create and log in to your account, as well as keep your account in working order.
+
+
+
+
+To save or protect an individual's vital interest. We may process your information when necessary to save or protect an individual's vital interest, such as to prevent harm.
+
+3. WHAT LEGAL BASES DO WE RELY ON TO PROCESS YOUR INFORMATION?
+
+In Short: We only process your personal information when we believe it is necessary and we have a valid legal reason (i.e., legal basis) to do so under applicable law, like with your consent, to comply with laws, to provide you with services to enter into or fulfill our contractual obligations, to protect your rights, or to fulfill our legitimate business interests.
+
+If you are located in the EU or UK, this section applies to you.
+
+The General Data Protection Regulation (GDPR) and UK GDPR require us to explain the valid legal bases we rely on in order to process your personal information. As such, we may rely on the following legal bases to process your personal information:
+Consent. We may process your information if you have given us permission (i.e., consent) to use your personal information for a specific purpose. You can withdraw your consent at any time. Click here to learn more.
+Legal Obligations. We may process your information where we believe it is necessary for compliance with our legal obligations, such as to cooperate with a law enforcement body or regulatory agency, exercise or defend our legal rights, or disclose your information as evidence in litigation in which we are involved.
+Vital Interests. We may process your information where we believe it is necessary to protect your vital interests or the vital interests of a third party, such as situations involving potential threats to the safety of any person.
+
+If you are located in Canada, this section applies to you.
+
+We may process your information if you have given us specific permission (i.e., express consent) to use your personal information for a specific purpose, or in situations where your permission can be inferred (i.e., implied consent). You can withdraw your consent at any time. Click here to learn more.
+
+In some exceptional cases, we may be legally permitted under applicable law to process your information without your consent, including, for example:
+If collection is clearly in the interests of an individual and consent cannot be obtained in a timely way
+For investigations and fraud detection and prevention
+For business transactions provided certain conditions are met
+If it is contained in a witness statement and the collection is necessary to assess, process, or settle an insurance claim
+For identifying injured, ill, or deceased persons and communicating with next of kin
+If we have reasonable grounds to believe an individual has been, is, or may be victim of financial abuse
+If it is reasonable to expect collection and use with consent would compromise the availability or the accuracy of the information and the collection is reasonable for purposes related to investigating a breach of an agreement or a contravention of the laws of Canada or a province
+If disclosure is required to comply with a subpoena, warrant, court order, or rules of the court relating to the production of records
+If it was produced by an individual in the course of their employment, business, or profession and the collection is consistent with the purposes for which the information was produced
+If the collection is solely for journalistic, artistic, or literary purposes
+If the information is publicly available and is specified by the regulations
+
+4. WHEN AND WITH WHOM DO WE SHARE YOUR PERSONAL INFORMATION?
+
+In Short: We may share information in specific situations described in this section and/or with the following third parties.
+
+We may need to share your personal information in the following situations:
+Business Transfers. We may share or transfer your information in connection with, or during negotiations of, any merger, sale of company assets, financing, or acquisition of all or a portion of our business to another company.
+
+5. WHAT IS OUR STANCE ON THIRD-PARTY WEBSITES?
+
+In Short: We are not responsible for the safety of any information that you share with third parties that we may link to or who advertise on our Services, but are not affiliated with, our Services.
+
+The Services may link to third-party websites, online services, or mobile applications and/or contain advertisements from third parties that are not affiliated with us and which may link to other websites, services, or applications. Accordingly, we do not make any guarantee regarding any such third parties, and we will not be liable for any loss or damage caused by the use of such third-party websites, services, or applications. The inclusion of a link towards a third-party website, service, or application does not imply an endorsement by us. We cannot guarantee the safety and privacy of data you provide to any third parties. Any data collected by third parties is not covered by this privacy notice. We are not responsible for the content or privacy and security practices and policies of any third parties, including other websites, services, or applications that may be linked to or from the Services. You should review the policies of such third parties and contact them directly to respond to your questions.
+
+6. HOW LONG DO WE KEEP YOUR INFORMATION?
+
+In Short: We keep your information for as long as necessary to fulfill the purposes outlined in this privacy notice unless otherwise required by law.
+
+We will only keep your personal information for as long as it is necessary for the purposes set out in this privacy notice, unless a longer retention period is required or permitted by law (such as tax, accounting, or other legal requirements). No purpose in this notice will require us keeping your personal information for longer than the period of time in which users have an account with us.
+
+When we have no ongoing legitimate business need to process your personal information, we will either delete or anonymize such information, or, if this is not possible (for example, because your personal information has been stored in backup archives), then we will securely store your personal information and isolate it from any further processing until deletion is possible.
+
+7. HOW DO WE KEEP YOUR INFORMATION SAFE?
+
+In Short: We aim to protect your personal information through a system of organizational and technical security measures.
+
+We have implemented appropriate and reasonable technical and organizational security measures designed to protect the security of any personal information we process. However, despite our safeguards and efforts to secure your information, no electronic transmission over the Internet or information storage technology can be guaranteed to be 100% secure, so we cannot promise or guarantee that hackers, cybercriminals, or other unauthorized third parties will not be able to defeat our security and improperly collect, access, steal, or modify your information. Although we will do our best to protect your personal information, transmission of personal information to and from our Services is at your own risk. You should only access the Services within a secure environment.
+
+8. WHAT ARE YOUR PRIVACY RIGHTS?
+
+In Short: In some regions, such as the European Economic Area (EEA), United Kingdom (UK), and Canada, you have rights that allow you greater access to and control over your personal information. You may review, change, or terminate your account at any time.
+
+In some regions (like the EEA, UK, and Canada), you have certain rights under applicable data protection laws. These may include the right (i) to request access and obtain a copy of your personal information, (ii) to request rectification or erasure; (iii) to restrict the processing of your personal information; and (iv) if applicable, to data portability. In certain circumstances, you may also have the right to object to the processing of your personal information. You can make such a request by contacting us by using the contact details provided in the section "HOW CAN YOU CONTACT US ABOUT THIS NOTICE?" below.
+
+We will consider and act upon any request in accordance with applicable data protection laws. 
+If you are located in the EEA or UK and you believe we are unlawfully processing your personal information, you also have the right to complain to your local data protection supervisory authority. You can find their contact details here: https://ec.europa.eu/justice/data-protection/bodies/authorities/index_en.htm.
+
+If you are located in Switzerland, the contact details for the data protection authorities are available here: https://www.edoeb.admin.ch/edoeb/en/home.html.
+
+Withdrawing your consent: If we are relying on your consent to process your personal information, which may be express and/or implied consent depending on the applicable law, you have the right to withdraw your consent at any time. You can withdraw your consent at any time by contacting us by using the contact details provided in the section "HOW CAN YOU CONTACT US ABOUT THIS NOTICE?" below.
+
+However, please note that this will not affect the lawfulness of the processing before its withdrawal nor, when applicable law allows, will it affect the processing of your personal information conducted in reliance on lawful processing grounds other than consent.
+
+Account Information
+
+If you would at any time like to review or change the information in your account or terminate your account, you can:
+Contact us using the contact information provided.
+Upon your request to terminate your account, we will deactivate or delete your account and information from our active databases. However, we may retain some information in our files to prevent fraud, troubleshoot problems, assist with any investigations, enforce our legal terms and/or comply with applicable legal requirements.
+
+If you have questions or comments about your privacy rights, you may email us at %{contactEmail}.
+
+9. CONTROLS FOR DO-NOT-TRACK FEATURES
+
+Most web browsers and some mobile operating systems and mobile applications include a Do-Not-Track ("DNT") feature or setting you can activate to signal your privacy preference not to have data about your online browsing activities monitored and collected. At this stage no uniform technology standard for recognizing and implementing DNT signals has been finalized. As such, we do not currently respond to DNT browser signals or any other mechanism that automatically communicates your choice not to be tracked online. If a standard for online tracking is adopted that we must follow in the future, we will inform you about that practice in a revised version of this privacy notice.
+
+10. DO CALIFORNIA RESIDENTS HAVE SPECIFIC PRIVACY RIGHTS?
+
+In Short: Yes, if you are a resident of California, you are granted specific rights regarding access to your personal information.
+
+California Civil Code Section 1798.83, also known as the "Shine The Light" law, permits our users who are California residents to request and obtain from us, once a year and free of charge, information about categories of personal information (if any) we disclosed to third parties for direct marketing purposes and the names and addresses of all third parties with which we shared personal information in the immediately preceding calendar year. If you are a California resident and would like to make such a request, please submit your request in writing to us using the contact information provided below.
+
+If you are under 18 years of age, reside in California, and have a registered account with Services, you have the right to request removal of unwanted data that you publicly post on the Services. To request removal of such data, please contact us using the contact information provided below and include the email address associated with your account and a statement that you reside in California. We will make sure the data is not publicly displayed on the Services, but please be aware that the data may not be completely or comprehensively removed from all our systems (e.g., backups, etc.).
+
+CCPA Privacy Notice
+
+The California Code of Regulations defines a "resident" as:
+
+(1) every individual who is in the State of California for other than a temporary or transitory purpose and
+(2) every individual who is domiciled in the State of California who is outside the State of California for a temporary or transitory purpose
+
+All other individuals are defined as "non-residents."
+
+If this definition of "resident" applies to you, we must adhere to certain rights and obligations regarding your personal information.
+
+What categories of personal information do we collect?
+
+We have collected the following categories of personal information in the past twelve (12) months:
+
+Category  Examples  Collected
+A. Identifiers
+Contact details, such as real name, alias, postal address, telephone or mobile contact number, unique personal identifier, online identifier, Internet Protocol address, email address, and account name
+
+YES
+
+B. Personal information categories listed in the California Customer Records statute
+Name, contact information, education, employment, employment history, and financial information
+
+NO
+
+C. Protected classification characteristics under California or federal law
+Gender and date of birth
+
+NO
+
+D. Commercial information
+Transaction information, purchase history, financial details, and payment information
+
+NO
+
+E. Biometric information
+Fingerprints and voiceprints
+
+NO
+
+F. Internet or other similar network activity
+Browsing history, search history, online behavior, interest data, and interactions with our and other websites, applications, systems, and advertisements
+
+NO
+
+G. Geolocation data
+Device location
+
+YES
+
+H. Audio, electronic, visual, thermal, olfactory, or similar information
+Images and audio, video or call recordings created in connection with our business activities
+
+YES
+
+I. Professional or employment-related information
+Business contact details in order to provide you our Services at a business level or job title, work history, and professional qualifications if you apply for a job with us
+
+NO
+
+J. Education Information
+Student records and directory information
+
+NO
+
+K. Inferences drawn from other personal information
+Inferences drawn from any of the collected personal information listed above to create a profile or summary about, for example, an individual's preferences and characteristics
+
+NO
+
+L. Sensitive Personal Information   
+NO
+
+
+We will use and retain the collected personal information as needed to provide the Services or for:
+Category A - As long as the user has an account with us
+Category G - As long as the user has an account with us
+Category H - As long as the user has an account with us
+We may also collect other personal information outside of these categories through instances where you interact with us in person, online, or by phone or mail in the context of:
+Receiving help through our customer support channels;
+Participation in customer surveys or contests; and
+Facilitation in the delivery of our Services and to respond to your inquiries.
+How do we use and share your personal information?
+
+More information about our data collection and sharing practices can be found in this privacy notice.
+
+You may contact us by email at %{contactEmail}, or by referring to the contact details at the bottom of this document.
+
+If you are using an authorized agent to exercise your right to opt out we may deny a request if the authorized agent does not submit proof that they have been validly authorized to act on your behalf.
+
+Will your information be shared with anyone else?
+
+We may disclose your personal information with our service providers pursuant to a written contract between us and each service provider. Each service provider is a for-profit entity that processes the information on our behalf, following the same strict privacy protection obligations mandated by the CCPA.
+
+We may use your personal information for our own business purposes, such as for undertaking internal research for technological development and demonstration. This is not considered to be "selling" of your personal information.
+
+%{WEB_LINK} has not disclosed, sold, or shared any personal information to third parties for a business or commercial purpose in the preceding twelve (12) months. %{WEB_LINK} will not sell or share personal information in the future belonging to website visitors, users, and other consumers.
+
+Your rights with respect to your personal data
+
+Right to request deletion of the data — Request to delete
+
+You can ask for the deletion of your personal information. If you ask us to delete your personal information, we will respect your request and delete your personal information, subject to certain exceptions provided by law, such as (but not limited to) the exercise by another consumer of his or her right to free speech, our compliance requirements resulting from a legal obligation, or any processing that may be required to protect against illegal activities.
+
+Right to be informed — Request to know
+
+Depending on the circumstances, you have a right to know:
+whether we collect and use your personal information;
+the categories of personal information that we collect;
+the purposes for which the collected personal information is used;
+whether we sell or share personal information to third parties;
+the categories of personal information that we sold, shared, or disclosed for a business purpose;
+the categories of third parties to whom the personal information was sold, shared, or disclosed for a business purpose;
+the business or commercial purpose for collecting, selling, or sharing personal information; and
+the specific pieces of personal information we collected about you.
+In accordance with applicable law, we are not obligated to provide or delete consumer information that is de-identified in response to a consumer request or to re-identify individual data to verify a consumer request.
+
+Right to Non-Discrimination for the Exercise of a Consumer's Privacy Rights
+
+We will not discriminate against you if you exercise your privacy rights.
+
+Right to Limit Use and Disclosure of Sensitive Personal Information
+
+We do not process consumer's sensitive personal information.
+
+Verification process
+
+Upon receiving your request, we will need to verify your identity to determine you are the same person about whom we have the information in our system. These verification efforts require us to ask you to provide information so that we can match it with information you have previously provided us. For instance, depending on the type of request you submit, we may ask you to provide certain information so that we can match the information you provide with the information we already have on file, or we may contact you through a communication method (e.g., phone or email) that you have previously provided to us. We may also use other verification methods as the circumstances dictate.
+
+We will only use personal information provided in your request to verify your identity or authority to make the request. To the extent possible, we will avoid requesting additional information from you for the purposes of verification. However, if we cannot verify your identity from the information already maintained by us, we may request that you provide additional information for the purposes of verifying your identity and for security or fraud-prevention purposes. We will delete such additionally provided information as soon as we finish verifying you.
+
+Other privacy rights
+You may object to the processing of your personal information.
+You may request correction of your personal data if it is incorrect or no longer relevant, or ask to restrict the processing of the information.
+You can designate an authorized agent to make a request under the CCPA on your behalf. We may deny a request from an authorized agent that does not submit proof that they have been validly authorized to act on your behalf in accordance with the CCPA.
+You may request to opt out from future selling or sharing of your personal information to third parties. Upon receiving an opt-out request, we will act upon the request as soon as feasibly possible, but no later than fifteen (15) days from the date of the request submission.
+To exercise these rights, you can contact us by email at %{contactEmail}, or by referring to the contact details at the bottom of this document. If you have a complaint about how we handle your data, we would like to hear from you.
+
+11. DO VIRGINIA RESIDENTS HAVE SPECIFIC PRIVACY RIGHTS?
+
+In Short: Yes, if you are a resident of Virginia, you may be granted specific rights regarding access to and use of your personal information.
+
+Virginia CDPA Privacy Notice
+
+Under the Virginia Consumer Data Protection Act (CDPA):
+
+"Consumer" means a natural person who is a resident of the Commonwealth acting only in an individual or household context. It does not include a natural person acting in a commercial or employment context.
+
+"Personal data" means any information that is linked or reasonably linkable to an identified or identifiable natural person. "Personal data" does not include de-identified data or publicly available information.
+
+"Sale of personal data" means the exchange of personal data for monetary consideration.
+
+If this definition "consumer" applies to you, we must adhere to certain rights and obligations regarding your personal data.
+
+The information we collect, use, and disclose about you will vary depending on how you interact with %{WEB_LINK} and our Services. To find out more, please visit the following links:
+Personal data we collect
+How we use your personal data
+When and with whom we share your personal data
+Your rights with respect to your personal data
+Right to be informed whether or not we are processing your personal data
+Right to access your personal data
+Right to correct inaccuracies in your personal data
+Right to request deletion of your personal data
+Right to obtain a copy of the personal data you previously shared with us
+Right to opt out of the processing of your personal data if it is used for targeted advertising, the sale of personal data, or profiling in furtherance of decisions that produce legal or similarly significant effects ("profiling")
+%{WEB_LINK} has not sold any personal data to third parties for business or commercial purposes. %{WEB_LINK} will not sell personal data in the future belonging to website visitors, users, and other consumers.
+
+Exercise your rights provided under the Virginia CDPA
+
+More information about our data collection and sharing practices can be found in this privacy notice.
+
+You may contact us by email at %{contactEmail}, by visiting our data subject request form, or by referring to the contact details at the bottom of this document.
+
+If you are using an authorized agent to exercise your rights, we may deny a request if the authorized agent does not submit proof that they have been validly authorized to act on your behalf.
+
+Verification process
+
+We may request that you provide additional information reasonably necessary to verify you and your consumer's request. If you submit the request through an authorized agent, we may need to collect additional information to verify your identity before processing your request.
+
+Upon receiving your request, we will respond without undue delay, but in all cases, within forty-five (45) days of receipt. The response period may be extended once by forty-five (45) additional days when reasonably necessary. We will inform you of any such extension within the initial 45-day response period, together with the reason for the extension.
+
+Right to appeal
+
+If we decline to take action regarding your request, we will inform you of our decision and reasoning behind it. If you wish to appeal our decision, please email us at %{contactEmail}. Within sixty (60) days of receipt of an appeal, we will inform you in writing of any action taken or not taken in response to the appeal, including a written explanation of the reasons for the decisions. If your appeal if denied, you may contact the Attorney General to submit a complaint.
+
+12. DO WE MAKE UPDATES TO THIS NOTICE?
+
+In Short: Yes, we will update this notice as necessary to stay compliant with relevant laws.
+
+We may update this privacy notice from time to time. The updated version will be indicated by an updated "Revised" date and the updated version will be effective as soon as it is accessible. If we make material changes to this privacy notice, we may notify you either by prominently posting a notice of such changes or by directly sending you a notification. We encourage you to review this privacy notice frequently to be informed of how we are protecting your information.
+
+13. HOW CAN YOU CONTACT US ABOUT THIS NOTICE?
+
+If you have questions or comments about this notice, you may email us at %{contactEmail} or by post to:
+
+%{WEB_LINK}
+50 Old Toh Tuck Rd
+Singapore, Singapore 597657
+Singapore
+
+14. HOW CAN YOU REVIEW, UPDATE, OR DELETE THE DATA WE COLLECT FROM YOU?
+
+Based on the applicable laws of your country, you may have the right to request access to the personal information we collect from you, change that information, or delete it. To request to review, update, or delete your personal information, please submit a request form by clicking here.
+This privacy policy was created using Termly's Privacy Policy Generator.
+
+  `,
+    'general_eula_content': `
+END USER LICENSE AGREEMENT
+
+Last updated February 03, 2025
+
+  %{appName} is licensed to You (End-User) by %{WEB_LINK}, located and registered at 2485 Patton Lane, Raleigh, Raleigh 27610, Raleigh ("Licensor"), for use only under the terms of this License Agreement.
+
+By downloading the Licensed Application from Apple's software distribution platform ("App Store") and Google's software distribution platform ("Play Store"), and any update thereto (as permitted by this License Agreement), You indicate that You agree to be bound by all of the terms and conditions of this License Agreement, and that You accept this License Agreement. App Store and Play Store are referred to in this License Agreement as "Services."
+
+The parties of this License Agreement acknowledge that the Services are not a Party to this License Agreement and are not bound by any provisions or obligations with regard to the Licensed Application, such as warranty, liability, maintenance and support thereof. %{WEB_LINK}, not the Services, is solely responsible for the Licensed Application and the content thereof.
+
+This License Agreement may not provide for usage rules for the Licensed Application that are in conflict with the latest Apple Media Services Terms and Conditions and Google Play Terms of Service ("Usage Rules"). %{WEB_LINK} acknowledges that it had the opportunity to review the Usage Rules and this License Agreement is not conflicting with them.
+
+%{appName} when purchased or downloaded through the Services, is licensed to You for use only under the terms of this License Agreement. The Licensor reserves all rights not expressly granted to You. %{appName} is to be used on devices that operate with Apple's operating systems ("iOS" and "Mac OS") or Google's operating system ("Android").
+
+
+TABLE OF CONTENTS
+
+1. THE APPLICATION
+2. SCOPE OF LICENSE
+3. TECHNICAL REQUIREMENTS
+4. MAINTENANCE AND SUPPORT
+5. USE OF DATA
+6. USER-GENERATED CONTRIBUTIONS
+7. CONTRIBUTION LICENSE
+8. LIABILITY
+9. WARRANTY
+10. PRODUCT CLAIMS
+11. LEGAL COMPLIANCE
+12. CONTACT INFORMATION
+13. TERMINATION
+14. THIRD-PARTY TERMS OF AGREEMENTS AND BENEFICIARY
+15. INTELLECTUAL PROPERTY RIGHTS
+16. APPLICABLE LAW
+17. MISCELLANEOUS
+
+
+1. THE APPLICATION
+
+%{appName} ("Licensed Application") is a piece of software created to watch video, publish comment, collect video and comment — and customized for iOS and Android mobile devices ("Devices"). It is used to watch video.
+
+The Licensed Application is not tailored to comply with industry-specific regulations (Health Insurance Portability and Accountability Act (HIPAA), Federal Information Security Management Act (FISMA), etc.), so if your interactions would be subjected to such laws, you may not use this Licensed Application. You may not use the Licensed Application in a way that would violate the Gramm-Leach-Bliley Act (GLBA).
+
+
+2. SCOPE OF LICENSE
+
+2.1  You are given a non-transferable, non-exclusive, non-sublicensable license to install and use the Licensed Application on any Devices that You (End-User) own or control and as permitted by the Usage Rules, with the exception that such Licensed Application may be accessed and used by other accounts associated with You (End-User, The Purchaser) via Family Sharing or volume purchasing.
+
+2.2  This license will also govern any updates of the Licensed Application provided by Licensor that replace, repair, and/or supplement the first Licensed Application, unless a separate license is provided for such update, in which case the terms of that new license will govern.
+
+2.3  You may not share or make the Licensed Application available to third parties (unless to the degree allowed by the Usage Rules, and with %{WEB_LINK}'s prior written consent), sell, rent, lend, lease or otherwise redistribute the Licensed Application.
+
+2.4  You may not reverse engineer, translate, disassemble, integrate, decompile, remove, modify, combine, create derivative works or updates of, adapt, or attempt to derive the source code of the Licensed Application, or any part thereof (except with %{WEB_LINK}'s prior written consent).
+
+2.5  You may not copy (excluding when expressly authorized by this license and the Usage Rules) or alter the Licensed Application or portions thereof. You may create and store copies only on devices that You own or control for backup keeping under the terms of this license, the Usage Rules, and any other terms and conditions that apply to the device or software used. You may not remove any intellectual property notices. You acknowledge that no unauthorized third parties may gain access to these copies at any time. If you sell your Devices to a third party, you must remove the Licensed Application from the Devices before doing so.
+
+2.6  Violations of the obligations mentioned above, as well as the attempt of such infringement, may be subject to prosecution and damages.
+
+2.7  Licensor reserves the right to modify the terms and conditions of licensing.
+
+2.8  Nothing in this license should be interpreted to restrict third-party terms. When using the Licensed Application, You must ensure that You comply with applicable third-party terms and conditions.
+
+
+3. TECHNICAL REQUIREMENTS
+
+3.1  The Licensed Application requires a firmware version 1.0.0 or higher. Licensor recommends using the latest version of the firmware.
+
+3.2  Licensor attempts to keep the Licensed Application updated so that it complies with modified/new versions of the firmware and new hardware. You are not granted rights to claim such an update.
+
+3.3  You acknowledge that it is Your responsibility to confirm and determine that the app end-user device on which You intend to use the Licensed Application satisfies the technical specifications mentioned above.
+
+3.4  Licensor reserves the right to modify the technical specifications as it sees appropriate at any time.
+
+
+4. MAINTENANCE AND SUPPORT
+
+4.1  The Licensor is solely responsible for providing any maintenance and support services for this Licensed Application. You can reach the Licensor at the email address listed in the App Store or Play Store Overview for this Licensed Application.
+
+4.2  %{WEB_LINK} and the End-User acknowledge that the Services have no obligation whatsoever to furnish any maintenance and support services with respect to the Licensed Application.
+
+
+5. USE OF DATA
+
+You acknowledge that Licensor will be able to access and adjust Your downloaded Licensed Application content and Your personal information, and that Licensor's use of such material and information is subject to Your legal agreements with Licensor and Licensor's privacy policy: https://%{WEB_LINK}/privacy/index.htm.
+
+You acknowledge that the Licensor may periodically collect and use technical data and related information about your device, system, and application software, and peripherals, offer product support, facilitate the software updates, and for purposes of providing other services to you (if any) related to the Licensed Application. Licensor may also use this information to improve its products or to provide services or technologies to you, as long as it is in a form that does not personally identify you.
+
+
+6. USER-GENERATED CONTRIBUTIONS
+
+The Licensed Application may invite you to chat, contribute to, or participate in blogs, message boards, online forums, and other functionality, and may provide you with the opportunity to create, submit, post, display, transmit, perform, publish, distribute, or broadcast content and materials to us or in the Licensed Application, including but not limited to text, writings, video, audio, photographs, graphics, comments, suggestions, or personal information or other material (collectively, "Contributions"). Contributions may be viewable by other users of the Licensed Application and through third-party websites or applications. As such, any Contributions you transmit may be treated as non-confidential and non-proprietary. When you create or make available any Contributions, you thereby represent and warrant that:
+
+1. The creation, distribution, transmission, public display, or performance, and the accessing, downloading, or copying of your Contributions do not and will not infringe the proprietary rights, including but not limited to the copyright, patent, trademark, trade secret, or moral rights of any third party.
+2. You are the creator and owner of or have the necessary licenses, rights, consents, releases, and permissions to use and to authorize us, the Licensed Application, and other users of the Licensed Application to use your Contributions in any manner contemplated by the Licensed Application and this License Agreement.
+3. You have the written consent, release, and/or permission of each and every identifiable individual person in your Contributions to use the name or likeness or each and every such identifiable individual person to enable inclusion and use of your Contributions in any manner contemplated by the Licensed Application and this License Agreement.
+4. Your Contributions are not false, inaccurate, or misleading.
+5. Your Contributions are not unsolicited or unauthorized advertising, promotional materials, pyramid schemes, chain letters, spam, mass mailings, or other forms of solicitation.
+6. Your Contributions are not obscene, lewd, lascivious, filthy, violent, harassing, libelous, slanderous, or otherwise objectionable (as determined by us).
+7. Your Contributions do not ridicule, mock, disparage, intimidate, or abuse anyone.
+8. Your Contributions are not used to harass or threaten (in the legal sense of those terms) any other person and to promote violence against a specific person or class of people.
+9. Your Contributions do not violate any applicable law, regulation, or rule.
+10. Your Contributions do not violate the privacy or publicity rights of any third party.
+11. Your Contributions do not violate any applicable law concerning child pornography, or otherwise intended to protect the health or well-being of minors.
+12. Your Contributions do not include any offensive comments that are connected to race, national origin, gender, sexual preference, or physical handicap.
+13. Your Contributions do not otherwise violate, or link to material that violates, any provision of this License Agreement, or any applicable law or regulation.
+
+Any use of the Licensed Application in violation of the foregoing violates this License Agreement and may result in, among other things, termination or suspension of your rights to use the Licensed Application.
+
+
+7. CONTRIBUTION LICENSE
+
+By posting your Contributions to any part of the Licensed Application or making Contributions accessible to the Licensed Application by linking your account from the Licensed Application to any of your social networking accounts, you automatically grant, and you represent and warrant that you have the right to grant, to us an unrestricted, unlimited, irrevocable, perpetual, non-exclusive, transferable, royalty-free, fully-paid, worldwide right, and license to host, use copy, reproduce, disclose, sell, resell, publish, broad cast, retitle, archive, store, cache, publicly display, reformat, translate, transmit, excerpt (in whole or in part), and distribute such Contributions (including, without limitation, your image and voice) for any purpose, commercial advertising, or otherwise, and to prepare derivative works of, or incorporate in other works, such as Contributions, and grant and authorize sublicenses of the foregoing. The use and distribution may occur in any media formats and through any media channels.
+
+This license will apply to any form, media, or technology now known or hereafter developed, and includes our use of your name, company name, and franchise name, as applicable, and any of the trademarks, service marks, trade names, logos, and personal and commercial images you provide. You waive all moral rights in your Contributions, and you warrant that moral rights have not otherwise been asserted in your Contributions.
+
+We do not assert any ownership over your Contributions. You retain full ownership of all of your Contributions and any intellectual property rights or other proprietary rights associated with your Contributions. We are not liable for any statements or representations in your Contributions provided by you in any area in the Licensed Application. You are solely responsible for your Contributions to the Licensed Application and you expressly agree to exonerate us from any and all responsibility and to refrain from any legal action against us regarding your Contributions.
+
+We have the right, in our sole and absolute discretion, (1) to edit, redact, or otherwise change any Contributions; (2) to recategorize any Contributions to place them in more appropriate locations in the Licensed Application; and (3) to prescreen or delete any Contributions at any time and for any reason, without notice. We have no obligation to monitor your Contributions.
+
+
+8. LIABILITY
+
+8.1  Licensor's responsibility in the case of violation of obligations and tort shall be limited to intent and gross negligence. Only in case of a breach of essential contractual duties (cardinal obligations), Licensor shall also be liable in case of slight negligence. In any case, liability shall be limited to the foreseeable, contractually typical damages. The limitation mentioned above does not apply to injuries to life, limb, or health.
+
+8.2  Licensor takes no accountability or responsibility for any damages caused due to a breach of duties according to Section 2 of this License Agreement. To avoid data loss, You are required to make use of backup functions of the Licensed Application to the extent allowed by applicable third-party terms and conditions of use. You are aware that in case of alterations or manipulations of the Licensed Application, You will not have access to the Licensed Application.
+
+
+9. WARRANTY
+
+9.1  Licensor warrants that the Licensed Application is free of spyware, trojan horses, viruses, or any other malware at the time of Your download. Licensor warrants that the Licensed Application works as described in the user documentation.
+
+9.2  No warranty is provided for the Licensed Application that is not executable on the device, that has been unauthorizedly modified, handled inappropriately or culpably, combined or installed with inappropriate hardware or software, used with inappropriate accessories, regardless if by Yourself or by third parties, or if there are any other reasons outside of %{WEB_LINK}'s sphere of influence that affect the executability of the Licensed Application.
+
+9.3  You are required to inspect the Licensed Application immediately after installing it and notify %{WEB_LINK} about issues discovered without delay by email provided in Contact Information. The defect report will be taken into consideration and further investigated if it has been emailed within a period of ninety (90) days after discovery.
+
+9.4  If we confirm that the Licensed Application is defective, %{WEB_LINK} reserves a choice to remedy the situation either by means of solving the defect or substitute delivery.
+
+9.5  In the event of any failure of the Licensed Application to conform to any applicable warranty, You may notify the Services Store Operator, and Your Licensed Application purchase price will be refunded to You. To the maximum extent permitted by applicable law, the Services Store Operator will have no other warranty obligation whatsoever with respect to the Licensed Application, and any other losses, claims, damages, liabilities, expenses, and costs attributable to any negligence to adhere to any warranty.
+
+9.6  If the user is an entrepreneur, any claim based on faults expires after a statutory period of limitation amounting to twelve (12) months after the Licensed Application was made available to the user. The statutory periods of limitation given by law apply for users who are consumers.
+   
+
+10. PRODUCT CLAIMS
+
+%{WEB_LINK} and the End-User acknowledge that %{WEB_LINK}, and not the Services, is responsible for addressing any claims of the End-User or any third party relating to the Licensed Application or the End-User's possession and/or use of that Licensed Application, including, but not limited to:
+
+(i) product liability claims;
+   
+(ii) any claim that the Licensed Application fails to conform to any applicable legal or regulatory requirement; and
+
+(iii) claims arising under consumer protection, privacy, or similar legislation, including in connection with Your Licensed Application's use of the HealthKit and HomeKit.
+
+
+11. LEGAL COMPLIANCE
+
+You represent and warrant that You are not located in a country that is subject to a US Government embargo, or that has been designated by the US Government as a "terrorist supporting" country; and that You are not listed on any US Government list of prohibited or restricted parties.
+
+
+12. CONTACT INFORMATION
+
+For general inquiries, complaints, questions or claims concerning the Licensed Application, please contact:
+       
+admin
+2485 Patton Lane
+Raleigh, Raleigh 27610
+Raleigh
+support@%{WEB_LINK}
+
+
+13. TERMINATION
+
+The license is valid until terminated by %{WEB_LINK} or by You. Your rights under this license will terminate automatically and without notice from %{WEB_LINK} if You fail to adhere to any term(s) of this license. Upon License termination, You shall stop all use of the Licensed Application, and destroy all copies, full or partial, of the Licensed Application.
+      
+
+14. THIRD-PARTY TERMS OF AGREEMENTS AND BENEFICIARY
+
+%{WEB_LINK} represents and warrants that %{WEB_LINK} will comply with applicable third-party terms of agreement when using Licensed Application.
+
+In Accordance with Section 9 of the "Instructions for Minimum Terms of Developer's End-User License Agreement," both Apple and Google and their subsidiaries shall be third-party beneficiaries of this End User License Agreement and — upon Your acceptance of the terms and conditions of this License Agreement, both Apple and Google will have the right (and will be deemed to have accepted the right) to enforce this End User License Agreement against You as a third-party beneficiary thereof.
+
+
+15. INTELLECTUAL PROPERTY RIGHTS
+
+%{WEB_LINK} and the End-User acknowledge that, in the event of any third-party claim that the Licensed Application or the End-User's possession and use of that Licensed Application infringes on the third party's intellectual property rights, %{WEB_LINK}, and not the Services, will be solely responsible for the investigation, defense, settlement, and discharge or any such intellectual property infringement claims.
+
+
+16. APPLICABLE LAW
+
+This License Agreement is governed by the laws of Raleigh excluding its conflicts of law rules.
+
+
+17. MISCELLANEOUS
+
+17.1  If any of the terms of this agreement should be or become invalid, the validity of the remaining provisions shall not be affected. Invalid terms will be replaced by valid ones formulated in a way that will achieve the primary purpose.
+               
+17.2  Collateral agreements, changes and amendments are only valid if laid down in writing. The preceding clause can only be waived in writing.`,
+    // App download modal related texts
+    download_app_title: 'Download APP for Full Content',
+    download_app_desc: 'Install our APP to watch all HD videos, ad-free and supports offline caching',
+    download_app_btn: 'Download Now',
+    download_app_cancel: 'Cancel',
+    download_app_short_title: 'Download APP to Watch Short Dramas',
+    download_app_short_desc: 'Install our APP to watch a vast collection of short dramas, with unlimited viewing and offline caching',
+    download_app_detail_title: 'Download APP to Watch Full Video',
+    download_app_detail_desc: 'Install our APP to smoothly watch complete videos, supports offline caching, HD and ad-free'
+};
+const __TURBOPACK__default__export__ = en;
+if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
+    __turbopack_context__.k.registerExports(module, globalThis.$RefreshHelpers$);
+}
+}}),
+"[project]/src/app/i18n/locales/tw.js [app-client] (ecmascript)": ((__turbopack_context__) => {
+"use strict";
+
+var { g: global, __dirname, k: __turbopack_refresh__, m: module } = __turbopack_context__;
+{
+__turbopack_context__.s({
+    "default": (()=>__TURBOPACK__default__export__)
+});
+const tw = {
+    config_app_name: '天天影視',
+    "seo_app_title": "天天影視 - 線上觀看電影、電視劇、動漫、短劇 - 正版APP",
+    "seo_app_desc": "免費線上觀看高清電影、電視劇、動漫、短劇，流暢體驗最新影視內容，隨時隨地享受精彩！",
+    "seo_page_title": "天天影視 - 免費{page} - 線上觀看電影、電視劇、動漫、短劇 - 正版APP",
+    "seo_page_desc": "天天影視 - 免費{page} - 免費線上觀看高清電影、電視劇、動漫、短劇，流暢體驗最新影視內容，隨時隨地享受精彩！",
+    "seo_detail_title": "《{title}》- 免費線上觀看",
+    "seo_detail_desc": "《{title}》- {desc}",
+    "seo_keywords": "線上電影,免費電視劇,高清影視,電影網站,免費影視,線上觀看電影,視頻網站,影視大全,電影線上,科幻電影,動作電影,愛情電影,懸疑電視劇,古裝電視劇,綜藝節目,動漫新番,戰爭電影,喜劇電影,紀錄片線上",
+    homeTab: '好看',
+    hotTab: '熱點',
+    recommend: '短劇',
+    shortVideo: '短視頻',
+    mineTab: '我的',
+    homeChoice: '熱門',
+    homeFilm: '電影',
+    homeTeleplay: '電視劇',
+    homeVariety: '綜藝',
+    homeEntertainment: '動漫',
+    homeNews: '資訊',
+    vipAll: '全部',
+    vipWeek: '本週熱門',
+    vipPopular: '人氣排序',
+    vipTime: '時間排序',
+    artTypeFilm: '電影',
+    artTypeTeleplay: '電視劇',
+    artTypeVariety: '綜藝',
+    artTypeEntertainment: '動漫',
+    artTypeNews: '資訊',
+    // 分類標籤
+    category_type: '類型',
+    category_region: '地區',
+    category_year: '年份',
+    category_all: '全部',
+    general_no_image: '無圖片',
+    general_retry: '重試',
+    all: '全部',
+    title_0: '精彩劇情',
+    title_1: '搞笑喜劇',
+    title_2: '高分動作',
+    title_3: '浪漫情感',
+    title_4: '科幻大片',
+    title_5: '動漫動畫',
+    title_6: '懸疑燒腦',
+    title_7: '驚險刺激',
+    title_8: '恐怖血腥',
+    title_9: '犯罪槍戰',
+    title_10: '國內好片',
+    title_11: '美國大片',
+    title_12: '經典港片',
+    title_13: '台灣巨作',
+    title_14: '日本',
+    title_15: '韓國',
+    contentTypePlot: '劇情',
+    contentTypeComedy: '喜劇',
+    contentTypeAction: '動作',
+    contentTypeRomance: '愛情',
+    contentTypeScienceFiction: '科幻',
+    contentTypeCartoon: '動畫',
+    contentTypeSuspense: '懸疑',
+    contentTypeThriller: '驚悚',
+    contentTypeHorror: '恐怖',
+    contentTypeCrime: '犯罪',
+    contentTypeHomosexual: '同性',
+    contentTypeMusic: '音樂',
+    contentTypeDance: '歌舞',
+    contentTypeBiopic: '傳記',
+    contentTypeHistorical: '歷史',
+    contentTypeWar: '戰爭',
+    contentTypeWestward: '西部',
+    contentTypeMagical: '奇幻',
+    contentTypeAdventure: '冒險',
+    contentTypeDisaster: '災難',
+    contentTypeMartialArts: '武俠',
+    contentTypeOthers: '其他',
+    // reelsContentTypeTimeTravel: '穿越',
+    // reelsContentTypeFantasy: '玄幻',
+    // reelsContentTypeComedy: '搞笑',
+    // reelsContentTypeHorror: '恐怖',
+    // reelsContentTypeAction: '熱血',
+    // reelsContentTypeMotivation: '勵志',
+    // reelsContentTypeRomance: '愛情',
+    // reelsContentTypeWar: '戰爭',
+    // reelsContentTypeUrban: '都市',
+    // reelsContentTypeOvercome: '逆襲',
+    // reelsContentTypeSweet: '甜寵',
+    // reelsContentTypeRebirth: '重生',
+    // reelsContentTypeRevenge: '復仇',
+    // reelsContentTypeCEO: '總裁',
+    // reelsContentTypeAristocracy: '豪門',
+    // reelsContentTypeAdventure: '冒險',
+    // reelsContentTypeIntrigue: '權謀',
+    // reelsContentTypeEmotions: '情感',
+    // reelsContentTypeMarriage: '婚姻',
+    // reelsContentTypeMystery: '懸疑',
+    reelsContentTypeUrban: '都市',
+    reelsContentTypeTraverse: '穿越',
+    reelsContentTypeRebirth: '重生',
+    reelsContentTypeWarGod: '戰神',
+    reelsContentTypeFantasy: '玄幻',
+    reelsContentTypeOverlord: '霸總',
+    reelsContentTypeTorturedLove: '虐戀',
+    reelsContentTypeBaby: '萌寶',
+    reelsContentTypeCostume: '古裝',
+    reelsContentTypeDivineHealer: '神醫',
+    reelsContentTypeFemale: '女頻',
+    reelsContentTypeMale: '男頻',
+    reelsContentTypeHeir: '豪門',
+    reelsContentTypeRepublic: '民國',
+    reelsContentTypeRise: '逆襲',
+    reelsContentTypeRomance: '言情',
+    reelsContentTypeHistory: '歷史',
+    reelsContentTypeSweet: '甜寵',
+    reelsContentTypeRevenge: '復仇',
+    reelsContentTypeFamily: '家庭',
+    reelsContentTypeReality: '現實',
+    reelsContentTypeKinship: '親情',
+    reelsContentTypeFeeling: '情感',
+    reelsContentTypeFlashMarriage: '閃婚',
+    reelsContentTypeOthers: '其他',
+    // reelsContentTypeYouth: '青春',
+    // reelsContentTypeEmpress: '女帝',
+    // reelsContentTypeRepublic: '民國',
+    // reelsContentTypeBaby: '萌寶',
+    // reelsContentTypeSuperpower: '超能',
+    // reelsContentTypeSweet: '甜寵',
+    // reelsContentTypeHeirDrama: '豪門恩怨',
+    // reelsContentTypeSurvival: '求生',
+    // reelsContentTypeVillain: '反派',
+    // reelsContentTypeFamilySearch: '尋親',
+    // reelsContentTypeMindReading: '讀心術',
+    // reelsContentTypeLaw: '律政',
+    // reelsContentTypeBusinessWar: '職場商戰',
+    // reelsContentTypeFantasyCostume: '古裝仙俠',
+    // reelsContentTypePowerPlay: '權謀',
+    // reelsContentTypeChildhoodLove: '青梅竹馬',
+    // reelsContentTypeMyth: '神話',
+    // reelsContentTypeMasterLady: '女高手下山',
+    // reelsContentTypeCompetition: '競賽',
+    // reelsContentTypeFrenemies: '歡喜冤家',
+    // reelsContentTypeEraDrama: '年代劇',
+    // reelsContentTypeComedy: '喜劇',
+    // reelsContentTypeTimeTravelModern: '古穿今',
+    // reelsContentTypeFamilyLove: '親情劇',
+    // reelsContentTypeWealth: '致富',
+    // reelsContentTypeFantasyTwist: '奇幻腦洞',
+    // reelsContentTypeWarGod: '戰神',
+    // reelsContentTypeStrongReturn: '強者回歸',
+    // reelsContentTypeSystem: '系統',
+    // reelsContentTypeInspiration: '勵志',
+    // reelsContentTypeModernFantasy: '現代奇幻',
+    // reelsContentTypeRevenge: '復仇',
+    // reelsContentTypeTactician: '毒士',
+    // reelsContentTypeChaseRegret: '追妻火葬場',
+    // reelsContentTypeMask: '馬甲',
+    // reelsContentTypeConcubine: '王妃',
+    // reelsContentTypeKinship: '親情',
+    // reelsContentTypeUnderdog: '小人物',
+    // reelsContentTypeInvincible: '無敵',
+    // reelsContentTypeWorkplace: '職場',
+    // reelsContentTypeAbandonedYouth: '棄少',
+    // reelsContentTypeMystery: '懸疑',
+    // reelsContentTypeCostume: '古裝',
+    // reelsContentTypeMetaphysics: '玄學',
+    // reelsContentTypeFantasyImmortal: '玄幻仙俠',
+    // reelsContentTypeRelax: '輕鬆',
+    // reelsContentTypeLandlord: '包租公',
+    // reelsContentTypeWorthlessGirl: '廢女',
+    // reelsContentTypeOperaDance: '戲曲歌舞',
+    // reelsContentTypeRise: '逆襲',
+    // reelsContentTypeSubstitute: '替身',
+    // reelsContentTypeOriginalWife: '原配',
+    // reelsContentTypeAnime: '動漫',
+    // reelsContentTypeGodEye: '神眼',
+    // reelsContentTypeImmortality: '長生',
+    // reelsContentTypeDivineHealer: '神醫',
+    // reelsContentTypeCrush: '暗戀',
+    // reelsContentTypeSwapMarriage: '換親',
+    // reelsContentTypeWomenGrowth: '女性成長',
+    // reelsContentTypeSpyWar: '抗戰諜戰',
+    // reelsContentTypeSeries: '電視劇',
+    // reelsContentTypeTimeTravel: '穿越時空',
+    // reelsContentTypeCultivation: '修仙',
+    // reelsContentTypeFlashMarriage: '閃婚',
+    // reelsContentTypeMasterDescent: '高手下山',
+    // reelsContentTypeTrueFakeHeiress: '真假千金',
+    // reelsContentTypeMiddleAgeLove: '中年婚戀',
+    // reelsContentTypeUrban: '都市',
+    // reelsContentTypeSpace: '空間',
+    // reelsContentTypeSports: '體育',
+    // reelsContentTypeBride: '婚女',
+    // reelsContentTypeMistakenIdentity: '誤認',
+    // reelsContentTypeTreasureHunt: '鑑寶',
+    // reelsContentTypeChefGod: '廚神',
+    // reelsContentTypeFamily: '家庭',
+    // reelsContentTypeHousewife: '家庭主婦',
+    // reelsContentTypeLadyBoss: '女總裁',
+    // reelsContentTypeSlagAbuse: '虐渣',
+    // reelsContentTypeTycoon: '神豪',
+    // reelsContentTypeSciFi: '科幻',
+    // reelsContentTypeTimeLink: '今古連通',
+    // reelsContentTypeMovie: '電影',
+    // reelsContentTypeReality: '現實',
+    // reelsContentTypeRebirth: '重生',
+    // reelsContentTypeTeacherStudent: '師生情',
+    // reelsContentTypeHeiress: '千金',
+    // reelsContentTypeTraverse: '穿越',
+    // reelsContentTypeCEO: '總裁',
+    // reelsContentTypeMarriage: '婚姻',
+    // reelsContentTypePatrioticFeud: '家國情仇',
+    // reelsContentTypeTorturedLove: '虐戀',
+    // reelsContentTypeMiddleAge: '中年',
+    // reelsContentTypeEmotionFlow: '情感流',
+    // reelsContentTypeLegacyAwaken: '傳承覺醒',
+    // reelsContentTypeMartialArts: '功夫武打',
+    // reelsContentTypeGroupSweet: '團寵',
+    // reelsContentTypeFeeling: '情感',
+    // reelsContentTypeModernRomance: '現代言情',
+    // reelsContentTypeRegret: '後悔流',
+    areaTypeChinaMainland: '大陸',
+    areaTypeUnitedStates: '美國',
+    areaTypeHongKong: '香港',
+    areaTypeTaiwan: '臺灣',
+    areaTypeJapan: '日本',
+    areaTypeKorea: '韓國',
+    areaTypeUnitedKingdom: '英國',
+    areaTypeFrance: '法國',
+    areaTypeGermany: '德國',
+    areaTypeItaly: '義大利',
+    areaTypeSpain: '西班牙',
+    areaTypeIndia: '印度',
+    areaTypeThailand: '泰國',
+    areaTypeRussia: '俄羅斯',
+    areaTypeIran: '伊朗',
+    areaTypeCanada: '加拿大',
+    areaTypeAustralia: '澳大利亞',
+    areaTypeIreland: '愛爾蘭',
+    areaTypeSweden: '瑞典',
+    areaTypeBrazil: '巴西',
+    areaTypeDenmark: '丹麥',
+    areaTypeOthers: '其他',
+    center_btn_chinese: '中文',
+    center_btn_english: '歐美',
+    center_btn_asian: '日韓',
+    center_btn_china: '國產',
+    center_btn_outback: '內地',
+    center_btn_cantonese: '港臺',
+    center_btn_Reality: '真人秀',
+    center_btn_international: '國際',
+    center_btn_Asia: '亞洲',
+    center_btn_UsTeleplay: '美劇',
+    main_noData: '暫無內容',
+    main_more: '更多',
+    main_not_open: '暫未開放',
+    main_lang_cn: '簡體中文',
+    main_lang_tw: '繁體中文',
+    main_lang_en: '英語',
+    main_message_all: '所有人',
+    main_message_friend: '僅好友',
+    main_message_followed: '僅關注我的人',
+    mine_register: '註冊',
+    mine_login: '登錄',
+    mine_ing: '中',
+    mine_username: '請輸入郵箱',
+    mine_password: '請輸入密碼',
+    mine_password_again: '請再次輸入密碼',
+    mine_password_not_same: '兩次輸入密碼不一致',
+    mine_password_invalid: '密碼請使用6-20位字母加數字組成',
+    mine_agree: '同意協定並註冊',
+    mine_tips: '點擊「同意協定並註冊」即表示您已閱讀並同意《用戶協定》《隱私政策》',
+    mine_password_forgot: '忘記密碼?',
+    mine_show_email: '請郵件聯繫管理員: %{contactEmail}',
+    mine_login_summary: '登錄一下，內容更精彩',
+    mine_watch_history: '觀看歷史',
+    mine_recently_played: '最近播放',
+    mine_recently_favorites: '最近收藏',
+    mine_create_list: '作品',
+    mine_activity: '動態',
+    mine_favorite: '喜歡',
+    mine_downloads: '我的下載',
+    mine_favorites: '我的收藏',
+    mine_weblink: '官網位址',
+    set_up_account: '帳號與安全',
+    set_up_my_coin: '我的積分',
+    set_up_cellphone: '手機綁定',
+    set_up_third: '第三方帳號綁定',
+    set_up_realname: '實名認證',
+    set_up_shield: '遮罩設置',
+    set_up_delete: '账号删除',
+    set_up_block_list: '黑名單',
+    report_text: '舉報',
+    report_block: '加入黑名單',
+    report_add_block_list: '已加入黑名單， 你可以在設定中取消黑名單',
+    report_remove_block_list: '成功移出黑名單',
+    report_unblock: '解除黑名單',
+    report_question: '請輸入你的舉報理由',
+    report_blocked_noData: '已遮罩，暫無可查看內容',
+    report_type_image: '舉報圖片或標題',
+    report_type_video: '舉報視頻',
+    report_type_comment: '舉報評論',
+    report_type_user: '舉報使用者',
+    report_thanks: '感謝您的舉報',
+    report_issue: '問題',
+    report_content_1: '您好！ 感謝您的舉報。 如果此內容違反了%{appName}的',
+    report_content_2: '我們會將其移除。 詳細瞭解如何遮罩評論或使用者，以及我們為保護您在%{appName}上的安全而設置的其他政策和工具。',
+    report_issue_0: '色情內容',
+    report_issue_1: '暴力或令人反感的內容',
+    report_issue_2: '仇恨或侮辱他人的內容',
+    report_issue_3: '有害或危險行為',
+    report_issue_4: '垃圾內容或誤導性內容',
+    report_issue_5: '騷擾或欺淩',
+    report_issue_6: '虐待兒童',
+    report_issue_7: '侵犯了我的權利',
+    report_issue_8: '宣揚恐怖主義',
+    report_issue_9: '版權問題',
+    report_issue_10: '隱私問題',
+    report_issue_11: '商標侵權或仿冒',
+    report_issue_12: '其他法律問題',
+    ad_skip: '跳過廣告',
+    ad_remove: '去掉廣告',
+    download_tips: '溫馨提示: 觀看緩存視頻時，請不要斷開網路',
+    download_progress: '下載進度',
+    download_delete: '刪除',
+    download_delete_sure: '確定刪除?',
+    download_deleted: '已成功刪除',
+    download_delete_tip: '下載完成後才能刪除',
+    download_complete: '已完成 %{progress}%',
+    download_free_storage: '剩餘 %{free}G 可用',
+    download_play_cache: ' (正在播放緩存)',
+    download_added: '已加入下載任務',
+    download_downloading: '正在下載中，進入[我的-我的下載]查看',
+    download_throw_err: '下載出錯了，請重啟App重試',
+    download_state_downloading: '下載中',
+    download_state_stop: '下載中斷',
+    download_state_complete: '下載完成',
+    download_source_cannot: '本播放源無法下載,請更換播放源重試',
+    download_source_error: '當前播放源下載錯誤，請切換其他播放源或重啟App重試',
+    download_cannot_play: '如果下載完成後無法觀看，請重啟app，或切換播放源重新下載.',
+    download_max_error: '下載數量已達到最大限制，請升級vip后重試',
+    set_up_play: '播放',
+    set_up_autoplay: '自動跳過片頭片尾',
+    set_up_net_play: '運營商網路自動播放',
+    set_up_net_upload: '允許運營商網路上傳',
+    set_up_general: '通用',
+    set_up_get_message: '接收推送通知',
+    set_up_change_lang: '切換語言',
+    set_up_push_other: '允許將我推送給好友',
+    set_up_who_push: '誰可以發消息給我',
+    set_up_about: '關於',
+    set_up_help: '反饋與説明',
+    set_up_sla: '使用者協定',
+    set_up_privacy: '隱私政策',
+    general_summary: '簡介',
+    general_starring: '主演',
+    general_type: '類型',
+    general_all_comment: '全部評論',
+    general_sets_title: '選集',
+    general_like: '點贊',
+    general_comment: '評論',
+    general_sets: '選集',
+    general_share: '分享',
+    general_collect: '收藏',
+    general_comment_any: '我來說幾句',
+    general_publish_comment: '發表評論',
+    general_picture: '圖片',
+    general_video: '視頻',
+    general_publish: '發表',
+    general_submit: '提交',
+    general_modify: '修改資料',
+    general_comment_num: '條',
+    general_comments: '評論',
+    general_reply: '回復',
+    general_replies: '回復',
+    general_follow: '關注',
+    general_unfollow: '取消关注',
+    general_likes: '點贊',
+    general_followering: '關注',
+    general_followers: '粉絲',
+    general_friends: '好友',
+    general_ensure: '確認',
+    general_cancel: '取消',
+    general_hot_search: '熱搜',
+    general_search_place: '輸入視頻名稱',
+    general_publishing: '評論提交中',
+    general_input_content: '請輸入內容',
+    general_logout: '退出帳號',
+    general_input_question: '請輸入您的問題',
+    general_noInterest: '不感興趣',
+    general_shield: '遮罩所有',
+    general_report: '舉報',
+    general_operate: '操作',
+    general_close: '關閉',
+    general_years: '年代',
+    general_success: '成功',
+    general_fail: '失敗',
+    general_user_not_exist: '使用者名稱不存在',
+    general_user_exist: '使用者名已存在',
+    general_auth_fail: '身份驗證失敗，請登陸',
+    general_wrong_character: '錯誤的字元，請檢查',
+    general_net_slow: '您的網路較慢，請稍後再試',
+    general_login_faild: '登錄失敗，帳號或密碼錯誤，請重試！',
+    general_net_wrong: '網路異常，請稍後再試',
+    general_net_unconnected: '網路已斷開，請檢查網路連接情況',
+    general_net_fault: '系統升級中，預計24小時內恢復',
+    general_net_link_fault: '網路連接錯誤',
+    general_fresh_btn: '刷新一下',
+    general_time_one: '1天前',
+    general_hour_number: '小時前',
+    general_go_login: '去登錄',
+    general_go_share: '去分享',
+    general_after_login: '請登錄後再分享',
+    general_must_share: '此視頻需要登錄才能觀看',
+    general_coin_invalid: '積分不足，分享給好友可獲得積分',
+    general_need_share: '分享后可免費觀看這個vip視頻',
+    general_need_coin: '此視頻需要',
+    general_coin: '積分',
+    general_coin_account: '您的積分:',
+    general_reach_end: '已經到底啦',
+    general_load_err: '視頻載入錯誤!',
+    general_search: '搜索',
+    general_watch_to: '觀看至',
+    general_watch_episode: '第%{index}集',
+    general_avatar: '頭像',
+    general_cover: '封面',
+    general_upload_err: '上傳錯誤，請重試',
+    general_camera_err: '相簿打開失敗，請重試',
+    general_input_title: '請輸入標題',
+    general_upload_cover: '請上傳封面',
+    general_auth_err: '身份驗證失敗',
+    general_loading: '載入中..',
+    general_director: '導演',
+    general_watch_now: '立即觀看',
+    general_hold: '稍後',
+    general_update_backend: '後臺更新',
+    general_if_update: '有新版本了，是否更新？',
+    general_must_update: '有新版本了，需要更新',
+    general_continue_update: '後臺更新',
+    general_update_title: '更新提示',
+    general_edit_info: '編輯個人資料',
+    general_edit_confirm: '確定修改',
+    general_delete_info: '删除账户',
+    general_delete_confirm: '確定',
+    general_delete_warning: '请注意，根据相关法律政策，这一步操作将永久删除或注销您的账户，您将不能访问您的所有资料和登陆，请慎重考虑后再做操作',
+    general_add_opus: '添加作品',
+    general_click_upload: '點擊上傳封面',
+    general_uploading: '上傳中',
+    general_title: '標題',
+    general_nickname: '昵稱',
+    general_upload_result: '視頻上傳成功，正在審核中',
+    general_download_faild: '本視頻因為版權原因暫無法下載',
+    general_warning_title: '溫馨提示:',
+    general_warning_content: '如遇到網路一直無法連接，提示網路錯誤，閃退，卡死等問題，請嘗試在官網下載最新版本安裝。',
+    general_warning_download_url: '官網下載位址:',
+    general_warning_enter_play: '點擊進入谷歌商店',
+    general_player_next_episode: '進入下一集',
+    general_player_rate: '倍速',
+    general_player_source: '播放源',
+    general_player_src: '源',
+    general_sets_count_label: '全%{count}集',
+    general_agree: '同意',
+    general_agree_not: '不同意',
+    general_sla_privacy: '使用者協議與隱私保護',
+    general_sla_agree: '需要獲得你的同意后才可繼續使用%{appName}提供的服務',
+    general_a: '感謝您選擇%{appName}產品和服務',
+    general_b: '我們非常重視您的個人資訊和隱私保護。 為了更好地保障您的個人權益，在您使用我們的產品前，請您務必審慎閱讀《用戶協定》及《隱私政策》內的所有條款，尤其是：',
+    general_c: '1，我們對您的個人資訊的收集/保存/使用/對外提供/保護等規則條款，以及您的使用者權利等條款;',
+    general_d: '2，約定我們的限制責任，免責條款;',
+    general_e: '3，其他加粗或下劃線進行標識的重要條款;',
+    general_f: '您點擊"同意"的行為即表示您已閱讀完畢並同意以上協定的全部內容。',
+    general_rate_title: '給五星好評後系統將推送更多優質電影電視劇',
+    general_rate_submit: '現在提交',
+    general_rate_cancle: '以後',
+    general_comment_placeholder: '在這裡輸入建議',
+    general_empty_error: '建議內容為空',
+    general_share_content: '複製下面連結，使用手機自帶瀏覽器打開，即可下載安裝APP，免費觀看此視頻',
+    general_privacy: '隱私政策',
+    general_sla: '使用者服務協定',
+    general_eula: '最終使用者許可協定',
+    general_update_time: '更新時間',
+    general_valid_time: '生效時間',
+    general_privacy_content: `
+
+
+更新內容1.變更我們收集的個人信息。隱私政策目錄本政策將幫助您了解以下內容：適用範圍運營主體、聯繫方式與重要入口提示重要詞語定義我們收集哪些您的個人信息我們如何使用您的信息如何訪問和控制您的信息我們如何分享您的信息我們如何存儲與保護您的信息有關共享信息的提示COOKIES、日誌檔案和WEB BEACON廣告我們向您發送的推送與公告我們如何處理兒童的個人信息本政策如何更新爭議解決歡迎您使用%{appName}平台服務，請在使用%{appName}服務前仔細閱讀並了解本政策，其中的重要
+
+條款將以加粗形式提示您注意，您應重點閱讀。如果您不同意本政策的內容，您應立即停止使用%{appName}服務。您使用或繼續使用我們提供的服務，均表示您同意我們按照本政策收集、使用、分享、儲存與保護您的信息。%{appName}深知個人信息對您的重要性，並會盡全力保護您的個人信息安全可靠。我們致力於維持您對我們的信任，恪守以下原則，保護您的個人信息：權責一致原則、目的明確原則、選擇同意原則、最小必要原則、確保安全原則、主體參與原則、公開透明原則等。同時，%{appName}承諾，我們將按業界成熟的安全標準，採取相應的安全保護措施來保護您的個人信息。本政策中所述的%{appName}平台服務可能會根據您所使用的手機型號、系統版本、軟件應用程序版本等因素而有所不同。最終的產品和服務以您所使用的%{appName}平台服務為準。1. 適用範圍1.1. 本政策適用於%{appName}提供的所有產品和服務，包括：1.1.1. %{appName}網站（%{WEB_LINK}），含其他任何由%{appName}直接所有或運營的任何網站平台（下稱"%{appName}網站"）；1.1.2. %{appName}直接擁有或運營的客戶端，包括但不限於PC、平板、手機等全部終端客戶端產品平台（下稱"%{appName}客戶端"）；1.1.3. %{appName}的其他技術和/或服務（下稱"%{appName}其他技術和服務"）。1.2. 請您注意，本政策不適用於以下情況：1.2.1. 其他獨立第三方向您提供的服務。若您通過%{appName}平台服務接入了第三方服務，此時您受第三方服務條款約束，請注意閱讀第三方服務所提供的用戶協議及隱私政策，並妥善保護自己的個人信息。例如，您點擊%{appName}平台的貼吧熱議板塊可跳轉至百度貼吧APP，在跳轉前，我們將以彈窗形式提醒您，如您確認跳轉，請點擊確定，此時您受百度貼吧服務條款約束，請妥善保護自己的個人信息。1.2.2. %{appName}平台中已另行獨立設置法律聲明及隱私政策的產品或服務。2. 運營主體、聯繫方式與重要入口提示2.1. 運營主體2.1.1. 因%{appName}APP 開發與運營需要，%{appName}所有產品與服務由%{WEB_LINK} 向您提供，您可
+
+通過國家企業信用信息公示系統網站（http://www.gsxt.gov.cn/）查詢並獲取最新的公司基本信息。2.1.2. 我們將選擇上述兩個主體的任一主體作為部分應用市場的開發者，在您通過應用市場下載安裝%{appName}APP 時，請注意識別。2.2. 聯繫方式2.2.1. 如您需要刪除個人信息、更正個人信息或有其他關於個人信息的需求，可通過隱私投訴功能（路徑：我的-設置-關於我們-隱私投訴）進行反饋。2.2.2. 如您有其他需求，可選擇：1) 通過反饋與幫助功能（路徑：我的-反饋與幫助）進行反饋；2) 聯繫客服（路徑：我的-反饋與幫助-聯繫客服）；3) 發送郵件至%{contactEmail} 進行反饋。2.3. 重要入口提示2.3.1. 如您需要註銷賬號，可通過註銷賬號功能（路徑：我的-設置-賬號管理-賬號註銷）進行操作。2.3.2. 如您需要關閉個性化推薦，可通過隱私權限設置（路徑：我的-設置-隱私權限設置）進行關閉。3. 重要詞語定義3.1. 除本政策另有規定外，本政策所用詞語與%{appName}《用戶協議》詞語具有相同的定義。3.2. 個人信息：指以電子或者其他方式記錄的能夠單獨或者與其他信息結合識別特定自然人身份或者反映特定自然人活動情況的各種信息。3.3. 個人敏感信息：指一旦洩露、非法提供或濫用可能危害人身和財產安全，極易導致個人名譽、身心健康受到損害或歧視性待遇的個人信息。您同意您的個人敏感信息按本政策所述的目的和方式來處理。請您注意，您在%{appName}服務中所提供、上傳或發布的內容和信息，可能會洩露您的個人敏感信息。您需要謹慎地考慮此種情況發生的可能性，從而考慮是否選擇停止提供、上傳或發布行為。3.4. 共享信息：指您在我們的服務中自願與您的社交網絡及使用該服務的所有用戶公開分享的有關您的信息，或其他方分享的與您有關的信息。
+
+3.5. 非個人身份信息：指任何與您有關但實際上不可直接或間接辨認您身份的信息，包括以匯集、匿名或化名方式提供的個人信息。您知悉並同意，無法識別出您的個人身份的信息不屬於個人信息。3.6. 匿名化：通過對個人信息的技術處理，使得個人信息主體無法被識別或者關聯，且處理後的信息不能被復原的過程。3.7. 去標識化：通過對個人信息的技術處理，使其在不借助額外信息的情況下，無法識別或者關聯個人信息主體的過程。3.8. Cookie：包含字符串的小文件，在您訪問網站或其他網絡內容時發送到您的計算機、移動電話或其他裝置內。3.9. Web Beacon：裝嵌在網站或電郵之內的電子影像檔案或其他技術，可用於計算訪客數目、記錄是否及何時瀏覽電郵或網站、或使用某些cookies。3.10. 設備信息：包括設備型號、唯一設備標識符（IMEI 信息、安卓ID、安卓OAID、Mac地址、iccid、imsi、idfa、idfv 等）、操作系統版本、網絡設備硬件、地址MAC 等軟硬件特徵信息。4. 我們收集哪些您的個人信息本條內容可能涉及必要信息、非必要信息與系統權限，為便於您閱讀，我們用"【】"符號進行了明確標識。4.1. 賬號註冊或登錄4.1.1. 必要信息：%{appName}為您提供的賬號註冊或登錄功能需要依賴部分信息才得以運行。您選擇使用該功能，需要向我們提供或允許我們收集的必要信息為【手機號碼】。如您拒絕提供，將導致註冊不成功，您可以退出註冊頁面後以"遊客"身份使用%{appName}。4.2. 第三方登錄4.2.1. 必要信息：%{appName}為您提供的使用第三方平台（如QQ、新浪微博、微信、抖音）賬號登錄功能需要依賴部分信息才得以運行。您選擇使用該功能，則需要向我們提供或允許我們收集的必要信息為【第三方賬號下的相關信息（包括用戶名、暱稱、頭像等）、手機號碼（用於綁定及認證）】。4.2.2. 非必要信息：您可自主選擇向我們提供或允許我們收集非必要信息，包括【設備信息
+
+（其定義見第3.10 條）】，這些信息並非該業務功能運行所必需，但這些信息對改善服務質量有非常重要的意義，我們不會強制要求您提供這些信息，如您拒絕不會對使用該業務功能產生不利影響。4.2.3. 系統權限：在您使用該業務功能時，您可自主選擇是否授予%{appName}【電話/設備信息權限】，如果您不授權，將不會對使用該業務功能產生不利影響。4.3. 視頻展示和播放4.3.1. 非必要信息：您可自主選擇向我們提供或允許我們收集非必要信息，包括【設備型號、設備名稱、唯一設備識別碼、瀏覽器類型和設置、語言設置、操作系統和應用程序版本、登錄IP 地址、接入網絡的方式、網絡質量數據、移動網絡信息、產品版本號、網絡日誌信息（如操作日誌、服務日誌）】，這些信息並非該業務功能運行所必需，但這些信息對改善服務質量有非常重要的意義，我們不會強制要求您提供這些信息，如您拒絕不會對使用該業務功能產生不利影響。4.3.2. 系統權限：在您使用該業務功能時，%{appName}會向您申請與個人信息相關的系統權限為【電話/設備信息權限】，如果您不授權，將不會對使用該業務功能產生不利影響。4.4. 視頻緩存4.4.1. 非必要信息：您可自主選擇向我們提供或允許我們收集非必要信息，包括【設備信息（其定義見第3.10 條）】，這些信息並非該業務功能運行所必需，但這些信息對改善服務質量有非常重要的意義，我們不會強制要求您提供這些信息，如您拒絕不會對使用該業務功能產生不利影響。4.4.2. 系統權限：在您使用該業務功能時，%{appName}會向您申請與個人信息相關的系統權限為【設備存儲權限】，如果您不授權，將會導致我們無法提供該業務功能。除上述權限之外，您可自主選擇是否額外授予%{appName}其他的系統權限，如【電話/設備信息權限】，如果您不授權，將不會對使用該業務功能產生不利影響。4.5. 搜索4.5.1. 非必要信息：您可自主選擇向我們提供或允許我們收集非必要信息，包括【設備信息（其定義見第3.10 條）、日誌信息（包括搜索的字或詞、瀏覽記錄和時間、搜索的時間以及次數）】，這些信息並非該業務功能運行所必需，但這些信息對改善服務質量有非常重要的意義，
+
+我們不會強制要求您提供這些信息，如您拒絕不會對使用該業務功能產生不利影響。4.5.2. 系統權限：在您使用該業務功能時，您可自主選擇是否授予%{appName}【電話/設備信息權限】，如果您不授權，將不會對使用該業務功能產生不利影響。4.6. 瀏覽、關注4.6.1. 非必要信息：您可自主選擇向我們提供或允許我們收集非必要信息，包括【設備信息（其定義見第3.10 條）】，這些信息並非該業務功能運行所必需，但這些信息對改善服務質量有非常重要的意義，我們不會強制要求您提供這些信息，如您拒絕不會對使用該業務功能產生不利影響。4.6.2. 系統權限：在您使用該業務功能時，您可自主選擇是否授予%{appName}【電話/設備信息權限】，如果您不授權，將不會對使用該業務功能產生不利影響。4.7. 信息發布4.7.1. 系統權限：在您使用該業務功能時，您可自主選擇是否授予%{appName}【設備相冊權限、設備相機權限】，如果您不授權，將無法使用從相冊選取圖片功能或使用相機拍攝圖片上傳功能，但不會對使用該業務的其他功能產生不利影響。4.8. 商品交易4.8.1. 必要信息：%{appName}為您提供的購買商品或服務功能需要依賴部分信息才得以運行。如您選擇使用該功能，您需要向我們提供或允許我們收集的必要信息為【收貨人姓名（名稱）、地址、聯繫電話，支付時間、支付金額、支付渠道】，請您注意，其中【收貨人姓名（名稱）、地址、聯繫電話】為個人敏感信息。4.8.2. 非必要信息：您可自主選擇向我們提供或允許我們收集非必要信息，包括【設備信息（其定義見第3.10 條）】，這些信息並非該業務功能運行所必需，但這些信息對改善服務質量有非常重要的意義，我們不會強制要求您提供這些信息，如您拒絕不會對使用該業務功能產生不利影響。4.8.3. 系統權限：在您使用該業務功能時，您可自主選擇是否授予%{appName}【電話/設備信息權限】，如果您不授權，將不會對使用該業務功能產生不利影響。4.9. 反饋或投訴4.9.1. 必要信息：%{appName}為您提供的反饋或投訴功能需要依賴部分信息才得以運行。如您選
+
+擇使用該功能，您需要向我們提供或允許我們收集的必要信息為【賬號信息、手機號碼】。4.9.2. 非必要信息：您可自主選擇向我們提供或允許我們收集非必要信息，包括【設備信息（其定義見第3.10 條）】，這些信息並非該業務功能運行所必需，但這些信息對改善服務質量有非常重要的意義，我們不會強制要求您提供這些信息，如您拒絕不會對使用該業務功能產生不利影響。4.9.3. 系統權限：在您使用該業務功能時，您可自主選擇是否授予%{appName}【電話/設備信息權限】，如果您不授權，將不會對使用該業務功能產生不利影響。4.10. 客服服務4.10.1. 必要信息：%{appName}為您提供的客服服務功能需要依賴部分信息才得以運行。如您選擇使用該功能，您需要向我們提供或允許我們收集的必要信息為【賬號信息】。4.10.2. 系統權限：在您使用該業務功能時，您可自主選擇是否授予%{appName}【錄音（麥克風）權限】，如果您不授權，將無法使用客服對話頁面的語音輸入功能，但不會對使用該業務的其他功能產生不利影響。4.11. 入駐4.11.1. 必要信息%{appName}為您提供的%{appName}up 主入駐功能（入口為PC 端首頁右上角）需要依賴部分信息才得以運行。選擇使用該功能時：1) 如您為個人UP 主，您需要向我們提供或允許我們收集的必要信息為【姓名、手機號碼、郵箱、身份證號碼】，請您注意，其中【身份證號碼】為個人敏感信息。2) 如您為機構UP 主，您需要向我們提供或允許我們收集的必要信息為【機構名稱、公司全稱、聯繫人姓名、聯繫人職務、手機號碼、郵箱】。4.11.2. 非必要信息您可自主選擇向我們提供或允許我們收集非必要信息：1) 如您為個人UP 主，這些非必要信息包括【聯繫方式（QQ、微信）、收益賬戶】。2) 如您為機構UP 主，這些非必要信息包括【聯繫方式（QQ、微信、微博）、收益賬戶】。這些信息並非該業務功能運行所必需，但這些信息對改善服務質量有非常重要的意義，我們不會強制要求您提供這些信息，如您拒絕不會對使用該業務功能產生不利影響。
+
+4.12. 更換頭像4.12.1. 必要信息：%{appName}為您提供的更換頭像功能需要依賴部分信息才得以運行。如您選擇使用該功能，您需要向我們提供或允許我們收集的必要信息為【圖片信息】。4.12.2. 系統權限：在您使用該業務功能時，%{appName}會向您申請與個人信息相關的系統權限為【設備相冊權限】，如果您不授權，將會導致我們無法提供該業務功能。除上述權限之外，您可自主選擇是否額外授予%{appName}其他的系統權限。4.13. 支付4.13.1. 必要信息%{appName}為您提供的支付功能（開通會員服務、購買商品等）需要依賴部分信息才得以運行。如您選擇使用該功能：1) 如您是安卓用戶，您需要向我們提供或允許我們收集的必要信息為【設備信息（其定義見第3.10 條）、第三方支付渠道的user ID（如支付寶user ID、微信open ID）】；2) 如您是iOS 用戶，您需要向我們提供或允許我們收集的必要信息為【Apple Pay ID】。4.13.2. 非必要信息：您可自主選擇向我們提供或允許我們收集非必要信息，包括【個人位置信息，網絡信息】，這些信息並非該業務功能運行所必需，但這些信息對改善服務質量有非常重要的意義，我們不會強制要求您提供這些信息，如您拒絕不會對使用該業務功能產生不利影響。4.13.3. 系統權限：在您使用該業務功能時，如您是安卓用戶，%{appName}會向您申請與個人信息相關的系統權限為【電話/設備信息權限】，如果您不授權，將會導致我們無法提供該業務功能。除上述權限之外，您可自主選擇是否額外授予%{appName}其他的系統權限，如【位置權限】，如果您不授權，將不會對使用該業務功能產生不利影響。4.14. 廣告4.14.1. 必要信息%{appName}為您提供的展示廣告功能需要依賴部分信息才得以運行。如您選擇使用該功能：1) 如您是安卓用戶，您需要向我們提供或允許我們收集的必要信息為【IMEI 信息、Mac 地址】；2) 如您是iOS 用戶，您需要向我們提供或允許我們收集的必要信息為【IDFA】。
+
+4.14.2. 在此提示您，您可通過閱讀本政策第7.2 條，了解我們接入的第三方SDK 廣告服務商所收集的信息種類、用途、個人信息保護的規則及退出機制等。4.15. 個性化推薦4.15.1. 必要信息：%{appName}為您提供的個性化推薦功能需要依賴部分信息才得以運行。如您選擇使用該功能，您需要向我們提供或允許我們收集的必要信息為【設備信息（其定義見第3.10 條）、瀏覽器型號、日誌信息、瀏覽記錄、點贊/分享/評論/互動的對象、搜索的字詞、個人位置信息、設備的IP 地址、搜索記錄、瀏覽記錄、收藏記錄、觀看時長、訂單信息、設備信息、點贊/分享/評論/互動的對象、偏向網絡行為、興趣偏好等信息】。在此基礎上，安卓用戶需額外提供【精准定位信息】，請您注意，【精准定位信息】為個人敏感信息。4.15.2. 系統權限：在您使用該業務功能時，%{appName}會向您申請與個人信息相關的系統權限為【電話/設備信息權限、位置權限】，如果您不授權，將會導致我們無法提供該業務功能。除上述權限之外，您可自主選擇是否額外授予%{appName}其他的系統權限。4.15.3. 在此提示您，您可通過本政策第5.2 條提供的方式，關閉個性化推薦功能。4.16. 投屏4.16.1. 必要信息：%{appName}為您提供的投屏功能需要依賴部分信息才得以運行。如您選擇使用該功能，您需要向我們提供或允許我們收集的必要信息為【本地網絡的訪問權限、收集該本地網絡中的設備信息（包括硬件型號、生產廠家、設備解碼器信息）Mac 地址，wifi 權限，藍牙信息】。4.16.2. 非必要信息：您可自主選擇向我們提供或允許我們收集非必要信息，包括【設備信息（其定義見第3.10 條）】，這些信息並非該業務功能運行所必需，但這些信息對改善服務質量有非常重要的意義，我們不會強制要求您提供這些信息，如您拒絕不會對使用該業務功能產生不利影響。4.16.3. 系統權限：在您使用該業務功能時，您可自主選擇是否授予%{appName}【電話/設備信息權限】，如果您不授權，將不會對使用該業務功能產生不利影響。4.17. 使用藍牙設備4.17.1. 必要信息：%{appName}為您提供的使用藍牙設備功能需要依賴部分信息才得以運行。如您選擇使用該功能且您是安卓用戶，則您需要向我們提供或允許我們收集的必要信息為【設備
+
+目前正在使用中的藍牙設備連接狀態（包括藍牙耳機音量調節等功能）】。4.18. 安全保障4.18.1. 為提高您使用我們及我們關聯公司、合作夥伴提供服務的安全性，保護您或其他用戶或公眾的人身財產安全免受侵害，更好的預防釣魚網站、欺詐、網絡漏洞、計算機病毒、網絡攻擊、網絡入侵等安全風險，我們會收集為實現安全保障功能的必要信息。我們可能使用或整合您的帳號信息、交易信息、設備信息（其定義見第3.10 條）、服務日誌信息以及我們關聯公司、合作夥伴取得您授權或依據法律共享的信息，來綜合判斷您帳號交易風險、進行身份驗證、檢測及防範安全事件。4.18.2. 為了保障軟件與服務的安全運行，我們會收集您的設備信息（包括設備型號、唯一設備標識符、操作系統版本、網絡設備硬件、地址MAC 等軟硬件特徵信息）、設備所在位置信息（包括IP 地址、GPS 位置以及能夠提供相關信息的WLAN 接入點、藍牙和基站等傳感器信息）、網絡接入方式、類型、狀態、網絡質量數據、操作、使用、服務日誌。4.18.3. 為了預防惡意程序及安全運營所必需，我們會收集安裝的應用信息或正在運行的進程信息、應用程序的總體運行、使用情況與頻率、應用崩潰情況、總體安裝使用情況、性能數據、應用來源。4.18.4. 我們可能使用您的帳號信息、交易信息、設備信息（其定義見第3.10 條）、服務日誌信息以及我們關聯方、合作方在獲得您授權或依法可以共享的信息，用於判斷賬戶安全、進行身份驗證、檢測及防範安全事件。4.19. 重要權限列表4.19.1. 使用%{appName}的各類服務場景需要您提供不同信息，我們在此向安卓用戶列示我們獲取的重要權限（包含權限、功能及場景說明）：序號權限列表功能場景說明1com.photofly.android.permission.JPUSH_MESSAGE
+
+讀取系統日誌（讀取系統底層日誌）推送消息時，確保app 可以被推送2android.permission.RECEIVE_USER_PRESENT獲取任務信息（允許程序獲取當前或最近運行的應用）推送消息時，確保app 可以被推送3android.permission.WAKE_LOCK喚醒鎖定（允許程序在手機屏幕關閉後後台進程仍然運行）播放視頻時保持屏幕常亮4android.permission.READ_EXTERNAL_STORAGE讀取外部存儲權限緩存視頻時，需要存儲權限5android.permission.MOUNT_UNMOUNT_FILESYSTEMS掛載文件系統緩存視頻時，需要創建文件夾6android.permission.SYSTEM_ALERT_WINDOW顯示系統窗口（顯示系統窗口）申請權限需要彈窗權限7android.permission.RECEIVE_BOOT_COMPLETED系統開機通知
+
+推送消息時，確保app 可以被推送8android.permission.DOWNLOAD_WITHOUT_NOTIFICATION獲取大致位置緩存/播放視頻時，根據用戶所在地區切換數據源，提升緩存/播放速度9android.permission.ACCESS_DOWNLOAD_MANAGER下載管理器權限緩存視頻時，需要通知用戶緩存進度10android.permission.INTERNET網絡權限使用app 時，需要聯網11android.permission.ACCESS_WIFI_STATE獲取WiFi 狀態播放視頻時監聽網絡變化，以便隨時通知用戶12android.permission.CHANGE_WIFI_STATE獲取MAC 地址輔助用戶唯一標識，輔助識別用戶身份13android.permission.ACCESS_NETWORK_STATE獲取網絡狀態（獲取網絡信息狀態，如當前的網絡連接是否有效）播放視頻時監聽網絡變化，以便隨時通知用戶
+
+14android.permission.WRITE_EXTERNAL_STORAGE寫入外部存儲緩存視頻時，需要寫入外部存儲15android.permission.READ_PHONE_STATE讀取電話狀態用戶唯一標識，輔助識別用戶身份16android.permission.BROADCAST_STICKY連續廣播推送消息時，提高推送成功率17android.permission.REQUEST_INSTALL_PACKAGES請求安裝未知應用app 內更新安裝app / 緩存文件安裝申請允許未知應用安裝18android.permission.CHANGE_NETWORK_STATE改變網絡狀態播放視頻時監聽網絡變化，以便隨時通知用戶19android.permission.BLUETOOTH使用藍牙視頻投屏時，通過藍牙尋找可投屏設備，增加投屏成功率20
+Page 14
+android.permission.CHANGE_WIFI_MULTICAST_STATE改變WiFi 廣播狀態（改變WiFi 廣播狀態）視頻投屏時，通過WIFI 廣播尋找可投屏設備，增加投屏成功率21android.permission.RECORD_AUDIO錄音（錄製聲音通過手機或耳機的麥克）客服系統支持語音輸入22com.zhongduomei.rrmj.society.permission.JPUSH_MESSAGE連續廣播推送消息時，提高推送成功率23com.zhongduomei.rrmj.society.permission.MIPUSH_RECEIVEMIUI 系統推送應答推送消息時，提高推送成功率24com.coloros.mcs.permission.RECIEVE_MCS_MESSAGE消息應答權限推送消息時，提高推送成功率25android.permission.ACCESS_FINE_LOCATION獲取精確位置見本政策第3.2.4 條26android.permission.CAMERA
+
+拍照權限（允許訪問攝像頭進行拍照）用戶可以拍攝照片上傳頭像27android.permission.FOREGROUND_SERVICE允許前台服務app 進入後台緩存視頻時，允許app 前台服務運行，提高下載成功率4.19.2. 此外，我們可能因第三方接入服務而向您收集其他信息，您可閱讀本政策第7.2 條，了解我們接入的第三方SDK 服務商所收集的信息種類、用途、個人信息保護的規則及退出機制等。4.20. 個人敏感信息4.20.1. 本政策收集的部分信息為個人敏感信息，我們已在涉及個人敏感信息的條款中用"【】"符號明確標識並提醒您注意。4.20.2. 在向%{appName}提供任何個人敏感信息前，請您考慮該等提供是恰當的並且同意您的個人敏感信息可按本政策所述的目的和方式進行處理。4.20.3. 我們會在得到您的同意後收集和使用您的個人敏感信息，以實現與%{appName}業務相關的功能，並允許您對這些敏感信息的收集與使用做出不同意的選擇，但是拒絕%{appName}收集或使用這些信息可能會影響您使用相關功能。4.21. 徵得授權同意的例外您理解並同意，在以下情形中，我們可以在不徵得您授權同意的情況下收集、使用您的個人信息：4.21.1. 與我們履行法律法規規定的義務相關的；4.21.2. 與國家安全、國防安全直接相關的；4.21.3. 與公共安全、公共衛生、重大公共利益直接相關的；4.21.4. 與刑事偵查、起訴、審判和判決執行等直接相關的；4.21.5. 出於維護您或其他個人的生命、財產等重大合法權益但又很難得到本人同意的；4.21.6. 所收集的個人信息是您自行向社會公眾公開的；
+
+4.21.7. 根據您的要求籤訂和履行合同所必需的（本政策不視為本條所述合同）；4.21.8. 從合法公開披露的信息中收集到您的個人信息的，如合法的新聞報導、政府信息公開等渠道；4.21.9. 維護%{appName}的產品和/或服務的安全穩定運行所必需的，如發現、處置產品或服務的故障；4.21.10. 新聞單位開展合法的新聞報導所必需的；4.21.11. 學術研究機構出於公共利益開展統計或學術研究所必要，且其對外提供學術研究或描述的結果時，對結果中所包含的個人信息進行去標識化處理的；4.21.12. 法律法規規定的其他情形。5. 我們如何使用您的信息5.1. 我們可能將在向您提供服務的過程之中所收集的信息用作下列用途：5.1.1. 用於數據分析和研發，以便向您提供更加優質的服務；5.1.2. 在我們提供服務時，用於身份驗證、客戶服務、安全防範、詐騙監測、存檔和備份用途，確保我們向您提供的產品和服務的安全性；5.1.3. 幫助我們設計新服務，改善我們現有服務；5.1.4. 使我們更加了解您如何接入和使用%{appName}服務；5.1.5. 向您提供定制的個性化廣告以替代普遍投放的廣告；5.1.6. 評估我們服務中的廣告和其他促銷及推廣活動的效果，並加以改善；5.1.7. 軟件認證或管理軟件升級；5.1.8. 讓您參與有關我們產品和服務或通過我們的產品和服務發起的調查，是否參與調查將由您全權決定，並且由您自行選擇提供哪些信息；5.1.9. 處於安全、合法調查等目的；5.1.10. 我們可能使用您的數據做數據匯總、分析、挖掘（包括商業化利用），但這些信息都採用匿名化形式，不能識別您的身份。5.2. 我們向您提供的個性化推薦5.2.1. 關於廣告的個性化推薦
+
+1) %{appName}致力為您提供有價值的信息，使用大數據和推薦算法為您匹配您可能感興趣的廣告，即向您提供個性化廣告推薦服務。2) 您可以通過%{appName}APP 內的設置關閉個性化廣告推薦，當您選擇關閉時，我們會同時關閉%{appName}的個性化廣告與第三方SDK 的個性化廣告。關閉後，您看到的廣告數量將保持不變，但是展示廣告的相關度會降低。3) 我們接入的第三方SDK 提供廣告推薦服務的情況如下：序號廣告推薦服務（第三方SDK）是否涉及個性化推薦1穿山甲廣告是2廣點通廣告是3新數廣告否4視連通廣告否5倍業廣告是6
+
+湛乘否7Appicplay 廣告是4) 關於上述第三方SDK 所收集的信息種類、用途、個人信息保護的規則及退出機制等，我們在本政策第7.2 條提供了詳細說明。5.2.2. 關於內容的個性化推薦1) %{appName}致力為您提供有價值的內容，使用大數據和推薦算法為您匹配您可能感興趣的內容，即向您提供個性化內容推薦服務。2) 您可以通過%{appName}APP 內的設置關閉個性化內容推薦，關閉後，您看到的內容數量將保持不變，但是展示內容的相關度會降低。3) 為避免誤解，在此向您說明：①%{appName}iPad 端不提供關於內容的個性化推薦；②%{appName}安卓端與iOS 端存在關於內容的個性化推薦，但並非所有內容推薦都為個性化推薦，部分內容推薦使用隨機推薦或人工編輯推薦的方式，在此過程中不會使用您的個人信息，不屬於個性化推薦，具體情況如下：序號內容推薦服務位置③在您關閉個性化推薦後，我們將使用隨機推薦或人工編輯推薦的方式，為您推薦內容。5.3. 請您注意，除非您撤回同意，您在使用%{appName}服務時所提供的所有個人信息，將在您使用%{appName}服務期間持續授權我們在符合本政策的範圍內使用。5.4. 在您註銷賬號後，我們將停止為您提供%{appName}服務，根據您的要求刪除您的個人信息或做匿名化處理，但法律法規另有規定的除外。
+
+6. 如何訪問和控制您的信息6.1. 訪問您可以通過如下方式訪問您的個人信息：6.1.1. 賬號信息：您可以隨時登錄您的個人賬號，訪問或編輯您的賬號中的個人資料信息、更改您的密碼、進行賬號關聯等；6.1.2. 使用信息：您可以在%{appName}平台中查閱您的歷史播放記錄、搜索記錄、上傳內容、訂單信息等；6.1.3. 其他信息：如您在此訪問過程中遇到操作問題的或如需獲取其他前述無法獲知的個人信息內容，您可通過隱私投訴功能提交您的訪問申請，我們將在15 個工作日內完成核查處理並向您發送結果，但法律法規另有約定的除外。6.2. 查詢6.2.1. 您可以查詢下列信息，請通過隱私投訴功能提交您的查詢申請，我們將在15 個工作日內完成核查處理並向您發送結果：1) 我們所持有的關於您的個人信息或個人信息的類型；2) 上述個人信息的來源、所用於的目的；3) 已經獲得上述個人信息的第三方身份或類型。如您需要查詢非您主動提供的個人信息，我們將在綜合考慮不響應請求可能對您的合法權益帶來的風險和損害，以及技術可行性、實現請求的成本等因素後，在15 個工作日內作出是否響應的決定，並向您解釋說明。6.3. 更正6.3.1. 經對您的身份進行驗證，且更正不影響信息的客觀性和準確性的情況下，您有權對錯誤或不完整的信息作出更正或更新，您可以自行在%{appName}平台中進行更正，或在特定情況下，尤其是數據錯誤時，通過隱私投訴功能提交您的更正申請，要求我們更正或更新您的數據，我們將在15 個工作日內完成核查處理並向您發送結果。6.3.2. 出於安全性和身份識別的考慮，您可能無法修改註冊時提交的某些初始註冊信息。6.4. 刪除6.4.1. 您可以通過隱私投訴功能提交您的刪除申請，如請求退出某服務類型，或請求刪除您的
+
+個人信息，我們將在15 個工作日內完成核查處理並向您發送結果，但已做數據匿名化處理或法律法規另有規定的除外。6.5. 獲取個人信息副本6.5.1. 如您需要您的個人數據的副本，您可以通過隱私投訴功能提交申請，在核實您的身份後，我們將我們將在15 個工作日內完成核查處理並向您提供您在%{appName}服務中的個人信息副本（例如基本資料、身份信息），但法律法規另有規定的除外。6.6. 撤回同意6.6.1. 如您想更改相關功能的授權範圍，您可以通過您的硬件設備修改個人設置、或在我們的產品或服務中的相關功能設置界面進行操作處理。如您在此過程中遇到操作問題的，可以通過隱私投訴功能提交撤回申請，我們將在15 個工作日內完成核查處理並向您發送結果。6.6.2. 當您取消相關個人信息收集的授權後，我們將不再收集該信息，也無法再為您提供上述與之對應的服務。6.6.3. 您知悉並同意，除非您行使前述"刪除權"，否則您的該行為不會影響我們基於您之前的授權進行的個人信息的處理、存儲。6.7. 註銷6.7.1. 您可以使用%{appName}的註銷功能（路徑可參照第2.3 條）進行賬號註銷，我們將在15個工作日內完成核查處理並註銷您的賬號。一旦您註銷賬號，將無法使用%{appName}服務，因此請您謹慎操作。為了保護您與他人的合法權益，我們會結合您對%{appName}提供的各產品的使用情況判斷是否支持您的註銷請求，若您的賬號涉及尚未處理的問題，%{appName}會先提示您處理。6.7.2. 除法律法規另有規定外，註銷賬號之後我們將停止為您提供服務，您該賬戶內的所有信息將被清空，並根據您的要求刪除或匿名化處理您的個人信息。6.8. 停止運營6.8.1. 若因特殊原因導致部分或全部%{appName}服務停止運營，我們將：1) 及時停止繼續收集您的個人信息；2) 將停止運營的通知以逐一送達或公告的形式通知您；3) 對我們所持有的個人信息進行刪除或匿名化處理，法律法規另有規定的除外。
+
+6.9. 例外情形6.9.1. 您理解並同意，如有以下情形，我們可能不會響應您提出的查詢、更正、刪除、撤回同意、註銷、索取副本信息的請求：1) 與我們履行法律法規規定的義務相關的；2) 與國家安全、國防安全直接相關的；3) 與公共安全、公共衛生、重大公共利益直接相關的；4) 與刑事偵查、起訴、審判和執行判決等直接相關的；5) 我們有充分證據表明您存在主觀惡意或濫用權利的（如您的請求將危害公共安全和其他人合法權益，或您的請求超出了一般技術手段和商業成本可覆蓋的範圍）；6) 出於維護您或其他個人的生命、財產等重大合法權益但又很難得到您的授權同意的；7) 響應您的請求將導致您或其他個人、組織的合法權益受到嚴重損害的；8) 涉及商業秘密的；6.9.2. 如我們決定不響應您的請求，我們將向您告知該決定的理由，您可通過隱私投訴功能進行投訴，我們將在15 個工作日內完成核查處理並向您發送結果。7. 我們如何分享您的信息您理解並同意，我們可能與我們的關聯公司分享您必要的個人信息，以提供和發展我們的產品和服務。除以下情形外，未經您同意，我們以及我們的關聯公司不會與任何第三方分享您的個人信息：7.1. 我們以及我們的關聯公司可能將您的個人信息與我們的關聯公司、合作夥伴及第三方服務供應商分享，用作下列用途：7.1.1. 向您提供%{appName}服務及廣告服務；7.1.2. 實現"我們如何使用您的信息"部分所述目的；7.1.3. 履行我們在《用戶協議》或本政策中的義務和行使我們的權利；7.1.4. 理解、維護和改善%{appName}服務。7.2. 我們接入的第三方SDK 服務商為了向您提供優質服務，%{appName}可能會集成第三方SDK 或其他類似的應用程序。為了您的
+
+信息安全，我們已與第三方SDK 服務商約定嚴格的數據安全保密義務，這些公司會嚴格遵守我們的數據隱私和安​​全要求。為便於您更好地了解第三方SDK 服務商所收集的信息種類、用途、個人信息保護的規則及退出機制等，我們在下表中進行了詳細描述，供您查閱：序號客戶端第三方SDK所屬公司收集信息使用目的1安卓支付寶支付SDK支付寶（中國）網絡技術有限公司關於支付寶支付SDK 所收集的信息種類、用途、個人信息保護的規則及退出機制等，詳見支付寶（https://www.alipay.com）上《支付寶隱私權政策》（https://render.alipay.com/p/c/k2cx0tg8）2安卓、iOS樂播投屏SDK深圳樂播科技有限公司關於樂播投屏SDK 所收集的信息種類、用途、個人信息保護的規則及退出機制等，詳見樂播投屏（https://www.hpplay.com.cn/）上《樂播投屏隱私政策》（http://m.hpplay.com.cn/privacy.jsp）
+
+供智能電視投屏功能3安卓OAID 設備碼移動安全聯盟（Mobile Security Alliance）手機號碼、運營商、地區、網絡制式、IMSI、IMIE 、設備型號、系統版本個性化推送、監測廣告效果4安卓、iOS智齒客服SDK北京智齒博創科技有限公司關於智齒客服SDK 所收集的信息種類、用途、個人信息保護的規則及退出機制等，詳見智齒（www.sobot.com）上《隱私政策》（https://www.sobot.com/clause.html）客服服務（包括拍照和錄音等）5iOS極光一鍵登錄深圳市和訊華谷信息技術有限公司關於極光一鍵登錄所收集的信息種類、用途、個人信息保護的規則及退出機制等，詳見極光（https://www.jiguang.cn/）上《極光隱私政策》（https://www.jiguang.cn/license/privacy）一鍵登錄6安卓、iOS數美SDK
+
+北京數美時代科技有限公司關於數美SDK 所收集的信息種類、用途、個人信息保護的規則及退出機制等，詳見數美（https://www.ishumei.com）上《數美科技隱私政策》（https://www.ishumei.com/legal/cn/privacy.html）*如：設備MAC 地址、藍牙MAC 地址、SIM 卡信息（如ICCID、IMSI、運營商信息等）、唯一設備識別碼（如IMEI、IDFA、安卓ID 等）、設備的基本配置信息（如CPU、內存、屏幕、型號、操作系統等）、網絡信息（如WIFI 及蜂窩網絡信息、IP 地址、時間戳等）、安裝軟件列表、系統及軟件相關配置信息等。具體以《數美科技隱私政策》為準。用於風險控制和反欺詐，以保障賬戶和交易安全7安卓、iOS友盟社會化分享SDK友盟同欣（北京）科技有限公司關於友盟社會化分享SDK、友盟一鍵登錄SDK、友盟統計、友盟push 所收集的信息種類、用途、個人信息保護的規則及退出機制等，詳見友盟（https://www.umeng.com/）上《隱私政策》（https://www.umeng.com/policy）*注1：友盟理解並尊重您的選擇權，如果您不願參與友盟+大數據計算，可以訪問https://outdip.umeng.com/opt_out.html 行使opt-out 權利。*注2：應友盟服務商要求，向您明示：我們的產品集成友盟+SDK，友盟+SDK 需要收集您的設備Mac 地址、唯一設備識別碼（IMEI/android ID/IDFA/OPENUDID/GUID、SIM 卡IMSI 信息）以提供統計分析服務，並通過地理位置校準報表數據準確性，提供基礎反作弊能力。社交平台分享、第三方登錄8安卓友盟一鍵登錄SDK一鍵登錄
+
+9安卓、iOS友盟統計%{appName}用戶使用效果統計分析10安卓、iOS友盟push推送服務11安卓、iOSTalkingData 統計北京騰雲天下科技有限公司關於TalkingData 統計所收集的信息種類、用途、個人信息保護的規則及退出機制等，詳見TalkingData（https://www.talkingdata.com）上《隱私政策》（https://www.talkingdata.com/privacy.jsp）%{appName}用戶使用效果統計分析12安卓、iOS新數廣告上海新數網絡科技股份有限公司關於新數廣告所收集的信息種類、用途、個人信息保護的規則及退出機制等，詳見新數網絡（http://www.datamaster.cn/）上《隱私政策》（http://www.datamaster.cn/index.php?r=site/politic）廣告位展示、監測廣告效果13安卓、iOS
+Page 26
+穿山甲廣告湖北今日頭條科技有限公司關於穿山甲廣告所收集的信息種類、用途、個人信息保護的規則及退出機制等，詳見穿山甲（https://ad.oceanengine.com/union/media/login）上《穿山甲（Pangle）隱私政策》（https://ad.oceanengine.com/union/media/privacy）廣告位展示、監測廣告效果14安卓、iOS廣點通廣告深圳市騰訊計算機系統有限公司關於廣點通廣告所收集的信息種類、用途、個人信息保護的規則及退出機制等，詳見騰訊廣告（https://e.qq.com/ads/）上《隱私權政策》（https://e.qq.com/optout.html）廣告位展示、監測廣告效果15安卓、iOS倍業廣告上海明睿信息技術有限公司關於倍業廣告所收集的信息種類、用途、個人信息保護的規則及退出機制等，詳見倍業科技（http://www.bayescom.com/）上《隱私政策》（http://www.bayescom.com/privacy.html）廣告位展示、監測廣告效果16安卓、iOSMobTech上海遊昆信息技術有限公司關於MobTech 所收集的信息種類、用途、個人信息保護的規則及退出機制等，詳見
+
+MobTech（https://www.mob.com/）上《隱私政策》（http://www.mob.com/about/policy）快捷打開app 到指定頁面17安卓、iOSAppicplay 廣告北京金域互動科技有限公司關於Appicplay 廣告所收集的信息種類、用途、個人信息保護的規則及退出機制等，詳見Appicplay（http://www.appicplay.com/）上《隱私政策》（http://www.appicplay.com/privacy-policy/?lang=zh）廣告位展示、監測廣告效果18安卓、iOS阿里雲SDK阿里雲計算有限公司關於阿里雲sdk 所收集的信息種類、用途、個人信息保護的規則及退出機制等，詳見阿里雲（https://www.aliyun.com/）上《法律聲明及隱私權政策》（http://terms.aliyun.com/legal-agreement/terms/suit_bu1_ali_cloud/suit_bu1_ali_cloud201902141711_54837.html?spm=5176.12825654.7y9jhqsfz.86.318b2c4aQDlZlP）%{appName}用戶使用效果統計分析19安卓、iOS騰訊即時通訊SDK深圳市騰訊計算機系統有限公司關於騰訊即時通訊SDK、騰訊雲播放器所收集的信息種類、用途、個人信息保護的規則及退出
+
+機制等，詳見騰訊雲（https://cloud.tencent.com）上《騰訊雲隱私聲明》（https://cloud.tencent.com/document/product/301/11470）即時通訊20安卓、iOS騰訊雲播放器騰訊雲播放器21安卓華為HMS 推送服務華為終端有限公司關於華為HMS 推送服務所收集的信息種類、用途、個人信息保護的規則及退出機制等，詳見華為開發者聯盟（https://developer.huawei.com/consumer/cn/develop/）上《隱私聲明》（https://consumer.huawei.com/cn/privacy/privacy-policy/）推送服務22安卓小米推送服務小米科技有限責任公司關於小米推送服務所收集的信息種類、用途、個人信息保護的規則及退出機制等，詳見小米開放平台（https://dev.mi.com/console/doc/）上《隱私政策》（https://dev.mi.com/console/doc/detail?pId=1822）推送服務23安卓、iOS新浪微博SDK
+
+北京微夢創科網絡技術有限公司關於新浪微博SDK 所收集的信息種類、用途、個人信息保護的規則及退出機制等，詳見新浪開發者平台（https://open.weibo.com/wiki/%E9%A6%96%E9%A1%B5）上《開發者協議》的隱私相關條款（https://open.weibo.com/wiki/%E5%BC%80%E5%8F%91%E8%80%85%E5%8D%8F%E8%AE%AE#.E9.9A.90.E7.A7.81.E7.9B.B8.E5.85.B3.E6.9D.A1.E6.AC.BE）社交平台分享、第三方登錄24安卓阿里百川熱修復阿里雲計算有限公司關於阿里百川熱修復所收集的信息種類、用途、個人信息保護的規則及退出機制等，詳見阿里雲（https://help.aliyun.com）上《服務條款》中"用戶數據"相關條款（https://help.aliyun.com/document_detail/51417.html）熱更新25安卓、iOS湛乘上海湛乘信息科技有限公司設備信息（包括設備識別碼、設備平台、設備廠商、設備品牌）、網絡信息、位置信息廣告位展示、監測廣告效果26安卓、iOS微信分享SDK騰訊科技（深圳）有限公司關於微信分享SDK 所收集的信息種類、用途、個人信息保護的規則及退出機制等，詳見騰訊
+
+隱私保護平台（https://privacy.qq.com/）上《微信隱私保護指引》（https://weixin.qq.com/cgi-bin/readtemplate?lang=zh_CN&t=weixin_agreement&s=privacy）社交平台分享、第三方登錄27安卓、iOS阿里播放器阿里雲計算有限公司關於阿里播放器所收集的信息種類、用途、個人信息保護的規則及退出機制等，詳見阿里雲（https://www.alibabacloud.com）上《服務條款》中第4 條（https://www.alibabacloud.com/help/zh/doc-detail/51685.htm?spm=a2c63.p38356.b99.484.5a2160fdllwN87）阿里播放器28安卓、iOS騰訊分享SDK騰訊科技（深圳）有限公司關於QQ 分享SDK 所收集的信息種類、用途、個人信息保護的規則及退出機制等，詳見騰訊隱私保護平台（https://privacy.qq.com/）上《QQ 隱私保護指引》（https://ti.qq.com/agreement/qqface.html?appname=mqq_2019）社交平台分享、第三方登錄29安卓網易易盾一鍵登陸SDK廣州網易計算機系統有限公司手機號碼、運營商、地區、網絡制式、IMSI、IMIE 、設備型號、系統版本
+
+一鍵登陸身份驗證30安卓視聯通廣告北京視連通科技有限公司設備信息（包括設備識別碼、設備平台、設備廠商、設備品牌）、網絡信息、位置信息廣告位展示、監測廣告效果31安卓bugly深圳市騰訊計算機系統有限公司SDK/API/JS 代碼版本、瀏覽器、互聯網服務提供商、IP 地址、平台、時間戳、應用標識符、應用程序版本、應用分發渠道、獨立設備標識符、iOS 廣告標識符（IDFA）、安卓廣告主標識符、MAC 地址、IMEI、設備型號、傳感器參數、終端製造廠商、終端設備操作系統版本、會話啟動/停止時間、語言所在地、時區和網絡狀態（WiFi 等）、硬盤、CPU 和電池使用情況監控線上bug，定位問題32安卓video++sdk上海極鍊網絡科技有限公司IMEI廣告位展示、監測廣告效果33安卓、iOSQuestMobile 統計北京貴士信息科技有限公司
+
+關於QuestMobile 統計所收集的信息種類、用途、個人信息保護的規則及退出機制等，詳見QuestMobile（www.questmobile.com.cn）上《QuestMobile 隱私政策》（www.questmobile.com.cn/privacy）%{appName}用戶使用效果統計分析34安卓、iOS抖音登錄SDK北京微播視界科技有限公司關於抖音登錄SDK 所收集的信息種類、用途、個人信息保護的規則及退出機制等，詳見抖音（www.douyin.com）上《"抖音"隱私政策》（https://www.douyin.com/agreements/?id=6773901168964798477）第三方登錄35安卓、iOS網易七魚SDK杭州網易質雲科技有限公司關於網易七魚SDK 所收集的信息種類、用途、個人信息保護的規則及退出機制等，詳見網易七魚（https://qiyukf.com/）上《隱私政策》（https://reg.163.com/agreement_mobile_ysbh_wap.shtml?v=20171127）客服服務7.3. 如我們或我們的關聯公司與任何上述第三方分享您的個人信息，我們將努力確保該等第三方在使用您的個人信息時遵守本政策及我們要求其遵守的其他適當的保密和安全措施，我們會對其數據安全能力與環境進行調查，與其簽署嚴格的保密協定，並只會分享特定用途所必要的個人信息。7.4. 隨著我們業務的持續發展，我們以及我們的關聯公司有可能進行合併、收購、資產轉讓或類似的交易，而您的個人信息有可能作為此類交易的一部分而被轉移，我們會要求新持有人繼
+
+續遵守本政策，否則我們將要求其重新獲取您的授權同意。7.5. 您理解並同意，在以下情形中，我們共享、轉讓、公開披露您的個人信息時，不必事先徵得您的授權同意：7.5.1. 與我們履行法律法規規定的義務相關的；7.5.2. 與國家安全、國防安全直接相關的7.5.3. 與公共安全、公共衛生、公共利益直接相關的；7.5.4. 與刑事偵查、起訴、審判和執行判決等直接相關的；7.5.5. 出於維護您或其他個人的生命、財產等重大合法權益但又很難得到您的授權同意的；7.5.6. 您自行向社會公眾公開的個人信息；7.5.7. 從合法公開披露的信息中收集個人信息的，如合法的新聞報導、政府信息公開等渠道；7.5.8. 法律法規規定的其他情形。8. 我們如何存儲與保護您的信息8.1. 我們依照法律法規的規定，將您的個人信息存儲於中華人民共和國境內（不含港澳台）。8.2. 我們在為提供%{appName}服務之目的所必需的期間內保留您的個人信息，直至您撤回同意或註銷賬戶為止，但對已匿名化的信息或法律法規另有規定的除外。8.3. 我們會嚴格遵循相關法律法規的要求，收集、使用、存儲和傳輸用戶信息，並通過本政策告知您相關信息的使用目的和範圍。8.4. 公司非常重視信息安全，我們努力為您的信息安全提供保障，以防止您的信息被不當使用或被未經授權的訪問、使用或洩漏。我們會採取適當的符合業界標準的安全措施和技術手段存儲和保護您的個人信息。8.5. 對個人信息洩露等安全事件，我們會啟動應急預案，阻止安全事件擴大。一旦發生用戶信息安全事件（洩露、丟失等）後，我們將按照法律法規的要求，及時向您告知安全事件的基本情況和可能的影響、我們已經採取或將要採取的處置措施、您可自主防範和降低風險的建議、對您的補救措施等。我們將及時將事件相關情況以推送通知、郵件、信函、短信等形式告知您，難以逐一告知時，我們會採取合理、有效的方式發佈公告。同時，我們還將按照相關監管部門要求，上報用戶信息安全事件的處置情況。8.6. 當您通過使用%{appName}服務中的社交功能與其他用戶交互您的相關個人信息時，請注意確
+
+保您個人信息的安全。8.7. 儘管已經採取了上述合理有效措施，並已經遵守了相關法律規定要求的標準，但請您理解，由於技術的限制以及可能存在的各種惡意手段，您接入%{appName}服務所用的系統和通訊網絡，有可能因%{appName}可控範圍外的因素而出現問題。因此，您應採取積極措施保護個人信息的安全（包括但不限於定期修改密碼、不將賬號密碼信息隨意告知他人等）。9. 有關共享信息的提示9.1. 我們的多項服務可讓您與您的社交網絡及使用該服務的所有用戶公開分享您的相關信息，例如，您在%{appName}服務中所上傳或發布的信息及您對其他人上傳或發布的信息作出的回應。使用我們服務的其他用戶也有可能分享與您有關的信息。只要您不刪除共享信息，有關信息便一直留存在公眾領域；即使您刪除共享信息，有關信息仍可能由其他用戶或不受我們控制的非關聯第三方獨立地緩存、複製或儲存，或由其他用戶或該等第三方在公眾領域保存。9.2. 請您認真考慮您通過%{appName}服務上傳、發布和交流的信息內容。如您要求從%{appName}服務中刪除您的個人信息，請自行操作或通過本政策提供的方式聯繫我們。10. COOKIES、日誌檔案和WEB BEACON10.1. 我們和第三方合作夥伴可能通過cookies 和web beacon 收集和使用您的信息，並將該等信息儲存為日誌信息。10.2. 我們使用cookies 和web beacon，目的是為您提供更個性化的用戶體驗和服務，並用於以下用途：10.2.1. 記住您的身份。例如：cookies 和web beacon 有助於我們辨認您作為我們的註冊用戶的身份，或保存您向我們提供有關您的喜好或其他信息；10.2.2. 分析您使用我們服務的情況。我們可利用cookies 和web beacon 來了解您使用%{appName}服務進行什麼活動、或哪些網頁或服務最受歡迎；10.2.3. 廣告優化。Cookies 和web beacon 有助於我們根據您的信息，向您提供與您相關的廣告而非進行普遍的廣告投放。10.3. 我們為上述目的使用cookies 和web beacon 的同時，可能將通過cookies 和webbeacon 收集的非個人身份信息匯總提供給廣告商和其他夥伴，用於分析您和其他用戶如何使用%{appName}服務並用於廣告服務。
+
+10.4. 我們的產品和服務上可能會有廣告商和其他合作方放置的cookies 和web beacon，詳見本政策關於第三方SDK 的條款。如該類cookies 和web beacon 已向您明示收集使用個人信息的目的、方式、範圍，並在徵得您的明確同意後，收集與您相關的信息，則該類收集和使用行為不受本政策約束，而是受到第三方平台自身的隱私政策約束。11. 廣告11.1. 我們可能使用您的信息，向您提供與您更加相關的廣告，詳見本政策關於個性化推薦的條款。11.2. 我們也可能使用您的信息，通過%{appName}服務、短信或其他方式向您發送營銷信息，提供或推廣我們或第三方的如下商品和服務：11.2.1. 我們的商品和服務，以及我們的關聯公司和合營夥伴的商品和服務；11.2.2. 第三方互聯網服務供應商的商品和服務。11.3. 如您不希望我們將您的個人信息用作前述廣告用途，您可以通過隱私權限設置進行關閉。12. 我們向您發送的推送與公告12.1. 信息推送您使用我們服務時，我們可能使用您的信息向您的設備發送推送通知。如您不希望收到這些信息，您可以通過隱私權限設置進行關閉。12.2. 與服務有關的公告我們可能在必需時（如當我們由於系統維護而暫停某一項服務時）向您發出與服務有關的公告。您可能無法取消這些與服務有關、性質不屬於推廣的公告。13. 我們如何處理兒童的個人信息13.1. 本條所稱兒童，是指未滿14 周歲的未成年人。13.2. %{appName}將遵循正當必要、知情同意、目的明確、安全保障、依法利用的原則，收集、存儲、使用、轉移、披露兒童個人信息。13.3. 如您是年滿14 周歲的未成年人，您應與您的監護人一同閱讀本政策，且應在監護人明確同意和指導下提交個人信息。如果您或您的監護人不同意本政策的內容，請您立即停止使用%{appName}服務。
+
+13.4. 如您是未滿14 周歲的未成年人，您應告知您的監護人仔細閱讀本政策，且應在監護人明確同意和指導下提交您的個人信息。如果您的監護人不同意本政策的內容，請您立即停止使用%{appName}服務。13.5. %{appName}將依據《兒童個人信息網絡保護規定》的其他要求，對兒童信息進行保護與處理。13.6. 如有未滿14 周歲的未成年人未經監護人同意提交了個人信息，一經發現，%{appName}將立刻刪除相關數據，並對其賬號設限。14. 本政策如何更新14.1. 為了給您提供更好的服務，我們可能隨時更新本政策的條款，該等更新構成本政策的一部分。如該等更新造成您在本政策下權利的實質減少或重大變更，我們將在修改生效前以書面形式（包括但不限於首頁彈窗形式、站內信形式等）告知您並再次徵得您的同意。14.2. 我們將在文首載明更新時間、生效時間與更新內容，幫助您快速了解更新信息。14.3. 如您在本政策更新生效後明示同意並繼續使用%{appName}服務，即表示您已充分閱讀、理解及接受更新後的文本並願意受更新後的文本約束。14.4. 上述的重大變更包括但不限於：1) %{appName}服務模式發生重大變化。如處理個人信息的目的、處理的個人信息的類型、個人信息的使用方式等；2) 我們在所有權結構、組織架構等方面發生重大變化。如業務調整、破產併購等引起的所有變更等；3) 個人信息共享、轉讓或公開披露的主要對象發生變化；4) 您參與個人信息處理方面的權利及其行使方式發生重大變化；5) 我們負責處理個人信息安全的責任部門、聯絡方式及投訴渠道發生變化時。15. 爭議解決15.1. 本政策的解釋及爭議解決均應適用中華人民共和國大陸地區法律。15.2. 與本政策相關的任何糾紛，雙方應協商友好解決；若不能協商解決，您同意將爭議提交至武漢市江岸區有管轄權的人民法院訴訟解決。15.3. 雙方同意，解決爭議時，應以您同意的最新《隱私政策》為準。
+  `,
+    general_sla_content: `
+    
+
+歡迎您使用%{appName}平台服務！各條款標題僅為幫助您理解該條款表達的主旨之用，不影響或限製本協議條款的含義或解釋。為維護您自身權益，建議您仔細閱讀各條款具體表述（重要條款已使用加粗字體標明，請重點閱讀）。1 服務條款的接受與修改1.1 本協議是用戶（下或稱"您"）與%{WEB_LINK}（下合稱"%{appName}"）之間的協議（下稱"本協議"）。本協議條款構成您（無論個人或者單位）使用%{appName}所提供的服務及其衍生服務之先決條件，通過訪問和/或使用%{appName}提供的網站、客戶端及其他服務，您表示接受同意本協議的全部條款；如果您不願意接受本協議的全部條款，您應不使用或主動取消%{appName}的服務。1.2 如果您為未滿18 周歲的未成年人，請在法定監護人的陪同下閱讀本協議，並特別注意未成年人使用條款；如果您為未滿14 周歲的兒童，特別提醒您注意《隱私政策》中針對您提供的保護。未成年人或其監護人應主動選擇未成年模式，並設置監護口令。未成年人行使和履行本協議項下的權利和義務視為已獲得了法定監護人的認可。1.3 %{appName}有權隨時對本協議進行修改，如您不同意修改後的內容，您應不使用或主動取消%{appName}的服務，否則即視為您接受本協議的修改。1.4 您可以通過下列渠道聯繫我們：1.4.1 關於舉報事宜，請發送郵件至%{contactEmail}；1.4.2 關於侵權投訴事宜，請發送郵件至%{contactEmail}；1.4.3 關於建議、反饋與賬號註銷事宜，請發送郵件至%{contactEmail}。2 服務說明2.1 適用本協議的%{appName}平台包括但不限於以下服務：2.1.1 %{appName}網站（%{WEB_LINK}），含其他任何由%{appName}直接所有或運營的任何網站平台（下稱"%{appName}網站"）；2.1.2 %{appName}直接擁有或運營的客戶端包括但不限於PC、平板、手機、電視、機頂盒等全
+
+部終端客戶端產品平台（下稱"%{appName}客戶端"）；2.1.3 %{appName}的其他技術和/或服務（下稱"%{appName}其他技術和服務"）。（以上服務統稱為"%{appName}服務"，上述服務所在的平台統稱"%{appName}平台"）。2.2 %{appName}所提供的服務，均僅限於用戶在上述平台使用，任何方式將%{appName}內容與平台分離、隱藏的使用行為，均不屬於本協議中約定的%{appName}服務。由此引起的一切法律後果由行為人負責，%{appName}將依法追究行為人的法律責任，並停止向其提供服務。3 使用規則3.1 用戶在申請使用%{appName}服務時，必須向%{appName}提供完整、真實、準確、最新的個人資料。如果上述信息發生變化，用戶應及時更改。3.2 用戶應妥善保管自己的帳號、密碼，不得轉讓、出借、出租或分享予他人使用。否則%{appName}有權選擇根據實際情況暫時封停或永久查封此帳號，當用戶的帳號或密碼遭到未經授權的使用時，用戶應當立即通知%{appName}。但無論如何，賬號的所有使用行為均視為用戶本人的行為。3.3 用戶同意%{appName}在提供服務的過程中以各種方式投放商業性廣告或其他任何類型的商業信息（包括但不限於在%{appName}平台的任何位置上投放廣告，在用戶上傳、傳播的內容中投放廣告），用戶同意接受%{appName}通過電子郵件或其他方式向用戶發送商品促銷或其他相關商業信息。3.4 %{appName}服務可能會提供與其他互聯網網站或資源進行鏈接。除非另有聲明，%{appName}無法對第三方網站之服務進行控制，用戶對廣告信息應審慎判斷其真實性、可靠性。用戶如因使用或依賴上述網站或資源與第三方產生糾紛，由用戶自行解決，除法律規定由廣告發布者承擔的責任外，%{appName}不承擔任何額外責任。3.5 用戶在使用%{appName}服務過程中，應遵守相關法律法規。在任何情況下，%{appName}一旦合理地認為用戶的行為可能違反上述法律、法規，可以在任何時候，不經事先通知終止向該用戶提供服務。3.6 禁止用戶利用%{appName}平台從事以下行為：（1）製作、上傳、複製、傳送、傳播包含任何反對憲法所確定的基本原則、危害國家安全、洩露國家秘密、顛覆國家政權、破壞國家統一、破壞民族團結、損害國家榮譽和利益、煽動民
+
+族仇恨、民族歧視、破壞民族團結、破壞國家宗教政策、宣揚邪教和封建迷信、淫穢、色情、賭博、暴力、兇殺、恐怖或者教唆犯罪、侮辱或者誹謗他人，侵害他人合法權益的等法律、行政法規禁止的內容或其他另人反感的包括但不限於資訊、資料、文字、軟件、音樂、照片、圖形、信息或其他資料；（2）以任何方式危害未成年人；（3）冒充任何人或機構，或以虛偽不實的方式謊稱或使人誤認為與任何人或任何機構有關；（4）偽造標題或以其他方式操控識別資料，使人誤認為該內容為%{appName}所傳送；（5）將無權傳送的內容（例如內部資料、機密資料）進行上載、張貼、發送電子郵件或以其他方式傳送；（6）發送任何未獲邀約或未經授權的垃圾電郵、廣告或宣傳資料，或任何其他商業通訊；（7）未經%{appName}明確許可，使用%{appName}平台服務用於任何商業用途或為任何第三方的利益；（8）跟踪或以其他方式騷擾他人；（9）參與任何非法或有可能非法（由%{appName}判斷）的活動或交易，包括傳授犯罪方法、出售任何非法藥物、洗錢活動、詐騙等；（10）賭博、提供賭博數據或透過任何方法誘使他人參與賭博活動；（11）使用或利用%{appName}知識產權（包括商標、品牌、標誌、任何其他專有數據或任何網頁的佈局或設計），或在其他方面侵犯%{appName}任何知識產權（包括試圖對%{appName}平台客戶端或所使用的軟件進行逆向工程）；（12）通過使用任何自動化程序、軟件、引擎、網絡爬蟲、網頁分析工具、數據挖掘工具或類似工具，接入%{appName}平台服務、收集或處理通過%{appName}平台服務所提供的內容；（13）對%{appName}平台服務所用的軟件進行解編、反向編譯或逆向工程，或試圖作出上述事項；（14）為破壞或濫用的目的開設多個賬戶，或惡意上傳重複的、無效的大容量數據和信息；（15）利用%{appName}平台進行商業宣傳或其他商業行動；（16）其他侵權或違法行為。3.7 就用戶違反本協議的行為，%{appName}保留視情節嚴重程度對該用戶做出查封ID，暫時封
+
+禁、永久封禁其使用%{appName}服務的權利。3.8 %{appName}的後台記錄有可能作為用戶違反法律法規、違約、侵權的證據，%{appName}可能根據權利人或相關行政機構的要求，披露用戶的上述信息以及身份信息，用戶同意免除%{appName}因此可能承擔的所有法律責任。3.9 用戶擁有合法獲得的%{appName}賬號、賬號下服務和產品的使用權，但前述賬號、服務、產品及其衍生物的所有權及知識產權均歸%{appName}所有。3.10 如用戶未遵守本協議，%{appName}有權根據本協議約定對其賬號採取相應措施。4 用戶的上傳與分享4.1 用戶可通過%{appName}平台服務在%{appName}平台上傳、發布或傳輸相關內容，包括但不限於文字、軟件、程序、圖形、圖片、聲音、音樂、視頻、音視頻、鏈接等信息或其他資料（下稱"內容"），但用戶需對此內容承擔相關的法律責任。除非有相反證明，%{appName}將用戶視為用戶在%{appName}平台上傳、發布或傳輸的內容的版權擁有人或相關權利人。4.2 用戶使用%{appName}平台服務上傳、發布或傳輸內容即代表了用戶有權且同意在全世界範圍內，永久性的、不可撤銷的、免費的授予%{appName}對該內容的存儲、使用、發布、複製、修改、改編、出版、翻譯、據以創作衍生作品、傳播、表演和展示等權利；將內容的全部或部分編入其他任何形式的作品、媒體、技術中的權利；對用戶的上傳、發布的內容進行商業開發的權利；通過有線或無線網絡向用戶的計算機終端、移動通訊終端（包括但不限於便攜式通訊設備如手機和智能平板電腦等）、手持數字影音播放設備、電視接收設備（模擬信號接收設備、數字信號接收設備、數字電視、IPTV、帶互聯網接入功能的播放設備等）等提供信息的下載、點播、數據傳輸、移動視頻業務（包括但不限於SMS、MMS、WAP、IVR、Streaming、3G、手機視頻等無線服務）、及其相關的宣傳和推廣等服務的權利；以及再授權給其他第三方以上述方式使用的權利。4.3 用戶理解並保證用戶在%{appName}平台上傳、發布或傳輸的內容（包括用戶的賬戶名稱等信息）不含有以下內容：（1）反對憲法確定的基本原則的；（2）危害國家統一、主權和領土完整的；（3）洩露國家秘密、危害國家安全或者損害國家榮譽和利益的；
+
+（4）煽動民族仇恨、民族歧視，破壞民族團結，或者侵害民族風俗、習慣的；（5）宣揚邪教、迷信的；（6）擾亂社會秩序，破壞社會穩定的；（7）誘導未成年人違法犯罪和渲染暴力、色情、賭博、恐怖活動的；（8）侮辱或者誹謗他人，侵害公民個人隱私等他人合法權益的；（9）危害社會公德，損害民族優秀文化傳統的；（10）有關法律、行政法規和國家規定禁止的其他內容。4.4 %{appName}鼓勵各位用戶在彈幕、評論中發表個人的意見和觀點，但發表的內容應當不包含涉及種族、宗教信仰、性別、年齡、國籍、殘障、性取向等針對特定對像或群體的語言人身攻擊、也不允許由以上原因煽動仇恨。針對評論、彈幕裡發送與視頻無關的第三方網址、社交平台、網盤代碼等的垃圾廣告信息的行為，一經發現，%{appName}有權對發垃圾廣告的賬號永久封禁或作出其他處罰措施。4.5 如果用戶上傳、發布或傳輸的內容含有以上違反法律法規的信息或內容，或者侵犯任何第三方的合法權益，用戶將直接承擔以上行為導致的一切不利後果。如因此給%{appName}造成不利後果的，用戶應負責消除影響，並且賠償%{appName}因此導致的一切損失，包括且不限於財產損害賠償、名譽損害賠償、律師費等因維權而產生的合理費用。4.6 提交投稿申請並通過審核的用戶（下或稱為"up 主"）應知悉並確認：4.6.1 up 主確認與%{appName}的運營方或關聯方不存在任何性質的長期僱傭關係，up 主僅就某具體素材完成後，向%{appName}提供時，方就該素材建立合作關係。Up 主確認不會直接或間接以%{appName}的名義從事任何活動。對於因拍攝活動產生的設備損耗、毀壞，對他人以及up 主自身人身財產安全造成的損害等相關風險，%{appName}不承擔責任。4.6.2 up 主確認提供給%{appName}的素材（包括但不限於視頻、圖片、文字等）的真實性與合法性，不存在任何虛假、具有誤導性的內容，不侵犯任何其他第三方的權益，不違反法律法規，不違背社會公序良俗，否則因此給%{appName}帶來損失的，up 主願意承擔所有責任並賠償損失。4.6.3 up 主確認所有素材的稿費（如有）根據%{appName}的稿費計算方式以及支付方式結算，up 主確認向%{appName}提供素材前，已經明確知曉並同意%{appName}的稿費計算方式以及支付方
+
+式。4.6.4 up 主保證其所提供的素材資源均為有權提供，如因此導致%{appName}被訴訟或處罰的，up 主應承擔%{appName}全部損失及解決爭議的訴訟費、律師費、公證費、鑑定費及其他合理費用。4.6.5 若有不可抗力原因導致up 主與%{appName}的合作終止，雙方將不承擔任何後果。5 用戶個人信息保護5.1 個人信息是指以電子或者其他方式記錄的能夠單獨或者與其他信息結合識別特定自然人身份或者反映特定自然人活動情況的各種信息。5.2 %{appName}將按照平台公佈的《隱私政策》的約定，處理和保護用戶的個人信息。6 賬號註銷6.1 用戶可以使用%{appName}的註銷功能或通過本協議提供的方式聯繫%{appName}進行賬號註銷（但法律法規另有規定的除外），一旦用戶註銷賬號，將無法使用%{appName}服務。為保護用戶或第三人的合法權益，%{appName}會結合用戶對%{appName}提供的各產品的使用情況判斷是否支持用戶的註銷請求，若用戶的賬號涉及尚未處理的問題，%{appName}會先提示用戶處理。6.2 除法律法規另有規定外，註銷賬號之後%{appName}將停止為用戶提供服務，用戶賬戶內的所有信息將被清空，並根據用戶的要求刪除或匿名化處理其個人信息。7 知識產權7.1 除非另有約定或%{appName}另行聲明，%{appName}平台內的所有內容（用戶依法享有版權的內容除外）、技術、軟件、程序、數據及其他信息（包括但不限於文字、圖像、圖片、照片、音頻、視頻、圖表、色彩、版面設計、電子文檔）的所有知識產權（包括但不限於版權、商標權、專利權、商業秘密等）及相關權利，均歸%{appName}或%{appName}關聯公司所有。未經%{appName}許可，任何人不得擅自使用（包括但不限於復制、傳播、展示、鏡像、上載、下載、修改、出租）。7.2 %{appName}對%{appName}專有內容、原創內容和其他通過授權取得的內容享有知識產權。未經%{appName}許可，任何單位和個人不得私自轉載、傳播和提供觀看服務或者有其他侵犯%{appName}知識產權的行為，否則將承擔所有相關的法律責任。8 免責聲明
+
+8.1 %{appName}對於任何包含、經由或連接、下載或從任何與有關本網絡服務所獲得的任何內容、信息或廣告，不聲明或保證其正確性或可靠性；並且對於用戶經本服務上的廣告、展示而購買、取得的任何產品、信息或資料，%{appName}不負保證責任。用戶自行承擔使用本服務的風險。8.2 %{appName}有權利但無義務，改善或更正%{appName}服務任何部分之任何疏漏、錯誤。8.3 %{appName}對如下事項不做擔保（包括但不限於）：（1）%{appName}提供的網站、客戶端等軟件雖然均已經過%{appName}測試，但由於技術本身的局限性，%{appName}不能保證其與其他軟硬件、系統完全兼容。如果出現不兼容的情況，用戶可將情況報告%{appName}，以獲得技術支持。如果無法解決問題，用戶可以選擇卸載、停止使用%{appName}服務。（2）使用%{appName}服務涉及到Internet 服務，可能會受到各個環節不穩定因素的影響。因不可抗力、黑客攻擊、系統不穩定、網絡中斷、用戶關機、通信線路等原因，均可能造成%{appName}服務中斷或不能滿足用戶要求的情況，%{appName}不保證服務適合用戶的使用要求。（3）由於%{appName}提供的客戶端等軟件可以通過網絡途徑下載、傳播，因此對於從非%{appName}指定官方站點下載、非%{appName}指定途徑獲得的%{appName}服務相關軟件，%{appName}無法保證其是否感染計算機病毒、是否隱藏有偽裝的木馬程序等黑客軟件，也不承擔用戶由此遭受的一切直接或間接損害賠償等法律責任。（4）%{appName}不做出任何與%{appName}服務的安全性、可靠性、及時性和性能有關的擔保，但%{appName}承諾將不斷提升服務質量及服務水平，為用戶提供更加優質的服務。8.4 基於以下原因而造成的利潤、商業信譽、資料損失或其他有形或無形損失，%{appName}不承擔任何直接、間接、附帶、衍生或懲罰性的賠償：（1）%{appName}服務使用或無法使用；（2）經由%{appName}購買或取得的任何產品、資料或服務；（3）用戶資料遭到未授權的使用或修改；（4）其他與%{appName}服務相關的事宜。%{appName}對於用戶所發布或由其他第三方發布的內容所引發的版權、署名權糾紛，不承擔任何責任。如果您認為用戶通過%{appName}所上載、傳播的視聽內容侵犯了您的相關權益，請您向給
+
+力視頻發出權利通知（郵箱：%{contactEmail}），權利通知應含有相關法律法規所要求的內容。收到通知後，%{appName}將根據相關法律規定採取措施對相關內容進行處理。%{appName}轉載、鏈接的內容，出於傳遞更多信息之目的，並不意味著贊同其觀點或對其真實性負責，轉載信息版權屬於原媒體及作者。版權相關事宜請聯繫：%{contactEmail}8.5 用戶應妥善保管自己的帳號和密碼，加強密碼安全性，謹防帳號洩露或被盜。因用戶帳號被洩露或被盜而造成的任何損失，%{appName}不承擔補償或賠償責任。8.6 用戶因缺少身份認證或認證信息不真實而導致帳號、帳號內財產等丟失、減少而無法找回的，%{appName}不承擔任何法律責任。9 用戶的違約及處理9.1 用戶在%{appName}平台上發布的內容和信息構成違約的，%{appName}可根據相應規則立即對相應內容和信息進行刪除、屏蔽等處理或對用戶的賬戶進行暫停使用、查封、註銷等處理。9.2 用戶在%{appName}平台上實施的行為，或雖未在%{appName}平台上實施但對%{appName}平台及其用戶產生影響的行為構成違約的，%{appName}可依據相應規則對用戶的賬戶執行限制參加活動、中止向用戶提供部分或全部服務等處理措施。如用戶的行為構成根本違約的，%{appName}可查封用戶的賬戶，終止向用戶提供服務。9.3 如果用戶在%{appName}平台上的行為違反相關的法律法規，%{appName}可依法向相關主管機關報告並提交用戶的使用記錄和其他信息。9.4 如用戶的行為使%{appName}及/或其關聯公司遭受損失（包括自身的直接經濟損失、商譽損失及對外支付的賠償金、和解款、律師費、訴訟費等間接經濟損失），用戶應賠償%{appName}及/或其關聯公司的上述全部損失。10 服務的變更和終止10.1 %{appName}有權在任何時候，暫時或永久地變更或終止服務（或任何一部分），無論是否通知用戶，%{appName}對服務的變更或終止對用戶和任何第三人不承擔任何責任。11 法律的適用和管轄11.1 本條款的生效、履行、解釋及爭議的解決均適用中華人民共和國法律（不包括衝突法），本條款因與中華人民共和國現行法律相抵觸而導致部分無效，不影響其他部分的效力。
+
+11.2 如就本協議內容或其執行發生任何爭議，應盡量友好協商解決；協商不成時，則爭議各方一致同意將發生的爭議提交本協議簽訂地（即中華人民共和國武漢市江岸區）有管轄權的人民法院進行訴訟。11.3 雙方同意，解決爭議時，應以用戶同意的最新《隱私政策》為準。投訴指引%{appName}作為網絡服務提供者，十分重視內容版權和其他知識產權的保護；為有效保護權利人，對於其中可能涉嫌侵犯權利人合法權益的信息，根據相關法律法規，特製定本指引。如果您作為權利人認為本平台上的信息侵犯了您的合法權益，您可依據本指引通知我們，我們將審查核實後予以處理。投訴流程：下載《舉報投訴表》，按要求填寫投訴信息，將《舉報投訴表》及相關證明材料，發送至%{contactEmail} 電子郵箱進行投訴；1.1 權利人主體信息和相關證明材料(1)個人投訴： 權利人的真實姓名、聯繫電話及郵箱、聯繫地址、身份證(中國公民)或護照(外國公民)的照片或掃描件等。(2)單位投訴： 權利人的名稱、住所地、聯繫人、聯繫電話及郵箱、投訴通知(加蓋公章)、營業執照(加蓋公章)等。(3)代他人投訴： 除上述(1)(2)中要求的投訴人和權利人雙方的主體身份信息和證明材料外，
+
+還需提供權利人簽名或蓋章的委託書。1.2 投訴內容(1)被投訴內容的完整標題/名稱和視頻鏈接等足以準確定位侵權內容的相關信息。(2)要求主張包括可以要求斷開侵權作品的訪問鏈接、刪除或更正涉嫌侵權的文字介紹。1.3 構成侵權的初步證明材料需要舉報投訴人就被舉報視頻的具體侵權內容進行說明。如涉及盜版或抄襲的，需簡要對比被舉報視頻與自身權利作品之間的同一性或者抄襲的具體內容；涉及針對其他民事權利（名譽權、肖像權及隱私權等）的投訴，應提供具體內容在被舉報視頻中的截圖。您所提供的材料的準確性，有助於加速審核工作人員的處理速度，能更好的維護您的合法權益。1.4 權利人保證權利人應在通知書中保證：權利人在通知書中的陳述和所提供材料皆是真實、有效和合法的，保證承擔和賠償本平台因根據權利人通知書對被投訴內容進行處理而遭受的全部損失。2、對合法投訴通知的處理2.1 本平台收到權利人符合本指引要求的投訴通知後，會盡快依法對被投訴內容做刪除或斷開鏈接等處理。2.2 對不符合本指引要求的投訴通知，本平台有權在權利人補正前暫不處理。
+
+2.3 對於侵犯權利人信息網絡傳播權的投訴通知，本平台在進行處理投訴的同時可依法將投訴通知轉送被投訴人。若被投訴人依法提交了申述證明及相關材料，本平台會將反通知轉送權利人。若權利人對反通知持有異議，依據法律規定，權利人應當且能夠通過行政或司法程序直接和被投訴人處理相關爭議。《舉報投訴表》下載鏈接如下：https://ent-disk-1252816746.cos.ap-shanghai.myqcloud.com/%E4%B8%BE%E6%8A%A5%E6%8A%95%E8%AF%89%E8%A1%A8.docx請複制鏈接後在電腦上操作
+  `,
+    general_eula_content: `
+
+a。許可範圍：許可方授予您不可轉讓的使用許可在您擁有或控制的任何 Apple 品牌產品上的應用程序使用規則。本標準 EULA 的條款將管轄任何內容、材料或服務可從許可應用程序訪問或在許可應用程序中購買，以及由替換或補充原始許可應用程序的許可方，除非此類升級是隨附自定義 EULA。除使用規則另有規定外，您不得通過網絡分發或使許可應用程序可用多個設備同時進行。您不得轉讓、重新分發或再許可許可應用程序，如果您將您的 Apple 設備出售給第三方，您必須刪除許可在這樣做之前從 Apple 設備應用程序。您不得複制（除非經本許可證和使用規則）、逆向工程、反彙編、嘗試導出源代碼許可應用程序的代碼、修改或創建衍生作品、任何更新或任何其中的一部分（除非並且僅在任何上述限制被禁止的情況下）適用法律或在管理任何使用的許可條款允許的範圍內許可應用程序中包含的開源組件）。
+
+b. 同意使用數據：您同意許可方可以收集和使用技術數據和相關信息——包括但不限於關於您的設備的技術信息，系統和應用軟件，以及外圍設備——定期收集以促進向您提供與本服務相關的軟件更新、產品支持和其他服務（如果有）許可的應用程序。許可方可以使用這些信息，只要它的形式不識別您的個人身份，以改進其產品或向您提供服務或技術。
+
+c。終止。本標準 EULA 在您或許可方終止之前一直有效。你的如果您不遵守以下任何條款，本標準 EULA 下的權利將自動終止它的條款。d. 外部服務。許可應用程序可能允許訪問許可方和/或第三方的派對服務和網站（統稱為"外部服務"）。您同意使用外部服務的風險由您自行承擔。許可方不負責檢查或評估任何第三方外部服務的內容或準確性，並且不承擔任何責任對於任何此類第三方外部服務。任何許可應用程序顯示的數據或外部服務，包括但不限於財務、醫療和位置信息，用於僅供一般參考之用，許可方或其代理人不作保證。你會不得以任何與本標準條款不一致的方式使用外部服務EULA 或侵犯許可方或任何第三方知識產權的內容。你同意不使用外部服務騷擾、辱罵、跟踪、威脅或誹謗任何個人或實體，並且許可方不對任何此類使用負責。外部服務可能無法在所有語言或在您的祖國，並且可能不適合或可用於任何特定位置。在您選擇使用此類外部服務的範圍內，您僅是負責遵守任何適用的法律。許可方保留更改的權利，暫停、刪除、禁用或對任何外部服務施加訪問限製或限制任何時間，恕不另行通知或對您承擔任何責任。
+
+e. 無保證：您明確承認並同意使用許可應用程序的風險由您自行承擔。達到最大適用法律、許可應用程序和許可應用程序執行或提供的任何服務按"原樣"和"可用"提供，不存在任何缺陷任何形式的保證，許可方在此否認所有關於被許可人的保證和條件應用程序和任何服務，無論是明示的、暗示的或法定的，包括但不限於默示保證和/或適銷性、質量令人滿意、適用性的條件出於特定目的、準確、安靜的享受，以及不侵犯第三方權利。沒有口頭或書面許可人或其授權人提供的信息或建議代表應創建保證。應該被許可應用程序或服務被證明有缺陷，您承擔全部所有必要服務、維修或糾正的成本。一些司法管轄區不允許排除暗示保證或對消費者適用法定權利的限制，因此上述排除和限制可能不適用於您。
+
+f。責任限制。在法律不禁止的範圍內，在任何情況下許可方是否應對人身傷害或任何意外事故負責，任何特殊的、間接的或後果性的損害，包括但不限於利潤損失、數據、業務中斷或任何其他商業損害或因您使用或無法使用而引起或與之相關的損失許可的應用程序，無論是如何引起的，無論責任理論（合同、侵權或其他），即使許可人已被告知此類損害的可能性。一些司法管轄區不允許限制個人責任傷害，或偶然或間接損害，所以這限制可能不適用於您。在任何情況下，許可方均不對您承擔全部責任所有損害賠償（適用法律在涉及人身傷害的情況下可能要求的除外）傷）超過五十美元（$50.00）。即使在以下情況下，上述限制也將適用上述補救措施未能達到其基本目的。
+
+g。您不得使用或以其他方式出口或再出口許可應用程序，除非美國法律和被許可人所在司法管轄區的法律授權獲得了申請。特別是但不限於，許可應用程序可以不得出口或再出口 (a) 到任何美國禁運的國家或 (b) 任何人美國財政部特別指定國民名單或美國財政部商務拒絕人員名單或實體名單。通過使用許可應用程序，您聲明並保證您不在任何此類國家或任何此類列表中。你也是同意您不會將這些產品用於美國法律禁止的任何目的，包括但不限於核能的開發、設計、製造或生產，導彈，或化學或生物武器。
+
+h。許可應用程序和相關文件是"商業項目"，作為該術語
+
+在 48 CFR §2.101 中定義，包括"商業計算機軟件"和"商業計算機軟件文檔"，因為此類術語在 48 CFR 中使用§12.212 或 48 CFR §227.7202（如適用）。符合 48 CFR §12.212 或 48 CFR§227.7202-1 至 227.7202-4（如適用）商業計算機軟件和商業計算機軟件文檔被授權給美國政府端用戶 (a) 僅作為商業項目和 (b) 僅具有授予所有其他人的權利最終用戶根據此處的條款和條件。保留未發表的權利美國版權法。
+
+i。除以下段落中明確規定的範圍外，本協議和您與 Apple 之間的關係應受加利福尼亞州法律管轄，排除其法律規定的衝突。您和 Apple 同意向個人和加利福尼亞州聖克拉拉縣法院的專屬管轄權，解決因本協議引起的任何爭議或索賠。如果 (a) 您不是美國公民；(二)您不居住在美國；(c) 您不是從美國訪問服務；(d) 你是下列國家之一的公民，您在此同意任何爭議或由本協議引起的索賠應受以下適用法律管轄，在不考慮任何法律衝突的情況下，您在此不可撤銷地服從非位於下列州、省或國家的法院的專屬管轄權其法律管轄：如果您是任何歐盟國家或瑞士、挪威或冰島的公民，管轄法律和法院應為您常住地的法律和法院。明確排除在本協議適用範圍之外的是被稱為聯合聯合國國際貨物銷售公約。
+  `,
+    // 下載APP彈框相關文本
+    download_app_title: '下載APP觀看完整內容',
+    download_app_desc: '安裝APP即可觀看全部高清視頻，無廣告，支持離線緩存',
+    download_app_btn: '立即下載',
+    download_app_cancel: '取消',
+    download_app_short_title: '下載APP觀看短劇',
+    download_app_short_desc: '安裝我們的APP即可觀看海量精彩短劇，支持無限觀看和離線緩存',
+    download_app_detail_title: '下載APP觀看完整視頻',
+    download_app_detail_desc: '安裝我們的APP即可流暢觀看完整視頻，支持離線緩存，高清無廣告'
+};
+const __TURBOPACK__default__export__ = tw;
+if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
+    __turbopack_context__.k.registerExports(module, globalThis.$RefreshHelpers$);
+}
+}}),
+"[project]/src/app/i18n/locales/ko.js [app-client] (ecmascript)": ((__turbopack_context__) => {
+"use strict";
+
+var { g: global, __dirname, k: __turbopack_refresh__, m: module } = __turbopack_context__;
+{
+__turbopack_context__.s({
+    "default": (()=>__TURBOPACK__default__export__)
+});
+const ko = {
+    config_app_name: '칸피안 네트워크',
+    "seo_app_title": "칸피안 네트워크 - 온라인으로 영화, 드라마, 애니메이션, 단편 드라마 시청",
+    "seo_app_desc": "무료로 고화질 영화, 드라마, 애니메이션, 단편 드라마를 온라인으로 시청하세요! 최신 콘텐츠를 부드럽게 즐기며 언제 어디서나 멋진 경험을!",
+    "seo_page_title": "칸피안 네트워크 - 무료{page} - 온라인으로 영화, 드라마, 애니메이션, 단편 드라마 시청",
+    "seo_page_desc": "칸피안 네트워크 - 무료{page} - 무료로 고화질 영화, 드라마, 애니메이션, 단편 드라마를 온라인으로 시청하세요! 최신 콘텐츠를 부드럽게 즐기며 언제 어디서나 멋진 경험을!",
+    "seo_detail_title": "《{title}》- 무료 온라인 시청",
+    "seo_detail_desc": "《{title}》- {desc}",
+    "seo_keywords": "온라인 영화, 무료 드라마, 고화질 영상, 영화 사이트, 무료 영상, 영화 온라인 시청, 비디오 사이트, 영상 모음, 영화 온라인, SF 영화, 액션 영화, 로맨스 영화, 스릴러 드라마, 사극 드라마, 버라이어티 쇼, 신작 애니메이션, 전쟁 영화, 코미디 영화, 다큐멘터리 온라인",
+    homeTab: '재미있는',
+    hotTab: '핫',
+    recommend: '단막극',
+    shortVideo: '짧은 동영상',
+    mineTab: '내',
+    homeChoice: '인기',
+    homeFilm: '영화',
+    homeTeleplay: '드라마',
+    homeVariety: '예능',
+    homeEntertainment: '애니메이션',
+    homeNews: '뉴스',
+    vipAll: '전체',
+    vipWeek: '이번 주 인기',
+    vipPopular: '인기순',
+    vipTime: '시간순',
+    artTypeFilm: '영화',
+    artTypeTeleplay: '드라마',
+    artTypeVariety: '예능',
+    artTypeEntertainment: '애니메이션',
+    artTypeNews: '뉴스',
+    category_type: '유형',
+    category_region: '지역',
+    category_year: '년도',
+    category_all: '전체',
+    general_no_image: '이미지 없음',
+    general_retry: '재시도',
+    all: '전체',
+    title_0: '멋진 스토리',
+    title_1: '웃긴 코미디',
+    title_2: '높은 평점 액션',
+    title_3: '로맨틱 감성',
+    title_4: '공상과학 대작',
+    title_5: '애니메이션',
+    title_6: '두뇌 자극 미스터리',
+    title_7: '스릴 넘치는',
+    title_8: '공포와 잔혹',
+    title_9: '범죄 총격전',
+    title_10: '국내 명작',
+    title_11: '미국 대작',
+    title_12: '고전 홍콩 영화',
+    title_13: '대만 걸작',
+    title_14: '일본',
+    title_15: '한국',
+    contentTypePlot: '스토리',
+    contentTypeComedy: '코미디',
+    contentTypeAction: '액션',
+    contentTypeRomance: '로맨스',
+    contentTypeScienceFiction: '공상과학',
+    contentTypeCartoon: '애니메이션',
+    contentTypeSuspense: '미스터리',
+    contentTypeThriller: '스릴러',
+    contentTypeHorror: '공포',
+    contentTypeCrime: '범죄',
+    contentTypeHomosexual: '동성',
+    contentTypeMusic: '음악',
+    contentTypeDance: '가요와 춤',
+    contentTypeBiopic: '전기',
+    contentTypeHistorical: '역사',
+    contentTypeWar: '전쟁',
+    contentTypeWestward: '서부',
+    contentTypeMagical: '판타지',
+    contentTypeAdventure: '모험',
+    contentTypeDisaster: '재난',
+    contentTypeMartialArts: '무협',
+    contentTypeOthers: '기타',
+    // reelsContentTypeTimeTravel: '穿越',
+    // reelsContentTypeFantasy: '玄幻',
+    // reelsContentTypeComedy: '搞笑',
+    // reelsContentTypeHorror: '恐怖',
+    // reelsContentTypeAction: '热血',
+    // reelsContentTypeMotivation: '励志',
+    // reelsContentTypeRomance: '爱情',
+    // reelsContentTypeWar: '战争',
+    // reelsContentTypeUrban: '都市',
+    // reelsContentTypeOvercome: '逆袭',
+    // reelsContentTypeSweet: '甜宠',
+    // reelsContentTypeRebirth: '重生',
+    // reelsContentTypeRevenge: '复仇',
+    // reelsContentTypeCEO: '总裁',
+    // reelsContentTypeAristocracy: '豪门',
+    // reelsContentTypeAdventure: '冒险',
+    // reelsContentTypeIntrigue: '权谋',
+    // reelsContentTypeEmotions: '情感',
+    // reelsContentTypeMarriage: '婚姻',
+    // reelsContentTypeMystery: '悬疑',
+    reelsContentTypeUrban: '도시',
+    reelsContentTypeTraverse: '시간여행',
+    reelsContentTypeRebirth: '환생',
+    reelsContentTypeWarGod: '전쟁신',
+    reelsContentTypeFantasy: '현환 판타지',
+    reelsContentTypeOverlord: '독재 사장',
+    reelsContentTypeTorturedLove: '잔혹한 사랑',
+    reelsContentTypeBaby: '귀여운 아기',
+    reelsContentTypeCostume: '고전 의상',
+    reelsContentTypeDivineHealer: '신의사',
+    reelsContentTypeFemale: '여성용',
+    reelsContentTypeMale: '남성용',
+    reelsContentTypeHeir: '재벌',
+    reelsContentTypeRepublic: '민국',
+    reelsContentTypeRise: '역전',
+    reelsContentTypeRomance: '로맨스',
+    reelsContentTypeHistory: '역사',
+    reelsContentTypeSweet: '달콤한 사랑',
+    reelsContentTypeRevenge: '복수',
+    reelsContentTypeFamily: '가정',
+    reelsContentTypeReality: '현실',
+    reelsContentTypeKinship: '가족애',
+    reelsContentTypeFeeling: '감성',
+    reelsContentTypeFlashMarriage: '번개 결혼',
+    reelsContentTypeOthers: '기타',
+    areaTypeChinaMainland: '중국',
+    areaTypeUnitedStates: '미국',
+    areaTypeHongKong: '홍콩',
+    areaTypeTaiwan: '대만',
+    areaTypeJapan: '일본',
+    areaTypeKorea: '한국',
+    areaTypeUnitedKingdom: '영국',
+    areaTypeFrance: '프랑스',
+    areaTypeGermany: '독일',
+    areaTypeItaly: '이탈리아',
+    areaTypeSpain: '스페인',
+    areaTypeIndia: '인도',
+    areaTypeThailand: '태국',
+    areaTypeRussia: '러시아',
+    areaTypeIran: '이란',
+    areaTypeCanada: '캐나다',
+    areaTypeAustralia: '호주',
+    areaTypeIreland: '아일랜드',
+    areaTypeSweden: '스웨덴',
+    areaTypeBrazil: '브라질',
+    areaTypeDenmark: '덴마크',
+    areaTypeOthers: '기타',
+    center_btn_chinese: '중국어',
+    center_btn_english: '서구',
+    center_btn_asian: '일본·한국',
+    center_btn_china: '중국',
+    center_btn_outback: '본토',
+    center_btn_cantonese: '홍콩/타이완',
+    center_btn_Reality: '리얼리티 쇼',
+    center_btn_international: '국제',
+    center_btn_Asia: '아시아',
+    center_btn_UsTeleplay: '미국 드라마',
+    main_noData: '내용 없음',
+    main_more: '더보기',
+    main_not_open: '아직 열리지 않음',
+    main_lang_cn: '간체 중국어',
+    main_lang_tw: '번체 중국어',
+    main_lang_en: '영어',
+    main_message_all: '모든 사람',
+    main_message_friend: '친구만',
+    main_message_followed: '나를 팔로우한 사람만',
+    mine_register: '회원가입',
+    mine_login: '로그인',
+    mine_ing: '진행 중',
+    mine_username: '전화번호나 이메일을 입력하세요',
+    mine_password: '비밀번호를 입력하세요',
+    mine_password_again: '비밀번호를 다시 입력하세요',
+    mine_password_not_same: '두 번 입력한 비밀번호가 일치하지 않습니다',
+    mine_password_invalid: '비밀번호는 6-20자리의 영문과 숫자로 구성되어야 합니다',
+    mine_agree: '약관에 동의하고 가입하기',
+    mine_tips: '"약관에 동의하고 가입하기"를 클릭하면 《이용약관》과 《개인정보 보호정책》을 읽고 동의한 것으로 간주됩니다',
+    mine_password_forgot: '비밀번호를 잊으셨나요?',
+    mine_show_email: '관리자에게 이메일로 문의하세요: %{contactEmail}',
+    mine_login_summary: '로그인하면 더 다양한 콘텐츠를 즐길 수 있습니다',
+    mine_watch_history: '시청 기록',
+    mine_recently_played: '최근 재생',
+    mine_recently_favorites: '최근 즐겨찾기',
+    mine_create_list: '작품',
+    mine_activity: '활동',
+    mine_favorite: '좋아요',
+    mine_downloads: '내 다운로드',
+    mine_favorites: '내 즐겨찾기',
+    mine_weblink: '공식 웹사이트 주소',
+    set_up_account: '계정 및 보안',
+    set_up_my_coin: '내 포인트',
+    set_up_cellphone: '휴대폰 연동',
+    set_up_third: '서드파티 계정 연동',
+    set_up_realname: '실명 인증',
+    set_up_shield: '차단 설정',
+    set_up_delete: '계정 삭제',
+    set_up_block_list: '차단 목록',
+    report_text: '신고',
+    report_block: '블랙리스트에 추가',
+    report_add_block_list: '이미 블랙리스트에 추가되었습니다, 설정에서 해제할 수 있습니다',
+    report_remove_block_list: '블랙리스트에서 제거되었습니다',
+    report_unblock: '블랙리스트 해제',
+    report_question: '신고 사유를 입력하세요',
+    report_blocked_noData: '차단됨, 볼 내용이 없습니다',
+    report_type_image: '이미지나 제목 신고',
+    report_type_video: '동영상 신고',
+    report_type_comment: '댓글 신고',
+    report_type_user: '사용자 신고',
+    report_thanks: '신고해주셔서 감사합니다',
+    report_issue: '문제',
+    report_content_1: '안녕하세요! 신고해주셔서 감사합니다. 이 내용이 %{appName}의',
+    report_content_2: '위반할 경우 제거될 것입니다. 댓글이나 사용자를 차단하는 방법 및 %{appName}에서의 안전을 위한 기타 정책과 도구에 대해 자세히 알아보세요',
+    report_issue_0: '음란물',
+    report_issue_1: '폭력 또는 혐오스러운 내용',
+    report_issue_2: '증오 또는 모욕적인 내용',
+    report_issue_3: '유해하거나 위험한 행위',
+    report_issue_4: '쓰레기 내용 또는 오해의 소지가 있는 내용',
+    report_issue_5: '괴롭힘 또는 따돌림',
+    report_issue_6: '아동 학대',
+    report_issue_7: '내 권리를 침해함',
+    report_issue_8: '테러를 선동함',
+    report_issue_9: '저작권 문제',
+    report_issue_10: '개인정보 문제',
+    report_issue_11: '상표 침해 또는 모조품',
+    report_issue_12: '기타 법적 문제',
+    ad_skip: '광고 건너뛰기',
+    ad_remove: '광고 제거',
+    download_tips: '안내: 캐시된 영상을 시청할 때는 네트워크 연결을 끊지 마세요',
+    download_progress: '다운로드 진행 상황',
+    download_delete: '삭제',
+    download_delete_sure: '삭제하시겠습니까?',
+    download_deleted: '성공적으로 삭제되었습니다',
+    download_delete_tip: '다운로드 완료 후 삭제 가능합니다',
+    download_complete: '완료됨 %{progress}%',
+    download_free_storage: '남은 %{free}G 사용 가능',
+    download_play_cache: ' (캐시 재생 중)',
+    download_added: '다운로드 작업에 추가되었습니다',
+    download_downloading: '다운로드 중, [내 - 내 다운로드]에서 확인하세요',
+    download_throw_err: '다운로드 중 오류 발생, 앱을 재시작하고 다시 시도하세요',
+    download_state_downloading: '다운로드 중',
+    download_state_stop: '다운로드 중단',
+    download_state_complete: '다운로드 완료',
+    download_source_cannot: '이 재생 소스는 다운로드할 수 없습니다',
+    download_source_error: '현재 재생 소스 다운로드 오류, 다른 소스를 선택하거나 앱을 재시작하세요',
+    download_cannot_play: '다운로드 후 재생이 안 될 경우 앱을 재시작하거나 재생 소스를 변경 후 재다운로드하세요.',
+    download_max_error: '다운로드 수가 최대 한도에 도달했습니다, VIP 업그레이드 후 다시 시도하세요',
+    set_up_play: '재생하기',
+    set_up_autoplay: '자동으로 시작 및 끝부분 건너뛰기',
+    set_up_net_play: '통신사 네트워크 자동 재생',
+    set_up_net_upload: '통신사 네트워크 업로드 허용',
+    set_up_general: '일반',
+    set_up_get_message: '푸시 알림 수신',
+    set_up_change_lang: '언어 변경',
+    set_up_push_other: '친구에게 푸시 알림 전송 허용',
+    set_up_who_push: '누가 내게 메시지를 보낼 수 있나요',
+    set_up_about: '정보',
+    set_up_help: '피드백 및 도움말',
+    set_up_sla: '이용약관',
+    set_up_privacy: '개인정보 보호정책',
+    general_summary: '요약',
+    general_starring: '주연',
+    general_type: '장르',
+    general_all_comment: '모든 댓글',
+    general_sets_title: '에피소드',
+    general_like: '좋아요',
+    general_comment: '댓글',
+    general_sets: '에피소드',
+    general_share: '공유',
+    general_collect: '즐겨찾기',
+    general_comment_any: '댓글 남기기',
+    general_publish_comment: '댓글 게시',
+    general_picture: '사진',
+    general_video: '동영상',
+    general_publish: '게시',
+    general_submit: '제출',
+    general_modify: '정보 수정',
+    general_comment_num: '개',
+    general_comments: '댓글',
+    general_reply: '답글',
+    general_replies: '답글',
+    general_follow: '팔로우',
+    general_unfollow: '언팔로우',
+    general_likes: '좋아요',
+    general_followering: '팔로우',
+    general_followers: '팬',
+    general_friends: '친구',
+    general_ensure: '확인',
+    general_cancel: '취소',
+    general_hot_search: '인기 검색어',
+    general_search_place: '동영상 이름을 입력하세요',
+    general_publishing: '댓글 게시 중',
+    general_input_content: '내용을 입력하세요',
+    general_logout: '로그아웃',
+    general_input_question: '질문을 입력하세요',
+    general_noInterest: '관심 없음',
+    general_shield: '모두 차단',
+    general_report: '신고',
+    general_operate: '조작',
+    general_close: '닫기',
+    general_years: `'s`,
+    general_success: '성공',
+    general_fail: '실패',
+    general_user_not_exist: '사용자 이름이 존재하지 않습니다',
+    general_user_exist: '사용자 이름이 이미 존재합니다',
+    general_auth_fail: '인증 실패, 로그인 해주세요',
+    general_wrong_character: '잘못된 문자, 확인해주세요',
+    general_net_slow: '네트워크가 느립니다, 나중에 다시 시도해주세요',
+    general_login_faild: '로그인 실패, 계정이나 비밀번호가 틀립니다, 다시 시도해주세요!',
+    general_net_wrong: '네트워크 오류, 나중에 다시 시도해주세요',
+    general_net_unconnected: '네트워크 연결이 끊어졌습니다, 연결 상태를 확인해주세요',
+    general_net_fault: '시스템 업그레이드 중, 24시간 내 복구 예상',
+    general_net_link_fault: '네트워크 연결 오류',
+    general_fresh_btn: '새로고침',
+    general_time_one: '1일 전',
+    general_hour_number: '시간 전',
+    general_go_login: '로그인하기',
+    general_go_share: '공유하기',
+    general_after_login: '로그인 후 공유해주세요',
+    general_must_share: '이 동영상은 로그인 후 시청 가능합니다',
+    general_coin_invalid: '포인트 부족, 친구와 공유하면 포인트 획득',
+    general_need_share: '공유 후 VIP 동영상 무료 시청 가능',
+    general_need_coin: '이 동영상은',
+    general_coin: '포인트',
+    general_coin_account: '당신의 포인트:',
+    general_reach_end: '끝까지 도달했습니다',
+    general_load_err: '동영상 로딩 오류!',
+    general_search: '검색',
+    general_watch_to: '시청 완료까지',
+    general_watch_episode: '%{index}회',
+    general_avatar: '프로필 사진',
+    general_cover: '커버',
+    general_upload_err: '업로드 오류, 다시 시도해주세요',
+    general_camera_err: '앨범 열기 실패, 다시 시도해주세요',
+    general_input_title: '제목을 입력하세요',
+    general_upload_cover: '커버를 업로드하세요',
+    general_auth_err: '인증 실패',
+    general_loading: '로딩 중...',
+    general_director: '감독',
+    general_watch_now: '지금 보기',
+    general_hold: '나중에',
+    general_update_backend: '백그라운드 업데이트',
+    general_if_update: '새 버전이 있습니다, 업데이트 하시겠습니까?',
+    general_must_update: '새 버전이 있어 업데이트가 필요합니다',
+    general_continue_update: '백그라운드 업데이트',
+    general_update_title: '업데이트 안내',
+    general_edit_info: '개인 정보 수정',
+    general_edit_confirm: '수정 확인',
+    general_delete_info: '계정을 삭제하세요',
+    general_delete_confirm: '확인',
+    general_delete_warning: '주의: 관련 법규에 따라 이 작업은 계정을 영구 삭제 또는 해지하며, 모든 정보에 접근할 수 없게 됩니다. 신중히 고려 후 진행하세요',
+    general_add_opus: '작품 추가',
+    general_click_upload: '클릭하여 커버 업로드',
+    general_uploading: '업로드 중',
+    general_title: '제목',
+    general_nickname: '닉네임',
+    general_upload_result: '동영상 업로드 성공, 검토 중',
+    general_download_faild: '이 동영상은 저작권 문제로 다운로드가 불가능합니다',
+    general_warning_title: '안내:',
+    general_warning_content: '네트워크 연결 불가, 오류, 강제 종료, 멈춤 등의 문제가 발생하면 공식 웹사이트에서 최신 버전을 다운로드하여 설치해 보세요',
+    general_warning_download_url: '공식 웹사이트 주소:',
+    general_warning_enter_play: '클릭하여 구글 스토어로 이동',
+    general_player_next_episode: '다음 회로 이동',
+    general_player_rate: '배속',
+    general_player_source: '재생 소스',
+    general_player_src: '소스',
+    general_sets_count_label: '전체 %{count}회',
+    general_agree: '동의',
+    general_agree_not: '동의하지 않음',
+    general_sla_privacy: '이용약관 및 개인정보 보호',
+    general_sla_agree: '귀하의 동의가 있어야 %{appName}의 서비스를 계속 이용할 수 있습니다',
+    general_a: '%{appName}의 제품 및 서비스를 선택해 주셔서 감사합니다',
+    general_b: '당사는 귀하의 개인정보와 프라이버시를 매우 중시합니다. 제품 사용 전 개인 권리 보호를 위해 반드시 읽어보시기 바랍니다',
+    general_c: '1. 개인정보 수집/저장/사용/제공/보호 규정 및 사용자 권리 관련 조항;',
+    general_d: '2. 당사의 책임 제한 및 면책 조항;',
+    general_e: '3. 기타 굵게 또는 밑줄로 표시된 중요한 조항;',
+    general_f: '"동의" 버튼을 클릭하면 위 모든 내용을 읽고 동의한 것으로 간주됩니다',
+    general_rate_title: '별 5개 평점 후 시스템이 더 많은 우수 영화/드라마를 추천합니다',
+    general_rate_submit: '지금 제출',
+    general_rate_cancle: '나중에',
+    general_comment_placeholder: '여기에 의견을 입력하세요',
+    general_empty_error: '의견 내용이 비어 있습니다',
+    general_share_content: '아래 링크를 복사하여 휴대폰 기본 브라우저로 열면 APP을 다운로드 및 설치 후 이 동영상을 무료로 시청할 수 있습니다',
+    general_privacy: '개인정보 보호정책',
+    general_sla: '사용자 서비스 약관',
+    general_eula: '최종 사용자 라이선스 계약',
+    general_update_time: '업데이트 시간',
+    general_valid_time: '유효 시간',
+    general_privacy_content: `
+    PRIVACY NOTICE
+
+Last updated February 02, 2023
+
+
+
+This privacy notice for %{WEB_LINK} ("Company," "we," "us," or "our"), describes how and why we might collect, store, use, and/or share ("process") your information when you use our services ("Services"), such as when you:
+Download and use our mobile application (%{appName}), or any other application of ours that links to this privacy notice
+Engage with us in other related ways, including any sales, marketing, or events
+Questions or concerns? Reading this privacy notice will help you understand your privacy rights and choices. If you do not agree with our policies and practices, please do not use our Services. If you still have any questions or concerns, please contact us at %{contactEmail}.
+
+
+SUMMARY OF KEY POINTS
+
+This summary provides key points from our privacy notice, but you can find out more details about any of these topics by clicking the link following each key point or by using our table of contents below to find the section you are looking for. You can also click here to go directly to our table of contents.
+
+What personal information do we process? When you visit, use, or navigate our Services, we may process personal information depending on how you interact with %{WEB_LINK} and the Services, the choices you make, and the products and features you use. Click here to learn more.
+
+Do we process any sensitive personal information? We do not process sensitive personal information.
+
+Do we receive any information from third parties? We do not receive any information from third parties.
+
+How do we process your information? We process your information to provide, improve, and administer our Services, communicate with you, for security and fraud prevention, and to comply with law. We may also process your information for other purposes with your consent. We process your information only when we have a valid legal reason to do so. Click here to learn more.
+
+In what situations and with which parties do we share personal information? We may share information in specific situations and with specific third parties. Click here to learn more.
+
+How do we keep your information safe? We have organizational and technical processes and procedures in place to protect your personal information. However, no electronic transmission over the internet or information storage technology can be guaranteed to be 100% secure, so we cannot promise or guarantee that hackers, cybercriminals, or other unauthorized third parties will not be able to defeat our security and improperly collect, access, steal, or modify your information. Click here to learn more.
+
+What are your rights? Depending on where you are located geographically, the applicable privacy law may mean you have certain rights regarding your personal information. Click here to learn more.
+
+How do you exercise your rights? The easiest way to exercise your rights is by filling out our data subject request form available here, or by contacting us. We will consider and act upon any request in accordance with applicable data protection laws.
+
+Want to learn more about what %{WEB_LINK} does with any information we collect? Click here to review the notice in full.
+
+
+TABLE OF CONTENTS
+
+1. WHAT INFORMATION DO WE COLLECT?
+2. HOW DO WE PROCESS YOUR INFORMATION?
+3. WHAT LEGAL BASES DO WE RELY ON TO PROCESS YOUR PERSONAL INFORMATION?
+4. WHEN AND WITH WHOM DO WE SHARE YOUR PERSONAL INFORMATION?
+5. WHAT IS OUR STANCE ON THIRD-PARTY WEBSITES?
+6. HOW LONG DO WE KEEP YOUR INFORMATION?
+7. HOW DO WE KEEP YOUR INFORMATION SAFE?
+8. WHAT ARE YOUR PRIVACY RIGHTS?
+9. CONTROLS FOR DO-NOT-TRACK FEATURES
+10. DO CALIFORNIA RESIDENTS HAVE SPECIFIC PRIVACY RIGHTS?
+11. DO VIRGINIA RESIDENTS HAVE SPECIFIC PRIVACY RIGHTS?
+12. DO WE MAKE UPDATES TO THIS NOTICE?
+13. HOW CAN YOU CONTACT US ABOUT THIS NOTICE?
+14. HOW CAN YOU REVIEW, UPDATE, OR DELETE THE DATA WE COLLECT FROM YOU?
+
+
+1. WHAT INFORMATION DO WE COLLECT?
+
+Personal information you disclose to us
+
+In Short: We collect personal information that you provide to us.
+
+We collect personal information that you voluntarily provide to us when you register on the Services, express an interest in obtaining information about us or our products and Services, when you participate in activities on the Services, or otherwise when you contact us.
+
+Personal Information Provided by You. The personal information that we collect depends on the context of your interactions with us and the Services, the choices you make, and the products and features you use. The personal information we collect may include the following:
+usernames
+passwords
+Sensitive Information. We do not process sensitive information.
+
+Application Data. If you use our application(s), we also may collect the following information if you choose to provide us with access or permission:
+Geolocation Information. We may request access or permission to track location-based information from your mobile device, either continuously or while you are using our mobile application(s), to provide certain location-based services. If you wish to change our access or permissions, you may do so in your device's settings.
+Mobile Device Access. We may request access or permission to certain features from your mobile device, including your mobile device's camera, storage, and other features. If you wish to change our access or permissions, you may do so in your device's settings.
+This information is primarily needed to maintain the security and operation of our application(s), for troubleshooting, and for our internal analytics and reporting purposes.
+
+All personal information that you provide to us must be true, complete, and accurate, and you must notify us of any changes to such personal information.
+
+Information automatically collected
+
+In Short: Some information — such as your Internet Protocol (IP) address and/or browser and device characteristics — is collected automatically when you visit our Services.
+
+We automatically collect certain information when you visit, use, or navigate the Services. This information does not reveal your specific identity (like your name or contact information) but may include device and usage information, such as your IP address, browser and device characteristics, operating system, language preferences, referring URLs, device name, country, location, information about how and when you use our Services, and other technical information. This information is primarily needed to maintain the security and operation of our Services, and for our internal analytics and reporting purposes.
+
+The information we collect includes:
+Log and Usage Data. Log and usage data is service-related, diagnostic, usage, and performance information our servers automatically collect when you access or use our Services and which we record in log files. Depending on how you interact with us, this log data may include your IP address, device information, browser type, and settings and information about your activity in the Services (such as the date/time stamps associated with your usage, pages and files viewed, searches, and other actions you take such as which features you use), device event information (such as system activity, error reports (sometimes called "crash dumps"), and hardware settings).
+Device Data. We collect device data such as information about your computer, phone, tablet, or other device you use to access the Services. Depending on the device used, this device data may include information such as your IP address (or proxy server), device and application identification numbers, location, browser type, hardware model, Internet service provider and/or mobile carrier, operating system, and system configuration information.
+Location Data. We collect location data such as information about your device's location, which can be either precise or imprecise. How much information we collect depends on the type and settings of the device you use to access the Services. For example, we may use GPS and other technologies to collect geolocation data that tells us your current location (based on your IP address). You can opt out of allowing us to collect this information either by refusing access to the information or by disabling your Location setting on your device. However, if you choose to opt out, you may not be able to use certain aspects of the Services.
+2. HOW DO WE PROCESS YOUR INFORMATION?
+
+In Short: We process your information to provide, improve, and administer our Services, communicate with you, for security and fraud prevention, and to comply with law. We may also process your information for other purposes with your consent.
+
+We process your personal information for a variety of reasons, depending on how you interact with our Services, including:
+To facilitate account creation and authentication and otherwise manage user accounts. We may process your information so you can create and log in to your account, as well as keep your account in working order.
+
+
+
+
+To save or protect an individual's vital interest. We may process your information when necessary to save or protect an individual's vital interest, such as to prevent harm.
+
+3. WHAT LEGAL BASES DO WE RELY ON TO PROCESS YOUR INFORMATION?
+
+In Short: We only process your personal information when we believe it is necessary and we have a valid legal reason (i.e., legal basis) to do so under applicable law, like with your consent, to comply with laws, to provide you with services to enter into or fulfill our contractual obligations, to protect your rights, or to fulfill our legitimate business interests.
+
+If you are located in the EU or UK, this section applies to you.
+
+The General Data Protection Regulation (GDPR) and UK GDPR require us to explain the valid legal bases we rely on in order to process your personal information. As such, we may rely on the following legal bases to process your personal information:
+Consent. We may process your information if you have given us permission (i.e., consent) to use your personal information for a specific purpose. You can withdraw your consent at any time. Click here to learn more.
+Legal Obligations. We may process your information where we believe it is necessary for compliance with our legal obligations, such as to cooperate with a law enforcement body or regulatory agency, exercise or defend our legal rights, or disclose your information as evidence in litigation in which we are involved.
+Vital Interests. We may process your information where we believe it is necessary to protect your vital interests or the vital interests of a third party, such as situations involving potential threats to the safety of any person.
+
+If you are located in Canada, this section applies to you.
+
+We may process your information if you have given us specific permission (i.e., express consent) to use your personal information for a specific purpose, or in situations where your permission can be inferred (i.e., implied consent). You can withdraw your consent at any time. Click here to learn more.
+
+In some exceptional cases, we may be legally permitted under applicable law to process your information without your consent, including, for example:
+If collection is clearly in the interests of an individual and consent cannot be obtained in a timely way
+For investigations and fraud detection and prevention
+For business transactions provided certain conditions are met
+If it is contained in a witness statement and the collection is necessary to assess, process, or settle an insurance claim
+For identifying injured, ill, or deceased persons and communicating with next of kin
+If we have reasonable grounds to believe an individual has been, is, or may be victim of financial abuse
+If it is reasonable to expect collection and use with consent would compromise the availability or the accuracy of the information and the collection is reasonable for purposes related to investigating a breach of an agreement or a contravention of the laws of Canada or a province
+If disclosure is required to comply with a subpoena, warrant, court order, or rules of the court relating to the production of records
+If it was produced by an individual in the course of their employment, business, or profession and the collection is consistent with the purposes for which the information was produced
+If the collection is solely for journalistic, artistic, or literary purposes
+If the information is publicly available and is specified by the regulations
+
+4. WHEN AND WITH WHOM DO WE SHARE YOUR PERSONAL INFORMATION?
+
+In Short: We may share information in specific situations described in this section and/or with the following third parties.
+
+We may need to share your personal information in the following situations:
+Business Transfers. We may share or transfer your information in connection with, or during negotiations of, any merger, sale of company assets, financing, or acquisition of all or a portion of our business to another company.
+
+5. WHAT IS OUR STANCE ON THIRD-PARTY WEBSITES?
+
+In Short: We are not responsible for the safety of any information that you share with third parties that we may link to or who advertise on our Services, but are not affiliated with, our Services.
+
+The Services may link to third-party websites, online services, or mobile applications and/or contain advertisements from third parties that are not affiliated with us and which may link to other websites, services, or applications. Accordingly, we do not make any guarantee regarding any such third parties, and we will not be liable for any loss or damage caused by the use of such third-party websites, services, or applications. The inclusion of a link towards a third-party website, service, or application does not imply an endorsement by us. We cannot guarantee the safety and privacy of data you provide to any third parties. Any data collected by third parties is not covered by this privacy notice. We are not responsible for the content or privacy and security practices and policies of any third parties, including other websites, services, or applications that may be linked to or from the Services. You should review the policies of such third parties and contact them directly to respond to your questions.
+
+6. HOW LONG DO WE KEEP YOUR INFORMATION?
+
+In Short: We keep your information for as long as necessary to fulfill the purposes outlined in this privacy notice unless otherwise required by law.
+
+We will only keep your personal information for as long as it is necessary for the purposes set out in this privacy notice, unless a longer retention period is required or permitted by law (such as tax, accounting, or other legal requirements). No purpose in this notice will require us keeping your personal information for longer than the period of time in which users have an account with us.
+
+When we have no ongoing legitimate business need to process your personal information, we will either delete or anonymize such information, or, if this is not possible (for example, because your personal information has been stored in backup archives), then we will securely store your personal information and isolate it from any further processing until deletion is possible.
+
+7. HOW DO WE KEEP YOUR INFORMATION SAFE?
+
+In Short: We aim to protect your personal information through a system of organizational and technical security measures.
+
+We have implemented appropriate and reasonable technical and organizational security measures designed to protect the security of any personal information we process. However, despite our safeguards and efforts to secure your information, no electronic transmission over the Internet or information storage technology can be guaranteed to be 100% secure, so we cannot promise or guarantee that hackers, cybercriminals, or other unauthorized third parties will not be able to defeat our security and improperly collect, access, steal, or modify your information. Although we will do our best to protect your personal information, transmission of personal information to and from our Services is at your own risk. You should only access the Services within a secure environment.
+
+8. WHAT ARE YOUR PRIVACY RIGHTS?
+
+In Short: In some regions, such as the European Economic Area (EEA), United Kingdom (UK), and Canada, you have rights that allow you greater access to and control over your personal information. You may review, change, or terminate your account at any time.
+
+In some regions (like the EEA, UK, and Canada), you have certain rights under applicable data protection laws. These may include the right (i) to request access and obtain a copy of your personal information, (ii) to request rectification or erasure; (iii) to restrict the processing of your personal information; and (iv) if applicable, to data portability. In certain circumstances, you may also have the right to object to the processing of your personal information. You can make such a request by contacting us by using the contact details provided in the section "HOW CAN YOU CONTACT US ABOUT THIS NOTICE?" below.
+
+We will consider and act upon any request in accordance with applicable data protection laws.
+ 
+If you are located in the EEA or UK and you believe we are unlawfully processing your personal information, you also have the right to complain to your local data protection supervisory authority. You can find their contact details here: https://ec.europa.eu/justice/data-protection/bodies/authorities/index_en.htm.
+
+If you are located in Switzerland, the contact details for the data protection authorities are available here: https://www.edoeb.admin.ch/edoeb/en/home.html.
+
+Withdrawing your consent: If we are relying on your consent to process your personal information, which may be express and/or implied consent depending on the applicable law, you have the right to withdraw your consent at any time. You can withdraw your consent at any time by contacting us by using the contact details provided in the section "HOW CAN YOU CONTACT US ABOUT THIS NOTICE?" below.
+
+However, please note that this will not affect the lawfulness of the processing before its withdrawal nor, when applicable law allows, will it affect the processing of your personal information conducted in reliance on lawful processing grounds other than consent.
+
+Account Information
+
+If you would at any time like to review or change the information in your account or terminate your account, you can:
+Contact us using the contact information provided.
+Upon your request to terminate your account, we will deactivate or delete your account and information from our active databases. However, we may retain some information in our files to prevent fraud, troubleshoot problems, assist with any investigations, enforce our legal terms and/or comply with applicable legal requirements.
+
+If you have questions or comments about your privacy rights, you may email us at %{contactEmail}.
+
+9. CONTROLS FOR DO-NOT-TRACK FEATURES
+
+Most web browsers and some mobile operating systems and mobile applications include a Do-Not-Track ("DNT") feature or setting you can activate to signal your privacy preference not to have data about your online browsing activities monitored and collected. At this stage no uniform technology standard for recognizing and implementing DNT signals has been finalized. As such, we do not currently respond to DNT browser signals or any other mechanism that automatically communicates your choice not to be tracked online. If a standard for online tracking is adopted that we must follow in the future, we will inform you about that practice in a revised version of this privacy notice.
+
+10. DO CALIFORNIA RESIDENTS HAVE SPECIFIC PRIVACY RIGHTS?
+
+In Short: Yes, if you are a resident of California, you are granted specific rights regarding access to your personal information.
+
+California Civil Code Section 1798.83, also known as the "Shine The Light" law, permits our users who are California residents to request and obtain from us, once a year and free of charge, information about categories of personal information (if any) we disclosed to third parties for direct marketing purposes and the names and addresses of all third parties with which we shared personal information in the immediately preceding calendar year. If you are a California resident and would like to make such a request, please submit your request in writing to us using the contact information provided below.
+
+If you are under 18 years of age, reside in California, and have a registered account with Services, you have the right to request removal of unwanted data that you publicly post on the Services. To request removal of such data, please contact us using the contact information provided below and include the email address associated with your account and a statement that you reside in California. We will make sure the data is not publicly displayed on the Services, but please be aware that the data may not be completely or comprehensively removed from all our systems (e.g., backups, etc.).
+
+CCPA Privacy Notice
+
+The California Code of Regulations defines a "resident" as:
+
+(1) every individual who is in the State of California for other than a temporary or transitory purpose and
+(2) every individual who is domiciled in the State of California who is outside the State of California for a temporary or transitory purpose
+
+All other individuals are defined as "non-residents."
+
+If this definition of "resident" applies to you, we must adhere to certain rights and obligations regarding your personal information.
+
+What categories of personal information do we collect?
+
+We have collected the following categories of personal information in the past twelve (12) months:
+
+Category  Examples  Collected
+A. Identifiers
+Contact details, such as real name, alias, postal address, telephone or mobile contact number, unique personal identifier, online identifier, Internet Protocol address, email address, and account name
+
+YES
+
+B. Personal information categories listed in the California Customer Records statute
+Name, contact information, education, employment, employment history, and financial information
+
+NO
+
+C. Protected classification characteristics under California or federal law
+Gender and date of birth
+
+NO
+
+D. Commercial information
+Transaction information, purchase history, financial details, and payment information
+
+NO
+
+E. Biometric information
+Fingerprints and voiceprints
+
+NO
+
+F. Internet or other similar network activity
+Browsing history, search history, online behavior, interest data, and interactions with our and other websites, applications, systems, and advertisements
+
+NO
+
+G. Geolocation data
+Device location
+
+YES
+
+H. Audio, electronic, visual, thermal, olfactory, or similar information
+Images and audio, video or call recordings created in connection with our business activities
+
+YES
+
+I. Professional or employment-related information
+Business contact details in order to provide you our Services at a business level or job title, work history, and professional qualifications if you apply for a job with us
+
+NO
+
+J. Education Information
+Student records and directory information
+
+NO
+
+K. Inferences drawn from other personal information
+Inferences drawn from any of the collected personal information listed above to create a profile or summary about, for example, an individual's preferences and characteristics
+
+NO
+
+L. Sensitive Personal Information   
+NO
+
+
+We will use and retain the collected personal information as needed to provide the Services or for:
+Category A - As long as the user has an account with us
+Category G - As long as the user has an account with us
+Category H - As long as the user has an account with us
+We may also collect other personal information outside of these categories through instances where you interact with us in person, online, or by phone or mail in the context of:
+Receiving help through our customer support channels;
+Participation in customer surveys or contests; and
+Facilitation in the delivery of our Services and to respond to your inquiries.
+How do we use and share your personal information?
+
+More information about our data collection and sharing practices can be found in this privacy notice.
+
+You may contact us by email at %{contactEmail}, or by referring to the contact details at the bottom of this document.
+
+If you are using an authorized agent to exercise your right to opt out we may deny a request if the authorized agent does not submit proof that they have been validly authorized to act on your behalf.
+
+Will your information be shared with anyone else?
+
+We may disclose your personal information with our service providers pursuant to a written contract between us and each service provider. Each service provider is a for-profit entity that processes the information on our behalf, following the same strict privacy protection obligations mandated by the CCPA.
+
+We may use your personal information for our own business purposes, such as for undertaking internal research for technological development and demonstration. This is not considered to be "selling" of your personal information.
+
+%{WEB_LINK} has not disclosed, sold, or shared any personal information to third parties for a business or commercial purpose in the preceding twelve (12) months. %{WEB_LINK} will not sell or share personal information in the future belonging to website visitors, users, and other consumers.
+
+Your rights with respect to your personal data
+
+Right to request deletion of the data — Request to delete
+
+You can ask for the deletion of your personal information. If you ask us to delete your personal information, we will respect your request and delete your personal information, subject to certain exceptions provided by law, such as (but not limited to) the exercise by another consumer of his or her right to free speech, our compliance requirements resulting from a legal obligation, or any processing that may be required to protect against illegal activities.
+
+Right to be informed — Request to know
+
+Depending on the circumstances, you have a right to know:
+whether we collect and use your personal information;
+the categories of personal information that we collect;
+the purposes for which the collected personal information is used;
+whether we sell or share personal information to third parties;
+the categories of personal information that we sold, shared, or disclosed for a business purpose;
+the categories of third parties to whom the personal information was sold, shared, or disclosed for a business purpose;
+the business or commercial purpose for collecting, selling, or sharing personal information; and
+the specific pieces of personal information we collected about you.
+In accordance with applicable law, we are not obligated to provide or delete consumer information that is de-identified in response to a consumer request or to re-identify individual data to verify a consumer request.
+
+Right to Non-Discrimination for the Exercise of a Consumer's Privacy Rights
+
+We will not discriminate against you if you exercise your privacy rights.
+
+Right to Limit Use and Disclosure of Sensitive Personal Information
+
+We do not process consumer's sensitive personal information.
+
+Verification process
+
+Upon receiving your request, we will need to verify your identity to determine you are the same person about whom we have the information in our system. These verification efforts require us to ask you to provide information so that we can match it with information you have previously provided us. For instance, depending on the type of request you submit, we may ask you to provide certain information so that we can match the information you provide with the information we already have on file, or we may contact you through a communication method (e.g., phone or email) that you have previously provided to us. We may also use other verification methods as the circumstances dictate.
+
+We will only use personal information provided in your request to verify your identity or authority to make the request. To the extent possible, we will avoid requesting additional information from you for the purposes of verification. However, if we cannot verify your identity from the information already maintained by us, we may request that you provide additional information for the purposes of verifying your identity and for security or fraud-prevention purposes. We will delete such additionally provided information as soon as we finish verifying you.
+
+Other privacy rights
+You may object to the processing of your personal information.
+You may request correction of your personal data if it is incorrect or no longer relevant, or ask to restrict the processing of the information.
+You can designate an authorized agent to make a request under the CCPA on your behalf. We may deny a request from an authorized agent that does not submit proof that they have been validly authorized to act on your behalf in accordance with the CCPA.
+You may request to opt out from future selling or sharing of your personal information to third parties. Upon receiving an opt-out request, we will act upon the request as soon as feasibly possible, but no later than fifteen (15) days from the date of the request submission.
+To exercise these rights, you can contact us by email at %{contactEmail}, or by referring to the contact details at the bottom of this document. If you have a complaint about how we handle your data, we would like to hear from you.
+
+11. DO VIRGINIA RESIDENTS HAVE SPECIFIC PRIVACY RIGHTS?
+
+In Short: Yes, if you are a resident of Virginia, you may be granted specific rights regarding access to and use of your personal information.
+
+Virginia CDPA Privacy Notice
+
+Under the Virginia Consumer Data Protection Act (CDPA):
+
+"Consumer" means a natural person who is a resident of the Commonwealth acting only in an individual or household context. It does not include a natural person acting in a commercial or employment context.
+
+"Personal data" means any information that is linked or reasonably linkable to an identified or identifiable natural person. "Personal data" does not include de-identified data or publicly available information.
+
+"Sale of personal data" means the exchange of personal data for monetary consideration.
+
+If this definition "consumer" applies to you, we must adhere to certain rights and obligations regarding your personal data.
+
+The information we collect, use, and disclose about you will vary depending on how you interact with %{WEB_LINK} and our Services. To find out more, please visit the following links:
+Personal data we collect
+How we use your personal data
+When and with whom we share your personal data
+Your rights with respect to your personal data
+Right to be informed whether or not we are processing your personal data
+Right to access your personal data
+Right to correct inaccuracies in your personal data
+Right to request deletion of your personal data
+Right to obtain a copy of the personal data you previously shared with us
+Right to opt out of the processing of your personal data if it is used for targeted advertising, the sale of personal data, or profiling in furtherance of decisions that produce legal or similarly significant effects ("profiling")
+%{WEB_LINK} has not sold any personal data to third parties for business or commercial purposes. %{WEB_LINK} will not sell personal data in the future belonging to website visitors, users, and other consumers.
+
+Exercise your rights provided under the Virginia CDPA
+
+More information about our data collection and sharing practices can be found in this privacy notice.
+
+You may contact us by email at %{contactEmail}, by visiting our data subject request form, or by referring to the contact details at the bottom of this document.
+
+If you are using an authorized agent to exercise your rights, we may deny a request if the authorized agent does not submit proof that they have been validly authorized to act on your behalf.
+
+Verification process
+
+We may request that you provide additional information reasonably necessary to verify you and your consumer's request. If you submit the request through an authorized agent, we may need to collect additional information to verify your identity before processing your request.
+
+Upon receiving your request, we will respond without undue delay, but in all cases, within forty-five (45) days of receipt. The response period may be extended once by forty-five (45) additional days when reasonably necessary. We will inform you of any such extension within the initial 45-day response period, together with the reason for the extension.
+
+Right to appeal
+
+If we decline to take action regarding your request, we will inform you of our decision and reasoning behind it. If you wish to appeal our decision, please email us at %{contactEmail}. Within sixty (60) days of receipt of an appeal, we will inform you in writing of any action taken or not taken in response to the appeal, including a written explanation of the reasons for the decisions. If your appeal if denied, you may contact the Attorney General to submit a complaint.
+
+12. DO WE MAKE UPDATES TO THIS NOTICE?
+
+In Short: Yes, we will update this notice as necessary to stay compliant with relevant laws.
+
+We may update this privacy notice from time to time. The updated version will be indicated by an updated "Revised" date and the updated version will be effective as soon as it is accessible. If we make material changes to this privacy notice, we may notify you either by prominently posting a notice of such changes or by directly sending you a notification. We encourage you to review this privacy notice frequently to be informed of how we are protecting your information.
+
+13. HOW CAN YOU CONTACT US ABOUT THIS NOTICE?
+
+If you have questions or comments about this notice, you may email us at %{contactEmail} or by post to:
+
+%{WEB_LINK}
+50 Old Toh Tuck Rd
+Singapore, Singapore 597657
+Singapore
+
+14. HOW CAN YOU REVIEW, UPDATE, OR DELETE THE DATA WE COLLECT FROM YOU?
+
+Based on the applicable laws of your country, you may have the right to request access to the personal information we collect from you, change that information, or delete it. To request to review, update, or delete your personal information, please submit a request form by clicking here.
+This privacy policy was created using Termly's Privacy Policy Generator.
+
+  `,
+    general_sla_content: `
+
+  TERMS AND CONDITIONS
+
+Last updated February 03, 2023
+
+
+
+TABLE OF CONTENTS
+
+1. AGREEMENT TO TERMS
+2. INTELLECTUAL PROPERTY RIGHTS
+3. USER REPRESENTATIONS
+4. USER REGISTRATION
+5. PROHIBITED ACTIVITIES
+6. USER GENERATED CONTRIBUTIONS
+7. CONTRIBUTION LICENSE
+8. GUIDELINES FOR REVIEWS
+9. MOBILE APPLICATION LICENSE
+10. SUBMISSIONS
+11. ADVERTISERS
+12. SITE MANAGEMENT
+13. PRIVACY POLICY
+14. COPYRIGHT INFRINGEMENTS
+15. TERM AND TERMINATION
+16. MODIFICATIONS AND INTERRUPTIONS
+17. GOVERNING LAW
+18. DISPUTE RESOLUTION
+19. CORRECTIONS
+20. DISCLAIMER
+21. LIMITATIONS OF LIABILITY
+22. INDEMNIFICATION
+23. USER DATA
+24. ELECTRONIC COMMUNICATIONS, TRANSACTIONS, AND SIGNATURES
+25. CALIFORNIA USERS AND RESIDENTS
+26. MISCELLANEOUS
+27. CONTACT US
+
+
+1. AGREEMENT TO TERMS
+
+These Terms of Use constitute a legally binding agreement made between you, whether personally or on behalf of an entity ("you") and %{WEB_LINK} ("Company," "we," "us," or "our"), concerning your access to and use of the %{WEB_LINK} website as well as any other media form, media channel, mobile website or mobile application related, linked, or otherwise connected thereto (collectively, the "Site"). We are registered in Singapore and have our registered office at 50 Old Toh Tuck Rd, Singapore, Singapore 597657. You agree that by accessing the Site, you have read, understood, and agreed to be bound by all of these Terms of Use. IF YOU DO NOT AGREE WITH ALL OF THESE TERMS OF USE, THEN YOU ARE EXPRESSLY PROHIBITED FROM USING THE SITE AND YOU MUST DISCONTINUE USE IMMEDIATELY.
+
+Supplemental terms and conditions or documents that may be posted on the Site from time to time are hereby expressly incorporated herein by reference. We reserve the right, in our sole discretion, to make changes or modifications to these Terms of Use from time to time. We will alert you about any changes by updating the "Last updated" date of these Terms of Use, and you waive any right to receive specific notice of each such change. Please ensure that you check the applicable Terms every time you use our Site so that you understand which Terms apply. You will be subject to, and will be deemed to have been made aware of and to have accepted, the changes in any revised Terms of Use by your continued use of the Site after the date such revised Terms of Use are posted.
+
+The information provided on the Site is not intended for distribution to or use by any person or entity in any jurisdiction or country where such distribution or use would be contrary to law or regulation or which would subject us to any registration requirement within such jurisdiction or country. Accordingly, those persons who choose to access the Site from other locations do so on their own initiative and are solely responsible for compliance with local laws, if and to the extent local laws are applicable.
+
+The Site is not tailored to comply with industry-specific regulations (Health Insurance Portability and Accountability Act (HIPAA), Federal Information Security Management Act (FISMA), etc.), so if your interactions would be subjected to such laws, you may not use this Site. You may not use the Site in a way that would violate the Gramm-Leach-Bliley Act (GLBA).
+
+The Site is intended for users who are at least 13 years of age. All users who are minors in the jurisdiction in which they reside (generally under the age of 18) must have the permission of, and be directly supervised by, their parent or guardian to use the Site. If you are a minor, you must have your parent or guardian read and agree to these Terms of Use prior to you using the Site.
+
+
+2. INTELLECTUAL PROPERTY RIGHTS
+
+Unless otherwise indicated, the Site is our proprietary property and all source code, databases, functionality, software, website designs, audio, video, text, photographs, and graphics on the Site (collectively, the "Content") and the trademarks, service marks, and logos contained therein (the "Marks") are owned or controlled by us or licensed to us, and are protected by copyright and trademark laws and various other intellectual property rights and unfair competition laws of the United States, international copyright laws, and international conventions. The Content and the Marks are provided on the Site "AS IS" for your information and personal use only. Except as expressly provided in these Terms of Use, no part of the Site and no Content or Marks may be copied, reproduced, aggregated, republished, uploaded, posted, publicly displayed, encoded, translated, transmitted, distributed, sold, licensed, or otherwise exploited for any commercial purpose whatsoever, without our express prior written permission.
+
+Provided that you are eligible to use the Site, you are granted a limited license to access and use the Site and to download or print a copy of any portion of the Content to which you have properly gained access solely for your personal, non-commercial use. We reserve all rights not expressly granted to you in and to the Site, the Content and the Marks.
+
+
+3. USER REPRESENTATIONS
+
+By using the Site, you represent and warrant that: (1) all registration information you submit will be true, accurate, current, and complete; (2) you will maintain the accuracy of such information and promptly update such registration information as necessary; (3) you have the legal capacity and you agree to comply with these Terms of Use; (4) you are not under the age of 13; (5) you are not a minor in the jurisdiction in which you reside, or if a minor, you have received parental permission to use the Site; (6) you will not access the Site through automated or non-human means, whether through a bot, script, or otherwise; (7) you will not use the Site for any illegal or unauthorized purpose; and (8) your use of the Site will not violate any applicable law or regulation.
+
+If you provide any information that is untrue, inaccurate, not current, or incomplete, we have the right to suspend or terminate your account and refuse any and all current or future use of the Site (or any portion thereof).
+
+
+4. USER REGISTRATION
+    
+You may be required to register with the Site. You agree to keep your password confidential and will be responsible for all use of your account and password. We reserve the right to remove, reclaim, or change a username you select if we determine, in our sole discretion, that such username is inappropriate, obscene, or otherwise objectionable.
+
+
+5. PROHIBITED ACTIVITIES
+
+You may not access or use the Site for any purpose other than that for which we make the Site available. The Site may not be used in connection with any commercial endeavors except those that are specifically endorsed or approved by us.
+
+As a user of the Site, you agree not to:
+Systematically retrieve data or other content from the Site to create or compile, directly or indirectly, a collection, compilation, database, or directory without written permission from us.
+Trick, defraud, or mislead us and other users, especially in any attempt to learn sensitive account information such as user passwords.
+Circumvent, disable, or otherwise interfere with security-related features of the Site, including features that prevent or restrict the use or copying of any Content or enforce limitations on the use of the Site and/or the Content contained therein.
+Disparage, tarnish, or otherwise harm, in our opinion, us and/or the Site.
+Use any information obtained from the Site in order to harass, abuse, or harm another person.
+Make improper use of our support services or submit false reports of abuse or misconduct.
+Use the Site in a manner inconsistent with any applicable laws or regulations.
+Engage in unauthorized framing of or linking to the Site.
+Upload or transmit (or attempt to upload or to transmit) viruses, Trojan horses, or other material, including excessive use of capital letters and spamming (continuous posting of repetitive text), that interferes with any party's uninterrupted use and enjoyment of the Site or modifies, impairs, disrupts, alters, or interferes with the use, features, functions, operation, or maintenance of the Site.
+Engage in any automated use of the system, such as using scripts to send comments or messages, or using any data mining, robots, or similar data gathering and extraction tools.
+Delete the copyright or other proprietary rights notice from any Content.
+Attempt to impersonate another user or person or use the username of another user.
+Upload or transmit (or attempt to upload or to transmit) any material that acts as a passive or active information collection or transmission mechanism, including without limitation, clear graphics interchange formats ("gifs"), 1×1 pixels, web bugs, cookies, or other similar devices (sometimes referred to as "spyware" or "passive collection mechanisms" or "pcms").
+Interfere with, disrupt, or create an undue burden on the Site or the networks or services connected to the Site.
+Harass, annoy, intimidate, or threaten any of our employees or agents engaged in providing any portion of the Site to you.
+Attempt to bypass any measures of the Site designed to prevent or restrict access to the Site, or any portion of the Site.
+Copy or adapt the Site's software, including but not limited to Flash, PHP, HTML, JavaScript, or other code.
+Except as permitted by applicable law, decipher, decompile, disassemble, or reverse engineer any of the software comprising or in any way making up a part of the Site.
+Except as may be the result of standard search engine or Internet browser usage, use, launch, develop, or distribute any automated system, including without limitation, any spider, robot, cheat utility, scraper, or offline reader that accesses the Site, or using or launching any unauthorized script or other software.
+Use a buying agent or purchasing agent to make purchases on the Site.
+Make any unauthorized use of the Site, including collecting usernames and/or email addresses of users by electronic or other means for the purpose of sending unsolicited email, or creating user accounts by automated means or under false pretenses.
+Use the Site as part of any effort to compete with us or otherwise use the Site and/or the Content for any revenue-generating endeavor or commercial enterprise.
+Use the Site to advertise or offer to sell goods and services.
+
+
+6. USER GENERATED CONTRIBUTIONS
+
+The Site may invite you to chat, contribute to, or participate in blogs, message boards, online forums, and other functionality, and may provide you with the opportunity to create, submit, post, display, transmit, perform, publish, distribute, or broadcast content and materials to us or on the Site, including but not limited to text, writings, video, audio, photographs, graphics, comments, suggestions, or personal information or other material (collectively, "Contributions"). Contributions may be viewable by other users of the Site and through third-party websites. As such, any Contributions you transmit may be treated as non-confidential and non-proprietary. When you create or make available any Contributions, you thereby represent and warrant that:
+The creation, distribution, transmission, public display, or performance, and the accessing, downloading, or copying of your Contributions do not and will not infringe the proprietary rights, including but not limited to the copyright, patent, trademark, trade secret, or moral rights of any third party.
+You are the creator and owner of or have the necessary licenses, rights, consents, releases, and permissions to use and to authorize us, the Site, and other users of the Site to use your Contributions in any manner contemplated by the Site and these Terms of Use.
+You have the written consent, release, and/or permission of each and every identifiable individual person in your Contributions to use the name or likeness of each and every such identifiable individual person to enable inclusion and use of your Contributions in any manner contemplated by the Site and these Terms of Use.
+Your Contributions are not false, inaccurate, or misleading.
+Your Contributions are not unsolicited or unauthorized advertising, promotional materials, pyramid schemes, chain letters, spam, mass mailings, or other forms of solicitation.
+Your Contributions are not obscene, lewd, lascivious, filthy, violent, harassing, libelous, slanderous, or otherwise objectionable (as determined by us).
+Your Contributions do not ridicule, mock, disparage, intimidate, or abuse anyone.
+Your Contributions are not used to harass or threaten (in the legal sense of those terms) any other person and to promote violence against a specific person or class of people.
+Your Contributions do not violate any applicable law, regulation, or rule.
+Your Contributions do not violate the privacy or publicity rights of any third party.
+Your Contributions do not violate any applicable law concerning child pornography, or otherwise intended to protect the health or well-being of minors.
+Your Contributions do not include any offensive comments that are connected to race, national origin, gender, sexual preference, or physical handicap.
+Your Contributions do not otherwise violate, or link to material that violates, any provision of these Terms of Use, or any applicable law or regulation.
+Any use of the Site in violation of the foregoing violates these Terms of Use and may result in, among other things, termination or suspension of your rights to use the Site.
+
+
+7. CONTRIBUTION LICENSE
+
+By posting your Contributions to any part of the Site, you automatically grant, and you represent and warrant that you have the right to grant, to us an unrestricted, unlimited, irrevocable, perpetual, non-exclusive, transferable, royalty-free, fully-paid, worldwide right, and license to host, use, copy, reproduce, disclose, sell, resell, publish, broadcast, retitle, archive, store, cache, publicly perform, publicly display, reformat, translate, transmit, excerpt (in whole or in part), and distribute such Contributions (including, without limitation, your image and voice) for any purpose, commercial, advertising, or otherwise, and to prepare derivative works of, or incorporate into other works, such Contributions, and grant and authorize sublicenses of the foregoing. The use and distribution may occur in any media formats and through any media channels.
+
+This license will apply to any form, media, or technology now known or hereafter developed, and includes our use of your name, company name, and franchise name, as applicable, and any of the trademarks, service marks, trade names, logos, and personal and commercial images you provide. You waive all moral rights in your Contributions, and you warrant that moral rights have not otherwise been asserted in your Contributions.
+
+We do not assert any ownership over your Contributions. You retain full ownership of all of your Contributions and any intellectual property rights or other proprietary rights associated with your Contributions. We are not liable for any statements or representations in your Contributions provided by you in any area on the Site. You are solely responsible for your Contributions to the Site and you expressly agree to exonerate us from any and all responsibility and to refrain from any legal action against us regarding your Contributions.
+
+We have the right, in our sole and absolute discretion, (1) to edit, redact, or otherwise change any Contributions; (2) to re-categorize any Contributions to place them in more appropriate locations on the Site; and (3) to prescreen or delete any Contributions at any time and for any reason, without notice. We have no obligation to monitor your Contributions.
+
+
+8. GUIDELINES FOR REVIEWS
+
+We may provide you areas on the Site to leave reviews or ratings. When posting a review, you must comply with the following criteria: (1) you should have firsthand experience with the person/entity being reviewed; (2) your reviews should not contain offensive profanity, or abusive, racist, offensive, or hate language; (3) your reviews should not contain discriminatory references based on religion, race, gender, national origin, age, marital status, sexual orientation, or disability; (4) your reviews should not contain references to illegal activity; (5) you should not be affiliated with competitors if posting negative reviews; (6) you should not make any conclusions as to the legality of conduct; (7) you may not post any false or misleading statements; and (8) you may not organize a campaign encouraging others to post reviews, whether positive or negative.
+
+We may accept, reject, or remove reviews in our sole discretion. We have absolutely no obligation to screen reviews or to delete reviews, even if anyone considers reviews objectionable or inaccurate. Reviews are not endorsed by us, and do not necessarily represent our opinions or the views of any of our affiliates or partners. We do not assume liability for any review or for any claims, liabilities, or losses resulting from any review. By posting a review, you hereby grant to us a perpetual, non-exclusive, worldwide, royalty-free, fully-paid, assignable, and sublicensable right and license to reproduce, modify, translate, transmit by any means, display, perform, and/or distribute all content relating to reviews.
+
+
+9. MOBILE APPLICATION LICENSE
+
+Use License
+
+If you access the Site via a mobile application, then we grant you a revocable, non-exclusive, non-transferable, limited right to install and use the mobile application on wireless electronic devices owned or controlled by you, and to access and use the mobile application on such devices strictly in accordance with the terms and conditions of this mobile application license contained in these Terms of Use. You shall not: (1) except as permitted by applicable law, decompile, reverse engineer, disassemble, attempt to derive the source code of, or decrypt the application; (2) make any modification, adaptation, improvement, enhancement, translation, or derivative work from the application; (3) violate any applicable laws, rules, or regulations in connection with your access or use of the application; (4) remove, alter, or obscure any proprietary notice (including any notice of copyright or trademark) posted by us or the licensors of the application; (5) use the application for any revenue generating endeavor, commercial enterprise, or other purpose for which it is not designed or intended; (6) make the application available over a network or other environment permitting access or use by multiple devices or users at the same time; (7) use the application for creating a product, service, or software that is, directly or indirectly, competitive with or in any way a substitute for the application; (8) use the application to send automated queries to any website or to send any unsolicited commercial e-mail; or (9) use any proprietary information or any of our interfaces or our other intellectual property in the design, development, manufacture, licensing, or distribution of any applications, accessories, or devices for use with the application.
+
+Apple and Android Devices
+
+The following terms apply when you use a mobile application obtained from either the Apple Store or Google Play (each an "App Distributor") to access the Site: (1) the license granted to you for our mobile application is limited to a non-transferable license to use the application on a device that utilizes the Apple iOS or Android operating systems, as applicable, and in accordance with the usage rules set forth in the applicable App Distributor's terms of service; (2) we are responsible for providing any maintenance and support services with respect to the mobile application as specified in the terms and conditions of this mobile application license contained in these Terms of Use or as otherwise required under applicable law, and you acknowledge that each App Distributor has no obligation whatsoever to furnish any maintenance and support services with respect to the mobile application; (3) in the event of any failure of the mobile application to conform to any applicable warranty, you may notify the applicable App Distributor, and the App Distributor, in accordance with its terms and policies, may refund the purchase price, if any, paid for the mobile application, and to the maximum extent permitted by applicable law, the App Distributor will have no other warranty obligation whatsoever with respect to the mobile application; (4) you represent and warrant that (i) you are not located in a country that is subject to a U.S. government embargo, or that has been designated by the U.S. government as a "terrorist supporting" country and (ii) you are not listed on any U.S. government list of prohibited or restricted parties; (5) you must comply with applicable third-party terms of agreement when using the mobile application, e.g., if you have a VoIP application, then you must not be in violation of their wireless data service agreement when using the mobile application; and (6) you acknowledge and agree that the App Distributors are third-party beneficiaries of the terms and conditions in this mobile application license contained in these Terms of Use, and that each App Distributor will have the right (and will be deemed to have accepted the right) to enforce the terms and conditions in this mobile application license contained in these Terms of Use against you as a third-party beneficiary thereof.
+
+
+10. SUBMISSIONS
+
+You acknowledge and agree that any questions, comments, suggestions, ideas, feedback, or other information regarding the Site ("Submissions") provided by you to us are non-confidential and shall become our sole property. We shall own exclusive rights, including all intellectual property rights, and shall be entitled to the unrestricted use and dissemination of these Submissions for any lawful purpose, commercial or otherwise, without acknowledgment or compensation to you. You hereby waive all moral rights to any such Submissions, and you hereby warrant that any such Submissions are original with you or that you have the right to submit such Submissions. You agree there shall be no recourse against us for any alleged or actual infringement or misappropriation of any proprietary right in your Submissions.
+
+
+11. ADVERTISERS
+
+We allow advertisers to display their advertisements and other information in certain areas of the Site, such as sidebar advertisements or banner advertisements. If you are an advertiser, you shall take full responsibility for any advertisements you place on the Site and any services provided on the Site or products sold through those advertisements. Further, as an advertiser, you warrant and represent that you possess all rights and authority to place advertisements on the Site, including, but not limited to, intellectual property rights, publicity rights, and contractual rights. We simply provide the space to place such advertisements, and we have no other relationship with advertisers.
+
+
+12. SITE MANAGEMENT
+
+We reserve the right, but not the obligation, to: (1) monitor the Site for violations of these Terms of Use; (2) take appropriate legal action against anyone who, in our sole discretion, violates the law or these Terms of Use, including without limitation, reporting such user to law enforcement authorities; (3) in our sole discretion and without limitation, refuse, restrict access to, limit the availability of, or disable (to the extent technologically feasible) any of your Contributions or any portion thereof; (4) in our sole discretion and without limitation, notice, or liability, to remove from the Site or otherwise disable all files and content that are excessive in size or are in any way burdensome to our systems; and (5) otherwise manage the Site in a manner designed to protect our rights and property and to facilitate the proper functioning of the Site.
+
+
+13. PRIVACY POLICY
+
+We care about data privacy and security. Please review our Privacy Policy: %{WEB_LINK}/privacy/index.html. By using the Site, you agree to be bound by our Privacy Policy, which is incorporated into these Terms of Use. Please be advised the Site is hosted in Singapore. If you access the Site from any other region of the world with laws or other requirements governing personal data collection, use, or disclosure that differ from applicable laws in Singapore, then through your continued use of the Site, you are transferring your data to Singapore, and you agree to have your data transferred to and processed in Singapore. Further, we do not knowingly accept, request, or solicit information from children or knowingly market to children. Therefore, in accordance with the U.S. Children's Online Privacy Protection Act, if we receive actual knowledge that anyone under the age of 13 has provided personal information to us without the requisite and verifiable parental consent, we will delete that information from the Site as quickly as is reasonably practical.
+
+
+14. COPYRIGHT INFRINGEMENTS
+
+We respect the intellectual property rights of others. If you believe that any material available on or through the Site infringes upon any copyright you own or control, please immediately notify us using the contact information provided below (a "Notification"). A copy of your Notification will be sent to the person who posted or stored the material addressed in the Notification. Please be advised that pursuant to applicable law you may be held liable for damages if you make material misrepresentations in a Notification. Thus, if you are not sure that material located on or linked to by the Site infringes your copyright, you should consider first contacting an attorney.
+
+
+15. TERM AND TERMINATION
+
+These Terms of Use shall remain in full force and effect while you use the Site. WITHOUT LIMITING ANY OTHER PROVISION OF THESE TERMS OF USE, WE RESERVE THE RIGHT TO, IN OUR SOLE DISCRETION AND WITHOUT NOTICE OR LIABILITY, DENY ACCESS TO AND USE OF THE SITE (INCLUDING BLOCKING CERTAIN IP ADDRESSES), TO ANY PERSON FOR ANY REASON OR FOR NO REASON, INCLUDING WITHOUT LIMITATION FOR BREACH OF ANY REPRESENTATION, WARRANTY, OR COVENANT CONTAINED IN THESE TERMS OF USE OR OF ANY APPLICABLE LAW OR REGULATION. WE MAY TERMINATE YOUR USE OR PARTICIPATION IN THE SITE OR DELETE YOUR ACCOUNT AND ANY CONTENT OR INFORMATION THAT YOU POSTED AT ANY TIME, WITHOUT WARNING, IN OUR SOLE DISCRETION.
+
+If we terminate or suspend your account for any reason, you are prohibited from registering and creating a new account under your name, a fake or borrowed name, or the name of any third party, even if you may be acting on behalf of the third party. In addition to terminating or suspending your account, we reserve the right to take appropriate legal action, including without limitation pursuing civil, criminal, and injunctive redress.
+
+
+16. MODIFICATIONS AND INTERRUPTIONS
+
+We reserve the right to change, modify, or remove the contents of the Site at any time or for any reason at our sole discretion without notice. However, we have no obligation to update any information on our Site. We also reserve the right to modify or discontinue all or part of the Site without notice at any time. We will not be liable to you or any third party for any modification, price change, suspension, or discontinuance of the Site.
+
+We cannot guarantee the Site will be available at all times. We may experience hardware, software, or other problems or need to perform maintenance related to the Site, resulting in interruptions, delays, or errors. We reserve the right to change, revise, update, suspend, discontinue, or otherwise modify the Site at any time or for any reason without notice to you. You agree that we have no liability whatsoever for any loss, damage, or inconvenience caused by your inability to access or use the Site during any downtime or discontinuance of the Site. Nothing in these Terms of Use will be construed to obligate us to maintain and support the Site or to supply any corrections, updates, or releases in connection therewith.
+
+
+17. GOVERNING LAW
+
+These Terms shall be governed by and defined following the laws of Singapore. %{WEB_LINK} and yourself irrevocably consent that the courts of Singapore shall have exclusive jurisdiction to resolve any dispute which may arise in connection with these terms.
+
+
+18. DISPUTE RESOLUTION
+
+Informal Negotiations
+
+To expedite resolution and control the cost of any dispute, controversy, or claim related to these Terms of Use (each "Dispute" and collectively, the "Disputes") brought by either you or us (individually, a "Party" and collectively, the "Parties"), the Parties agree to first attempt to negotiate any Dispute (except those Disputes expressly provided below) informally for at least ninety (90) days before initiating arbitration. Such informal negotiations commence upon written notice from one Party to the other Party.
+
+Binding Arbitration
+
+Any dispute arising out of or in connection with this contract, including any question regarding its existence, validity, or termination, shall be referred to and finally resolved by the International Commercial Arbitration Court under the European Arbitration Chamber (Belgium, Brussels, Avenue Louise, 146) according to the Rules of this ICAC, which, as a result of referring to it, is considered as the part of this clause. The number of arbitrators shall be three (3). The seat, or legal place, of arbitration shall be Singapore, Singapore. The language of the proceedings shall be English. The governing law of the contract shall be the substantive law of Singapore.
+
+Restrictions
+
+The Parties agree that any arbitration shall be limited to the Dispute between the Parties individually. To the full extent permitted by law, (a) no arbitration shall be joined with any other proceeding; (b) there is no right or authority for any Dispute to be arbitrated on a class-action basis or to utilize class action procedures; and (c) there is no right or authority for any Dispute to be brought in a purported representative capacity on behalf of the general public or any other persons.
+
+Exceptions to Informal Negotiations and Arbitration
+
+The Parties agree that the following Disputes are not subject to the above provisions concerning informal negotiations and binding arbitration: (a) any Disputes seeking to enforce or protect, or concerning the validity of, any of the intellectual property rights of a Party; (b) any Dispute related to, or arising from, allegations of theft, piracy, invasion of privacy, or unauthorized use; and (c) any claim for injunctive relief. If this provision is found to be illegal or unenforceable, then neither Party will elect to arbitrate any Dispute falling within that portion of this provision found to be illegal or unenforceable and such Dispute shall be decided by a court of competent jurisdiction within the courts listed for jurisdiction above, and the Parties agree to submit to the personal jurisdiction of that court.
+
+
+19. CORRECTIONS
+
+There may be information on the Site that contains typographical errors, inaccuracies, or omissions, including descriptions, pricing, availability, and various other information. We reserve the right to correct any errors, inaccuracies, or omissions and to change or update the information on the Site at any time, without prior notice.
+
+
+20. DISCLAIMER
+
+THE SITE IS PROVIDED ON AN AS-IS AND AS-AVAILABLE BASIS. YOU AGREE THAT YOUR USE OF THE SITE AND OUR SERVICES WILL BE AT YOUR SOLE RISK. TO THE FULLEST EXTENT PERMITTED BY LAW, WE DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, IN CONNECTION WITH THE SITE AND YOUR USE THEREOF, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. WE MAKE NO WARRANTIES OR REPRESENTATIONS ABOUT THE ACCURACY OR COMPLETENESS OF THE SITE'S CONTENT OR THE CONTENT OF ANY WEBSITES LINKED TO THE SITE AND WE WILL ASSUME NO LIABILITY OR RESPONSIBILITY FOR ANY (1) ERRORS, MISTAKES, OR INACCURACIES OF CONTENT AND MATERIALS, (2) PERSONAL INJURY OR PROPERTY DAMAGE, OF ANY NATURE WHATSOEVER, RESULTING FROM YOUR ACCESS TO AND USE OF THE SITE, (3) ANY UNAUTHORIZED ACCESS TO OR USE OF OUR SECURE SERVERS AND/OR ANY AND ALL PERSONAL INFORMATION AND/OR FINANCIAL INFORMATION STORED THEREIN, (4) ANY INTERRUPTION OR CESSATION OF TRANSMISSION TO OR FROM THE SITE, (5) ANY BUGS, VIRUSES, TROJAN HORSES, OR THE LIKE WHICH MAY BE TRANSMITTED TO OR THROUGH THE SITE BY ANY THIRD PARTY, AND/OR (6) ANY ERRORS OR OMISSIONS IN ANY CONTENT AND MATERIALS OR FOR ANY LOSS OR DAMAGE OF ANY KIND INCURRED AS A RESULT OF THE USE OF ANY CONTENT POSTED, TRANSMITTED, OR OTHERWISE MADE AVAILABLE VIA THE SITE. WE DO NOT WARRANT, ENDORSE, GUARANTEE, OR ASSUME RESPONSIBILITY FOR ANY PRODUCT OR SERVICE ADVERTISED OR OFFERED BY A THIRD PARTY THROUGH THE SITE, ANY HYPERLINKED WEBSITE, OR ANY WEBSITE OR MOBILE APPLICATION FEATURED IN ANY BANNER OR OTHER ADVERTISING, AND WE WILL NOT BE A PARTY TO OR IN ANY WAY BE RESPONSIBLE FOR MONITORING ANY TRANSACTION BETWEEN YOU AND ANY THIRD-PARTY PROVIDERS OF PRODUCTS OR SERVICES. AS WITH THE PURCHASE OF A PRODUCT OR SERVICE THROUGH ANY MEDIUM OR IN ANY ENVIRONMENT, YOU SHOULD USE YOUR BEST JUDGMENT AND EXERCISE CAUTION WHERE APPROPRIATE.
+
+
+21. LIMITATIONS OF LIABILITY
+
+IN NO EVENT WILL WE OR OUR DIRECTORS, EMPLOYEES, OR AGENTS BE LIABLE TO YOU OR ANY THIRD PARTY FOR ANY DIRECT, INDIRECT, CONSEQUENTIAL, EXEMPLARY, INCIDENTAL, SPECIAL, OR PUNITIVE DAMAGES, INCLUDING LOST PROFIT, LOST REVENUE, LOSS OF DATA, OR OTHER DAMAGES ARISING FROM YOUR USE OF THE SITE, EVEN IF WE HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. NOTWITHSTANDING ANYTHING TO THE CONTRARY CONTAINED HEREIN, OUR LIABILITY TO YOU FOR ANY CAUSE WHATSOEVER AND REGARDLESS OF THE FORM OF THE ACTION, WILL AT ALL TIMES BE LIMITED TO THE AMOUNT PAID, IF ANY, BY YOU TO US DURING THE SIX (6) MONTH PERIOD PRIOR TO ANY CAUSE OF ACTION ARISING. CERTAIN US STATE LAWS AND INTERNATIONAL LAWS DO NOT ALLOW LIMITATIONS ON IMPLIED WARRANTIES OR THE EXCLUSION OR LIMITATION OF CERTAIN DAMAGES. IF THESE LAWS APPLY TO YOU, SOME OR ALL OF THE ABOVE DISCLAIMERS OR LIMITATIONS MAY NOT APPLY TO YOU, AND YOU MAY HAVE ADDITIONAL RIGHTS.
+
+
+22. INDEMNIFICATION
+
+You agree to defend, indemnify, and hold us harmless, including our subsidiaries, affiliates, and all of our respective officers, agents, partners, and employees, from and against any loss, damage, liability, claim, or demand, including reasonable attorneys' fees and expenses, made by any third party due to or arising out of: (1) your Contributions; (2) use of the Site; (3) breach of these Terms of Use; (4) any breach of your representations and warranties set forth in these Terms of Use; (5) your violation of the rights of a third party, including but not limited to intellectual property rights; or (6) any overt harmful act toward any other user of the Site with whom you connected via the Site. Notwithstanding the foregoing, we reserve the right, at your expense, to assume the exclusive defense and control of any matter for which you are required to indemnify us, and you agree to cooperate, at your expense, with our defense of such claims. We will use reasonable efforts to notify you of any such claim, action, or proceeding which is subject to this indemnification upon becoming aware of it.
+
+
+23. USER DATA
+
+We will maintain certain data that you transmit to the Site for the purpose of managing the performance of the Site, as well as data relating to your use of the Site. Although we perform regular routine backups of data, you are solely responsible for all data that you transmit or that relates to any activity you have undertaken using the Site. You agree that we shall have no liability to you for any loss or corruption of any such data, and you hereby waive any right of action against us arising from any such loss or corruption of such data.
+
+
+24. ELECTRONIC COMMUNICATIONS, TRANSACTIONS, AND SIGNATURES
+
+Visiting the Site, sending us emails, and completing online forms constitute electronic communications. You consent to receive electronic communications, and you agree that all agreements, notices, disclosures, and other communications we provide to you electronically, via email and on the Site, satisfy any legal requirement that such communication be in writing. YOU HEREBY AGREE TO THE USE OF ELECTRONIC SIGNATURES, CONTRACTS, ORDERS, AND OTHER RECORDS, AND TO ELECTRONIC DELIVERY OF NOTICES, POLICIES, AND RECORDS OF TRANSACTIONS INITIATED OR COMPLETED BY US OR VIA THE SITE. You hereby waive any rights or requirements under any statutes, regulations, rules, ordinances, or other laws in any jurisdiction which require an original signature or delivery or retention of non-electronic records, or to payments or the granting of credits by any means other than electronic means.
+
+
+25. CALIFORNIA USERS AND RESIDENTS
+
+If any complaint with us is not satisfactorily resolved, you can contact the Complaint Assistance Unit of the Division of Consumer Services of the California Department of Consumer Affairs in writing at 1625 North Market Blvd., Suite N 112, Sacramento, California 95834 or by telephone at (800) 952-5210 or (916) 445-1254.
+
+
+26. MISCELLANEOUS
+
+These Terms of Use and any policies or operating rules posted by us on the Site or in respect to the Site constitute the entire agreement and understanding between you and us. Our failure to exercise or enforce any right or provision of these Terms of Use shall not operate as a waiver of such right or provision. These Terms of Use operate to the fullest extent permissible by law. We may assign any or all of our rights and obligations to others at any time. We shall not be responsible or liable for any loss, damage, delay, or failure to act caused by any cause beyond our reasonable control. If any provision or part of a provision of these Terms of Use is determined to be unlawful, void, or unenforceable, that provision or part of the provision is deemed severable from these Terms of Use and does not affect the validity and enforceability of any remaining provisions. There is no joint venture, partnership, employment or agency relationship created between you and us as a result of these Terms of Use or use of the Site. You agree that these Terms of Use will not be construed against us by virtue of having drafted them. You hereby waive any and all defenses you may have based on the electronic form of these Terms of Use and the lack of signing by the parties hereto to execute these Terms of Use.
+
+
+27. CONTACT US
+
+In order to resolve a complaint regarding the Site or to receive further information regarding use of the Site, please contact us at:
+
+%{WEB_LINK}
+50 Old Toh Tuck Rd
+Singapore, Singapore 597657
+Singapore
+%{contactEmail}
+
+  `,
+    'general_eula_content': `
+END USER LICENSE AGREEMENT
+
+Last updated February 03, 2025
+
+  %{appName} is licensed to You (End-User) by %{WEB_LINK}, located and registered at 2485 Patton Lane, Raleigh, Raleigh 27610, Raleigh ("Licensor"), for use only under the terms of this License Agreement.
+
+By downloading the Licensed Application from Apple's software distribution platform ("App Store") and Google's software distribution platform ("Play Store"), and any update thereto (as permitted by this License Agreement), You indicate that You agree to be bound by all of the terms and conditions of this License Agreement, and that You accept this License Agreement. App Store and Play Store are referred to in this License Agreement as "Services."
+
+The parties of this License Agreement acknowledge that the Services are not a Party to this License Agreement and are not bound by any provisions or obligations with regard to the Licensed Application, such as warranty, liability, maintenance and support thereof. %{WEB_LINK}, not the Services, is solely responsible for the Licensed Application and the content thereof.
+
+This License Agreement may not provide for usage rules for the Licensed Application that are in conflict with the latest Apple Media Services Terms and Conditions and Google Play Terms of Service ("Usage Rules"). %{WEB_LINK} acknowledges that it had the opportunity to review the Usage Rules and this License Agreement is not conflicting with them.
+
+%{appName} when purchased or downloaded through the Services, is licensed to You for use only under the terms of this License Agreement. The Licensor reserves all rights not expressly granted to You. %{appName} is to be used on devices that operate with Apple's operating systems ("iOS" and "Mac OS") or Google's operating system ("Android").
+
+
+TABLE OF CONTENTS
+
+1. THE APPLICATION
+2. SCOPE OF LICENSE
+3. TECHNICAL REQUIREMENTS
+4. MAINTENANCE AND SUPPORT
+5. USE OF DATA
+6. USER-GENERATED CONTRIBUTIONS
+7. CONTRIBUTION LICENSE
+8. LIABILITY
+9. WARRANTY
+10. PRODUCT CLAIMS
+11. LEGAL COMPLIANCE
+12. CONTACT INFORMATION
+13. TERMINATION
+14. THIRD-PARTY TERMS OF AGREEMENTS AND BENEFICIARY
+15. INTELLECTUAL PROPERTY RIGHTS
+16. APPLICABLE LAW
+17. MISCELLANEOUS
+
+
+1. THE APPLICATION
+
+%{appName} ("Licensed Application") is a piece of software created to watch video, publish comment, collect video and comment — and customized for iOS and Android mobile devices ("Devices"). It is used to watch video.
+
+The Licensed Application is not tailored to comply with industry-specific regulations (Health Insurance Portability and Accountability Act (HIPAA), Federal Information Security Management Act (FISMA), etc.), so if your interactions would be subjected to such laws, you may not use this Licensed Application. You may not use the Licensed Application in a way that would violate the Gramm-Leach-Bliley Act (GLBA).
+
+
+2. SCOPE OF LICENSE
+
+2.1  You are given a non-transferable, non-exclusive, non-sublicensable license to install and use the Licensed Application on any Devices that You (End-User) own or control and as permitted by the Usage Rules, with the exception that such Licensed Application may be accessed and used by other accounts associated with You (End-User, The Purchaser) via Family Sharing or volume purchasing.
+
+2.2  This license will also govern any updates of the Licensed Application provided by Licensor that replace, repair, and/or supplement the first Licensed Application, unless a separate license is provided for such update, in which case the terms of that new license will govern.
+
+2.3  You may not share or make the Licensed Application available to third parties (unless to the degree allowed by the Usage Rules, and with %{WEB_LINK}'s prior written consent), sell, rent, lend, lease or otherwise redistribute the Licensed Application.
+
+2.4  You may not reverse engineer, translate, disassemble, integrate, decompile, remove, modify, combine, create derivative works or updates of, adapt, or attempt to derive the source code of the Licensed Application, or any part thereof (except with %{WEB_LINK}'s prior written consent).
+
+2.5  You may not copy (excluding when expressly authorized by this license and the Usage Rules) or alter the Licensed Application or portions thereof. You may create and store copies only on devices that You own or control for backup keeping under the terms of this license, the Usage Rules, and any other terms and conditions that apply to the device or software used. You may not remove any intellectual property notices. You acknowledge that no unauthorized third parties may gain access to these copies at any time. If you sell your Devices to a third party, you must remove the Licensed Application from the Devices before doing so.
+
+2.6  Violations of the obligations mentioned above, as well as the attempt of such infringement, may be subject to prosecution and damages.
+
+2.7  Licensor reserves the right to modify the terms and conditions of licensing.
+
+2.8  Nothing in this license should be interpreted to restrict third-party terms. When using the Licensed Application, You must ensure that You comply with applicable third-party terms and conditions.
+
+
+3. TECHNICAL REQUIREMENTS
+
+3.1  The Licensed Application requires a firmware version 1.0.0 or higher. Licensor recommends using the latest version of the firmware.
+
+3.2  Licensor attempts to keep the Licensed Application updated so that it complies with modified/new versions of the firmware and new hardware. You are not granted rights to claim such an update.
+
+3.3  You acknowledge that it is Your responsibility to confirm and determine that the app end-user device on which You intend to use the Licensed Application satisfies the technical specifications mentioned above.
+
+3.4  Licensor reserves the right to modify the technical specifications as it sees appropriate at any time.
+
+
+4. MAINTENANCE AND SUPPORT
+
+4.1  The Licensor is solely responsible for providing any maintenance and support services for this Licensed Application. You can reach the Licensor at the email address listed in the App Store or Play Store Overview for this Licensed Application.
+
+4.2  %{WEB_LINK} and the End-User acknowledge that the Services have no obligation whatsoever to furnish any maintenance and support services with respect to the Licensed Application.
+
+
+5. USE OF DATA
+
+You acknowledge that Licensor will be able to access and adjust Your downloaded Licensed Application content and Your personal information, and that Licensor's use of such material and information is subject to Your legal agreements with Licensor and Licensor's privacy policy: https://%{WEB_LINK}/privacy/index.htm.
+
+You acknowledge that the Licensor may periodically collect and use technical data and related information about your device, system, and application software, and peripherals, offer product support, facilitate the software updates, and for purposes of providing other services to you (if any) related to the Licensed Application. Licensor may also use this information to improve its products or to provide services or technologies to you, as long as it is in a form that does not personally identify you.
+
+
+6. USER-GENERATED CONTRIBUTIONS
+
+The Licensed Application may invite you to chat, contribute to, or participate in blogs, message boards, online forums, and other functionality, and may provide you with the opportunity to create, submit, post, display, transmit, perform, publish, distribute, or broadcast content and materials to us or in the Licensed Application, including but not limited to text, writings, video, audio, photographs, graphics, comments, suggestions, or personal information or other material (collectively, "Contributions"). Contributions may be viewable by other users of the Licensed Application and through third-party websites or applications. As such, any Contributions you transmit may be treated as non-confidential and non-proprietary. When you create or make available any Contributions, you thereby represent and warrant that:
+
+1. The creation, distribution, transmission, public display, or performance, and the accessing, downloading, or copying of your Contributions do not and will not infringe the proprietary rights, including but not limited to the copyright, patent, trademark, trade secret, or moral rights of any third party.
+2. You are the creator and owner of or have the necessary licenses, rights, consents, releases, and permissions to use and to authorize us, the Licensed Application, and other users of the Licensed Application to use your Contributions in any manner contemplated by the Licensed Application and this License Agreement.
+3. You have the written consent, release, and/or permission of each and every identifiable individual person in your Contributions to use the name or likeness or each and every such identifiable individual person to enable inclusion and use of your Contributions in any manner contemplated by the Licensed Application and this License Agreement.
+4. Your Contributions are not false, inaccurate, or misleading.
+5. Your Contributions are not unsolicited or unauthorized advertising, promotional materials, pyramid schemes, chain letters, spam, mass mailings, or other forms of solicitation.
+6. Your Contributions are not obscene, lewd, lascivious, filthy, violent, harassing, libelous, slanderous, or otherwise objectionable (as determined by us).
+7. Your Contributions do not ridicule, mock, disparage, intimidate, or abuse anyone.
+8. Your Contributions are not used to harass or threaten (in the legal sense of those terms) any other person and to promote violence against a specific person or class of people.
+9. Your Contributions do not violate any applicable law, regulation, or rule.
+10. Your Contributions do not violate the privacy or publicity rights of any third party.
+11. Your Contributions do not violate any applicable law concerning child pornography, or otherwise intended to protect the health or well-being of minors.
+12. Your Contributions do not include any offensive comments that are connected to race, national origin, gender, sexual preference, or physical handicap.
+13. Your Contributions do not otherwise violate, or link to material that violates, any provision of this License Agreement, or any applicable law or regulation.
+
+Any use of the Licensed Application in violation of the foregoing violates this License Agreement and may result in, among other things, termination or suspension of your rights to use the Licensed Application.
+
+
+7. CONTRIBUTION LICENSE
+
+By posting your Contributions to any part of the Licensed Application or making Contributions accessible to the Licensed Application by linking your account from the Licensed Application to any of your social networking accounts, you automatically grant, and you represent and warrant that you have the right to grant, to us an unrestricted, unlimited, irrevocable, perpetual, non-exclusive, transferable, royalty-free, fully-paid, worldwide right, and license to host, use copy, reproduce, disclose, sell, resell, publish, broad cast, retitle, archive, store, cache, publicly display, reformat, translate, transmit, excerpt (in whole or in part), and distribute such Contributions (including, without limitation, your image and voice) for any purpose, commercial advertising, or otherwise, and to prepare derivative works of, or incorporate in other works, such as Contributions, and grant and authorize sublicenses of the foregoing. The use and distribution may occur in any media formats and through any media channels.
+
+This license will apply to any form, media, or technology now known or hereafter developed, and includes our use of your name, company name, and franchise name, as applicable, and any of the trademarks, service marks, trade names, logos, and personal and commercial images you provide. You waive all moral rights in your Contributions, and you warrant that moral rights have not otherwise been asserted in your Contributions.
+
+We do not assert any ownership over your Contributions. You retain full ownership of all of your Contributions and any intellectual property rights or other proprietary rights associated with your Contributions. We are not liable for any statements or representations in your Contributions provided by you in any area in the Licensed Application. You are solely responsible for your Contributions to the Licensed Application and you expressly agree to exonerate us from any and all responsibility and to refrain from any legal action against us regarding your Contributions.
+
+We have the right, in our sole and absolute discretion, (1) to edit, redact, or otherwise change any Contributions; (2) to recategorize any Contributions to place them in more appropriate locations in the Licensed Application; and (3) to prescreen or delete any Contributions at any time and for any reason, without notice. We have no obligation to monitor your Contributions.
+
+
+8. LIABILITY
+
+8.1  Licensor's responsibility in the case of violation of obligations and tort shall be limited to intent and gross negligence. Only in case of a breach of essential contractual duties (cardinal obligations), Licensor shall also be liable in case of slight negligence. In any case, liability shall be limited to the foreseeable, contractually typical damages. The limitation mentioned above does not apply to injuries to life, limb, or health.
+
+8.2  Licensor takes no accountability or responsibility for any damages caused due to a breach of duties according to Section 2 of this License Agreement. To avoid data loss, You are required to make use of backup functions of the Licensed Application to the extent allowed by applicable third-party terms and conditions of use. You are aware that in case of alterations or manipulations of the Licensed Application, You will not have access to the Licensed Application.
+
+
+9. WARRANTY
+
+9.1  Licensor warrants that the Licensed Application is free of spyware, trojan horses, viruses, or any other malware at the time of Your download. Licensor warrants that the Licensed Application works as described in the user documentation.
+
+9.2  No warranty is provided for the Licensed Application that is not executable on the device, that has been unauthorizedly modified, handled inappropriately or culpably, combined or installed with inappropriate hardware or software, used with inappropriate accessories, regardless if by Yourself or by third parties, or if there are any other reasons outside of %{WEB_LINK}'s sphere of influence that affect the executability of the Licensed Application.
+
+9.3  You are required to inspect the Licensed Application immediately after installing it and notify %{WEB_LINK} about issues discovered without delay by email provided in Contact Information. The defect report will be taken into consideration and further investigated if it has been emailed within a period of ninety (90) days after discovery.
+
+9.4  If we confirm that the Licensed Application is defective, %{WEB_LINK} reserves a choice to remedy the situation either by means of solving the defect or substitute delivery.
+
+9.5  In the event of any failure of the Licensed Application to conform to any applicable warranty, You may notify the Services Store Operator, and Your Licensed Application purchase price will be refunded to You. To the maximum extent permitted by applicable law, the Services Store Operator will have no other warranty obligation whatsoever with respect to the Licensed Application, and any other losses, claims, damages, liabilities, expenses, and costs attributable to any negligence to adhere to any warranty.
+
+9.6  If the user is an entrepreneur, any claim based on faults expires after a statutory period of limitation amounting to twelve (12) months after the Licensed Application was made available to the user. The statutory periods of limitation given by law apply for users who are consumers.
+   
+
+10. PRODUCT CLAIMS
+
+%{WEB_LINK} and the End-User acknowledge that %{WEB_LINK}, and not the Services, is responsible for addressing any claims of the End-User or any third party relating to the Licensed Application or the End-User's possession and/or use of that Licensed Application, including, but not limited to:
+
+(i) product liability claims;
+   
+(ii) any claim that the Licensed Application fails to conform to any applicable legal or regulatory requirement; and
+
+(iii) claims arising under consumer protection, privacy, or similar legislation, including in connection with Your Licensed Application's use of the HealthKit and HomeKit.
+
+
+11. LEGAL COMPLIANCE
+
+You represent and warrant that You are not located in a country that is subject to a US Government embargo, or that has been designated by the US Government as a "terrorist supporting" country; and that You are not listed on any US Government list of prohibited or restricted parties.
+
+
+12. CONTACT INFORMATION
+
+For general inquiries, complaints, questions or claims concerning the Licensed Application, please contact:
+       
+admin
+2485 Patton Lane
+Raleigh, Raleigh 27610
+Raleigh
+support@%{WEB_LINK}
+
+
+13. TERMINATION
+
+The license is valid until terminated by %{WEB_LINK} or by You. Your rights under this license will terminate automatically and without notice from %{WEB_LINK} if You fail to adhere to any term(s) of this license. Upon License termination, You shall stop all use of the Licensed Application, and destroy all copies, full or partial, of the Licensed Application.
+      
+
+14. THIRD-PARTY TERMS OF AGREEMENTS AND BENEFICIARY
+
+%{WEB_LINK} represents and warrants that %{WEB_LINK} will comply with applicable third-party terms of agreement when using Licensed Application.
+
+In Accordance with Section 9 of the "Instructions for Minimum Terms of Developer's End-User License Agreement," both Apple and Google and their subsidiaries shall be third-party beneficiaries of this End User License Agreement and — upon Your acceptance of the terms and conditions of this License Agreement, both Apple and Google will have the right (and will be deemed to have accepted the right) to enforce this End User License Agreement against You as a third-party beneficiary thereof.
+
+
+15. INTELLECTUAL PROPERTY RIGHTS
+
+%{WEB_LINK} and the End-User acknowledge that, in the event of any third-party claim that the Licensed Application or the End-User's possession and use of that Licensed Application infringes on the third party's intellectual property rights, %{WEB_LINK}, and not the Services, will be solely responsible for the investigation, defense, settlement, and discharge or any such intellectual property infringement claims.
+
+
+16. APPLICABLE LAW
+
+This License Agreement is governed by the laws of Raleigh excluding its conflicts of law rules.
+
+
+17. MISCELLANEOUS
+
+17.1  If any of the terms of this agreement should be or become invalid, the validity of the remaining provisions shall not be affected. Invalid terms will be replaced by valid ones formulated in a way that will achieve the primary purpose.
+               
+17.2  Collateral agreements, changes and amendments are only valid if laid down in writing. The preceding clause can only be waived in writing.`,
+    download_app_title: '앱을 다운로드하여 전체 콘텐츠 시청',
+    download_app_desc: '앱을 설치하면 모든 HD 비디오를 광고 없이 시청할 수 있으며, 오프라인 캐싱을 지원합니다',
+    download_app_btn: '지금 다운로드',
+    download_app_cancel: '취소',
+    download_app_short_title: '앱을 다운로드하여 숏 드라마 시청',
+    download_app_short_desc: '앱을 설치하면 방대한 숏 드라마 콜렉션을 무제한으로 시청하고 오프라인 캐싱을 지원합니다',
+    download_app_detail_title: '앱을 다운로드하여 전체 비디오 시청',
+    download_app_detail_desc: '앱을 설치하면 전체 비디오를 원활하게 시청할 수 있으며, 오프라인 캐싱, HD 품질, 광고 없음을 지원합니다'
+};
+const __TURBOPACK__default__export__ = ko;
+if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
+    __turbopack_context__.k.registerExports(module, globalThis.$RefreshHelpers$);
+}
+}}),
+"[project]/src/app/i18n/locales/ja.js [app-client] (ecmascript)": ((__turbopack_context__) => {
+"use strict";
+
+var { g: global, __dirname, k: __turbopack_refresh__, m: module } = __turbopack_context__;
+{
+__turbopack_context__.s({
+    "default": (()=>__TURBOPACK__default__export__)
+});
+const ja = {
+    config_app_name: '天天視聴',
+    "seo_app_title": "天天視聴 - オンラインで映画、ドラマ、アニメ、短編ドラマを視聴",
+    "seo_app_desc": "無料で高画質の映画、ドラマ、アニメ、短編ドラマをオンラインで視聴！最新のコンテンツをスムーズに楽しめ、いつでもどこでも素晴らしい体験を！",
+    "seo_page_title": "天天視聴 - 無料{page} - オンラインで映画、ドラマ、アニメ、短編ドラマを視聴",
+    "seo_page_desc": "天天視聴 - 無料{page} - 無料で高画質の映画、ドラマ、アニメ、短編ドラマをオンラインで視聴！最新のコンテンツをスムーズに楽しめ、いつでもどこでも素晴らしい体験を！",
+    "seo_detail_title": "《{title}》- 無料オンライン視聴",
+    "seo_detail_desc": "《{title}》- {desc}",
+    "seo_keywords": "オンライン映画,無料ドラマ,高画質動画,映画サイト,無料動画,映画オンライン視聴,動画サイト,動画大全,映画オンライン,SF映画,アクション映画,恋愛映画,サスペンスドラマ,時代劇ドラマ,バラエティ番組,新作アニメ,戦争映画,コメディ映画,ドキュメンタリーオンライン",
+    homeTab: '見ごたえ',
+    hotTab: 'ホット',
+    recommend: 'ショートドラマ',
+    shortVideo: 'ショートビデオ',
+    mineTab: 'マイ',
+    homeChoice: '人気',
+    homeFilm: '映画',
+    homeTeleplay: 'テレビドラマ',
+    homeVariety: 'バラエティ',
+    homeEntertainment: 'アニメ',
+    homeNews: 'ニュース',
+    vipAll: 'すべて',
+    vipWeek: '今週の人気',
+    vipPopular: '人気順',
+    vipTime: '時間順',
+    artTypeFilm: '映画',
+    artTypeTeleplay: 'テレビドラマ',
+    artTypeVariety: 'バラエティ',
+    artTypeEntertainment: 'アニメ',
+    artTypeNews: 'ニュース',
+    category_type: 'タイプ',
+    category_region: '地域',
+    category_year: '年',
+    category_all: 'すべて',
+    general_no_image: '画像なし',
+    general_retry: '再試行',
+    all: 'すべて',
+    title_0: '素晴らしいストーリー',
+    title_1: 'おもしろいコメディ',
+    title_2: '高評価アクション',
+    title_3: 'ロマンティックな感情',
+    title_4: 'SF大作',
+    title_5: 'アニメーション',
+    title_6: '頭脳を刺激するミステリー',
+    title_7: 'スリリング',
+    title_8: 'ホラー＆グロテスク',
+    title_9: '犯罪＆銃撃戦',
+    title_10: '国内の名作',
+    title_11: 'アメリカ大作',
+    title_12: 'クラシック香港映画',
+    title_13: '台湾の大作',
+    title_14: '日本',
+    title_15: '韓国',
+    contentTypePlot: 'プロット',
+    contentTypeComedy: 'コメディ',
+    contentTypeAction: 'アクション',
+    contentTypeRomance: 'ロマンス',
+    contentTypeScienceFiction: 'SF',
+    contentTypeCartoon: 'アニメ',
+    contentTypeSuspense: 'サスペンス',
+    contentTypeThriller: 'スリラー',
+    contentTypeHorror: 'ホラー',
+    contentTypeCrime: '犯罪',
+    contentTypeHomosexual: '同性愛',
+    contentTypeMusic: '音楽',
+    contentTypeDance: '歌とダンス',
+    contentTypeBiopic: '伝記',
+    contentTypeHistorical: '歴史',
+    contentTypeWar: '戦争',
+    contentTypeWestward: 'ウエスタン',
+    contentTypeMagical: 'ファンタジー',
+    contentTypeAdventure: '冒険',
+    contentTypeDisaster: '災害',
+    contentTypeMartialArts: '武侠',
+    contentTypeOthers: 'その他',
+    // reelsContentTypeTimeTravel: '穿越',
+    // reelsContentTypeFantasy: '玄幻',
+    // reelsContentTypeComedy: '搞笑',
+    // reelsContentTypeHorror: '恐怖',
+    // reelsContentTypeAction: '热血',
+    // reelsContentTypeMotivation: '励志',
+    // reelsContentTypeRomance: '爱情',
+    // reelsContentTypeWar: '战争',
+    // reelsContentTypeUrban: '都市',
+    // reelsContentTypeOvercome: '逆袭',
+    // reelsContentTypeSweet: '甜宠',
+    // reelsContentTypeRebirth: '重生',
+    // reelsContentTypeRevenge: '复仇',
+    // reelsContentTypeCEO: '总裁',
+    // reelsContentTypeAristocracy: '豪门',
+    // reelsContentTypeAdventure: '冒险',
+    // reelsContentTypeIntrigue: '权谋',
+    // reelsContentTypeEmotions: '情感',
+    // reelsContentTypeMarriage: '婚姻',
+    // reelsContentTypeMystery: '悬疑',
+    reelsContentTypeUrban: '都会',
+    reelsContentTypeTraverse: 'タイムトラベル',
+    reelsContentTypeRebirth: '生まれ変わり',
+    reelsContentTypeWarGod: '戦神',
+    reelsContentTypeFantasy: '幻想',
+    reelsContentTypeOverlord: '独裁社長',
+    reelsContentTypeTorturedLove: '過酷な愛',
+    reelsContentTypeBaby: 'かわいい赤ちゃん',
+    reelsContentTypeCostume: '時代衣装',
+    reelsContentTypeDivineHealer: '神の医者',
+    reelsContentTypeFemale: '女性向け',
+    reelsContentTypeMale: '男性向け',
+    reelsContentTypeHeir: '大富豪',
+    reelsContentTypeRepublic: '民国',
+    reelsContentTypeRise: '逆転',
+    reelsContentTypeRomance: 'ロマンス',
+    reelsContentTypeHistory: '歴史',
+    reelsContentTypeSweet: '甘い愛',
+    reelsContentTypeRevenge: '復讐',
+    reelsContentTypeFamily: '家族',
+    reelsContentTypeReality: 'リアル',
+    reelsContentTypeKinship: '家族の絆',
+    reelsContentTypeFeeling: '感情',
+    reelsContentTypeFlashMarriage: '一括結婚',
+    reelsContentTypeOthers: 'その他',
+    areaTypeChinaMainland: '中国',
+    areaTypeUnitedStates: 'アメリカ',
+    areaTypeHongKong: '香港',
+    areaTypeTaiwan: '台湾',
+    areaTypeJapan: '日本',
+    areaTypeKorea: '韓国',
+    areaTypeUnitedKingdom: 'イギリス',
+    areaTypeFrance: 'フランス',
+    areaTypeGermany: 'ドイツ',
+    areaTypeItaly: 'イタリア',
+    areaTypeSpain: 'スペイン',
+    areaTypeIndia: 'インド',
+    areaTypeThailand: 'タイ',
+    areaTypeRussia: 'ロシア',
+    areaTypeIran: 'イラン',
+    areaTypeCanada: 'カナダ',
+    areaTypeAustralia: 'オーストラリア',
+    areaTypeIreland: 'アイルランド',
+    areaTypeSweden: 'スウェーデン',
+    areaTypeBrazil: 'ブラジル',
+    areaTypeDenmark: 'デンマーク',
+    areaTypeOthers: 'その他',
+    center_btn_chinese: '中国語',
+    center_btn_english: '欧米',
+    center_btn_asian: '日本・韓国',
+    center_btn_china: '中国',
+    center_btn_outback: '本土',
+    center_btn_cantonese: '香港/台湾',
+    center_btn_Reality: 'リアリティ',
+    center_btn_international: '国際',
+    center_btn_Asia: 'アジア',
+    center_btn_UsTeleplay: 'アメリカドラマ',
+    main_noData: 'コンテンツがありません',
+    main_more: 'もっと見る',
+    main_not_open: 'まだオープンしていません',
+    main_lang_cn: '簡体中国語',
+    main_lang_tw: '繁体中国語',
+    main_lang_en: '英語',
+    main_message_all: 'すべての人',
+    main_message_friend: '友達のみ',
+    main_message_followed: 'フォロワーのみ',
+    mine_register: '登録',
+    mine_login: 'ログイン',
+    mine_ing: '進行中',
+    mine_username: '電話番号またはメールアドレスを入力してください',
+    mine_password: 'パスワードを入力してください',
+    mine_password_again: '再度パスワードを入力してください',
+    mine_password_not_same: '2回入力したパスワードが一致しません',
+    mine_password_invalid: 'パスワードは6-20文字の英数字で構成してください',
+    mine_agree: '利用規約に同意して登録',
+    mine_tips: '「利用規約に同意して登録」をクリックすると、《ユーザー規約》と《プライバシーポリシー》を読んで同意したものとみなされます',
+    mine_password_forgot: 'パスワードをお忘れですか？',
+    mine_show_email: '管理者にメールで問い合わせ: %{contactEmail}',
+    mine_login_summary: 'ログインするとより多彩なコンテンツを楽しめます',
+    mine_watch_history: '視聴履歴',
+    mine_recently_played: '最近再生',
+    mine_recently_favorites: '最近のお気に入り',
+    mine_create_list: '作品',
+    mine_activity: 'アクティビティ',
+    mine_favorite: 'いいね',
+    mine_downloads: 'ダウンロード',
+    mine_favorites: 'お気に入り',
+    mine_weblink: '公式ウェブサイトのURL',
+    set_up_account: 'アカウントとセキュリティ',
+    set_up_my_coin: 'マイコイン',
+    set_up_cellphone: '電話番号連携',
+    set_up_third: 'サードパーティーアカウント連携',
+    set_up_realname: '実名認証',
+    set_up_shield: 'ブロック設定',
+    set_up_delete: 'アカウント削除',
+    set_up_block_list: 'ブラックリスト',
+    report_text: '通報',
+    report_block: 'ブラックリストに追加',
+    report_add_block_list: '既にブラックリストに追加されています。設定から解除できます',
+    report_remove_block_list: 'ブラックリストから削除されました',
+    report_unblock: 'ブラックリスト解除',
+    report_question: '通報理由を入力してください',
+    report_blocked_noData: 'ブロックされました、表示するコンテンツがありません',
+    report_type_image: '画像またはタイトルを通報',
+    report_type_video: '動画を通報',
+    report_type_comment: 'コメントを通報',
+    report_type_user: 'ユーザーを通報',
+    report_thanks: '通報ありがとうございます',
+    report_issue: '問題',
+    report_content_1: 'こんにちは！通報ありがとうございます。この内容が%{appName}の',
+    report_content_2: 'に違反する場合、削除されます。コメントやユーザーのブロック方法、%{appName}での安全確保のための他の方針とツールについてご確認ください',
+    report_issue_0: 'ポルノ',
+    report_issue_1: '暴力または不快な内容',
+    report_issue_2: 'ヘイトまたは侮辱',
+    report_issue_3: '有害または危険な行為',
+    report_issue_4: 'スパムまたは誤解を招く内容',
+    report_issue_5: '嫌がらせまたはいじめ',
+    report_issue_6: '児童虐待',
+    report_issue_7: '私の権利を侵害',
+    report_issue_8: 'テロ扇動',
+    report_issue_9: '著作権の問題',
+    report_issue_10: 'プライバシーの問題',
+    report_issue_11: '商標侵害または偽造',
+    report_issue_12: 'その他の法的問題',
+    ad_skip: '広告をスキップ',
+    ad_remove: '広告を削除',
+    download_tips: 'ご注意: キャッシュされた動画を視聴中はネットワークを切断しないでください',
+    download_progress: 'ダウンロード進捗',
+    download_delete: '削除',
+    download_delete_sure: '削除してもよろしいですか？',
+    download_deleted: '正常に削除されました',
+    download_delete_tip: 'ダウンロード完了後にのみ削除可能です',
+    download_complete: '完了 %{progress}%',
+    download_free_storage: '残り %{free}G 利用可能',
+    download_play_cache: ' (キャッシュ再生中)',
+    download_added: 'ダウンロードタスクに追加されました',
+    download_downloading: 'ダウンロード中、[マイ - ダウンロード]で確認してください',
+    download_throw_err: 'ダウンロードエラーが発生しました。アプリを再起動して再試行してください',
+    download_state_downloading: 'ダウンロード中',
+    download_state_stop: 'ダウンロード中断',
+    download_state_complete: 'ダウンロード完了',
+    download_source_cannot: 'この再生ソースはダウンロードできません',
+    download_source_error: '現在の再生ソースにダウンロードエラーがあります。他のソースに切り替えるかアプリを再起動してください',
+    download_cannot_play: 'ダウンロード完了後に再生できない場合は、アプリを再起動するか、ソースを変更して再ダウンロードしてください。',
+    download_max_error: 'ダウンロード数が最大制限に達しました。VIPアップグレード後に再試行してください',
+    set_up_play: '再生する',
+    set_up_autoplay: '自動でスキップ（オープニング・エンディング）',
+    set_up_net_play: 'キャリアネットワークで自動再生',
+    set_up_net_upload: 'キャリアネットワークでのアップロードを許可',
+    set_up_general: '一般',
+    set_up_get_message: 'プッシュ通知を受信',
+    set_up_change_lang: '言語切替',
+    set_up_push_other: '友達へのプッシュ通知を許可',
+    set_up_who_push: '誰がメッセージを送れるか',
+    set_up_about: '情報',
+    set_up_help: 'フィードバックとヘルプ',
+    set_up_sla: 'ユーザー規約',
+    set_up_privacy: 'プライバシーポリシー',
+    general_summary: '概要',
+    general_starring: '主演',
+    general_type: 'ジャンル',
+    general_all_comment: 'すべてのコメント',
+    general_sets_title: 'エピソード',
+    general_like: 'いいね',
+    general_comment: 'コメント',
+    general_sets: 'エピソード',
+    general_share: '共有',
+    general_collect: 'コレクション',
+    general_comment_any: 'コメントを書く',
+    general_publish_comment: 'コメント投稿',
+    general_picture: '画像',
+    general_video: '動画',
+    general_publish: '投稿',
+    general_submit: '送信',
+    general_modify: '情報修正',
+    general_comment_num: '件',
+    general_comments: 'コメント',
+    general_reply: '返信',
+    general_replies: '返信',
+    general_follow: 'フォロー',
+    general_unfollow: 'フォロー解除',
+    general_likes: 'いいね',
+    general_followering: 'フォロー中',
+    general_followers: 'フォロワー',
+    general_friends: '友達',
+    general_ensure: '確認',
+    general_cancel: 'キャンセル',
+    general_hot_search: 'ホットサーチ',
+    general_search_place: '動画名を入力してください',
+    general_publishing: 'コメント投稿中',
+    general_input_content: '内容を入力してください',
+    general_logout: 'ログアウト',
+    general_input_question: '質問を入力してください',
+    general_noInterest: '興味なし',
+    general_shield: 'すべてブロック',
+    general_report: '通報',
+    general_operate: '操作',
+    general_close: '閉じる',
+    general_years: `'s`,
+    general_success: '成功',
+    general_fail: '失敗',
+    general_user_not_exist: 'ユーザー名が存在しません',
+    general_user_exist: 'ユーザー名は既に存在します',
+    general_auth_fail: '認証に失敗しました。ログインしてください',
+    general_wrong_character: '不正な文字です。確認してください',
+    general_net_slow: 'ネットワークが遅いです。後ほどお試しください',
+    general_login_faild: 'ログインに失敗しました。アカウントまたはパスワードが間違っています。再試行してください！',
+    general_net_wrong: 'ネットワークエラーです。後ほどお試しください',
+    general_net_unconnected: 'ネットワークが切断されました。接続状況を確認してください',
+    general_net_fault: 'システム更新中です。24時間以内に復旧予定',
+    general_net_link_fault: 'ネットワーク接続エラー',
+    general_fresh_btn: '更新',
+    general_time_one: '1日前',
+    general_hour_number: '時間前',
+    general_go_login: 'ログインする',
+    general_go_share: '共有する',
+    general_after_login: 'ログイン後に共有してください',
+    general_must_share: 'この動画はログインが必要です',
+    general_coin_invalid: 'コインが不足しています。友達と共有すると獲得できます',
+    general_need_share: '共有後にVIP動画が無料で視聴可能です',
+    general_need_coin: 'この動画は',
+    general_coin: 'コイン',
+    general_coin_account: 'あなたのコイン:',
+    general_reach_end: '最後まで到達しました',
+    general_load_err: '動画読み込みエラー！',
+    general_search: '検索',
+    general_watch_to: '視聴完了まで',
+    general_watch_episode: '%{index}話',
+    general_avatar: 'アバター',
+    general_cover: 'カバー',
+    general_upload_err: 'アップロードエラー、再試行してください',
+    general_camera_err: 'アルバムを開けませんでした。再試行してください',
+    general_input_title: 'タイトルを入力してください',
+    general_upload_cover: 'カバーをアップロードしてください',
+    general_auth_err: '認証エラー',
+    general_loading: '読み込み中...',
+    general_director: '監督',
+    general_watch_now: '今すぐ視聴',
+    general_hold: '後で',
+    general_update_backend: 'バックグラウンド更新',
+    general_if_update: '新バージョンがあります。更新しますか？',
+    general_must_update: '新バージョンがあり、更新が必要です',
+    general_continue_update: 'バックグラウンド更新',
+    general_update_title: '更新のお知らせ',
+    general_edit_info: '個人情報編集',
+    general_edit_confirm: '編集を確定',
+    general_delete_info: 'アカウントを削除する',
+    general_delete_confirm: '確認',
+    general_delete_warning: '注意：関連法に基づき、この操作によりアカウントは永久に削除または無効となり、すべてのデータにアクセスできなくなります。慎重に検討してください',
+    general_add_opus: '作品を追加',
+    general_click_upload: 'クリックしてカバーをアップロード',
+    general_uploading: 'アップロード中',
+    general_title: 'タイトル',
+    general_nickname: 'ニックネーム',
+    general_upload_result: '動画アップロード成功、審査中です',
+    general_download_faild: '著作権の問題により、この動画はダウンロードできません',
+    general_warning_title: 'ご注意:',
+    general_warning_content: 'ネットワーク接続の問題、エラー、強制終了、フリーズなどが発生した場合は、公式ウェブサイトから最新バージョンをダウンロードしてインストールしてください',
+    general_warning_download_url: '公式ウェブサイトのダウンロードURL:',
+    general_warning_enter_play: 'クリックしてGoogle Playに移動',
+    general_player_next_episode: '次のエピソードへ',
+    general_player_rate: '再生速度',
+    general_player_source: '再生ソース',
+    general_player_src: 'ソース',
+    general_sets_count_label: '全%{count}話',
+    general_agree: '同意する',
+    general_agree_not: '同意しない',
+    general_sla_privacy: 'ユーザー規約とプライバシー保護',
+    general_sla_agree: 'あなたの同意がなければ%{appName}のサービスは利用できません',
+    general_a: '%{appName}の製品とサービスをお選びいただきありがとうございます',
+    general_b: '私たちはあなたの個人情報とプライバシーを非常に重視しています。製品を使用する前に、必ずご確認ください',
+    general_c: '1. 個人情報の収集・保存・使用・提供・保護に関する規約およびユーザー権利の条項；',
+    general_d: '2. 当社の責任制限および免責事項；',
+    general_e: '3. その他、重要な条項（太字または下線で示されています）；',
+    general_f: '「同意する」をクリックすると、上記すべての内容を読み、同意したものとみなされます',
+    general_rate_title: '5つ星評価後、システムがより多くの高品質な映画・ドラマを推奨します',
+    general_rate_submit: '今すぐ送信',
+    general_rate_cancle: '後で',
+    general_comment_placeholder: 'ここに意見を入力してください',
+    general_empty_error: '意見の内容が空です',
+    general_share_content: '以下のリンクをコピーし、携帯のブラウザで開くと、APPをダウンロードしてインストールし、この動画を無料で視聴できます',
+    general_privacy: 'プライバシーポリシー',
+    general_sla: 'ユーザーサービス規約',
+    general_eula: 'エンドユーザーライセンス契約',
+    general_update_time: '更新時間',
+    general_valid_time: '有効時間',
+    general_privacy_content: `
+    PRIVACY NOTICE
+
+Last updated February 02, 2023
+
+
+
+This privacy notice for %{WEB_LINK} ("Company," "we," "us," or "our"), describes how and why we might collect, store, use, and/or share ("process") your information when you use our services ("Services"), such as when you:
+Download and use our mobile application (%{appName}), or any other application of ours that links to this privacy notice
+Engage with us in other related ways, including any sales, marketing, or events
+Questions or concerns? Reading this privacy notice will help you understand your privacy rights and choices. If you do not agree with our policies and practices, please do not use our Services. If you still have any questions or concerns, please contact us at %{contactEmail}.
+
+
+SUMMARY OF KEY POINTS
+
+This summary provides key points from our privacy notice, but you can find out more details about any of these topics by clicking the link following each key point or by using our table of contents below to find the section you are looking for. You can also click here to go directly to our table of contents.
+
+What personal information do we process? When you visit, use, or navigate our Services, we may process personal information depending on how you interact with %{WEB_LINK} and the Services, the choices you make, and the products and features you use. Click here to learn more.
+
+Do we process any sensitive personal information? We do not process sensitive personal information.
+
+Do we receive any information from third parties? We do not receive any information from third parties.
+
+How do we process your information? We process your information to provide, improve, and administer our Services, communicate with you, for security and fraud prevention, and to comply with law. We may also process your information for other purposes with your consent. We process your information only when we have a valid legal reason to do so. Click here to learn more.
+
+In what situations and with which parties do we share personal information? We may share information in specific situations and with specific third parties. Click here to learn more.
+
+How do we keep your information safe? We have organizational and technical processes and procedures in place to protect your personal information. However, no electronic transmission over the internet or information storage technology can be guaranteed to be 100% secure, so we cannot promise or guarantee that hackers, cybercriminals, or other unauthorized third parties will not be able to defeat our security and improperly collect, access, steal, or modify your information. Click here to learn more.
+
+What are your rights? Depending on where you are located geographically, the applicable privacy law may mean you have certain rights regarding your personal information. Click here to learn more.
+
+How do you exercise your rights? The easiest way to exercise your rights is by filling out our data subject request form available here, or by contacting us. We will consider and act upon any request in accordance with applicable data protection laws.
+
+Want to learn more about what %{WEB_LINK} does with any information we collect? Click here to review the notice in full.
+
+
+TABLE OF CONTENTS
+
+1. WHAT INFORMATION DO WE COLLECT?
+2. HOW DO WE PROCESS YOUR INFORMATION?
+3. WHAT LEGAL BASES DO WE RELY ON TO PROCESS YOUR PERSONAL INFORMATION?
+4. WHEN AND WITH WHOM DO WE SHARE YOUR PERSONAL INFORMATION?
+5. WHAT IS OUR STANCE ON THIRD-PARTY WEBSITES?
+6. HOW LONG DO WE KEEP YOUR INFORMATION?
+7. HOW DO WE KEEP YOUR INFORMATION SAFE?
+8. WHAT ARE YOUR PRIVACY RIGHTS?
+9. CONTROLS FOR DO-NOT-TRACK FEATURES
+10. DO CALIFORNIA RESIDENTS HAVE SPECIFIC PRIVACY RIGHTS?
+11. DO VIRGINIA RESIDENTS HAVE SPECIFIC PRIVACY RIGHTS?
+12. DO WE MAKE UPDATES TO THIS NOTICE?
+13. HOW CAN YOU CONTACT US ABOUT THIS NOTICE?
+14. HOW CAN YOU REVIEW, UPDATE, OR DELETE THE DATA WE COLLECT FROM YOU?
+
+
+1. WHAT INFORMATION DO WE COLLECT?
+
+Personal information you disclose to us
+
+In Short: We collect personal information that you provide to us.
+
+We collect personal information that you voluntarily provide to us when you register on the Services, express an interest in obtaining information about us or our products and Services, when you participate in activities on the Services, or otherwise when you contact us.
+
+Personal Information Provided by You. The personal information that we collect depends on the context of your interactions with us and the Services, the choices you make, and the products and features you use. The personal information we collect may include the following:
+usernames
+passwords
+Sensitive Information. We do not process sensitive information.
+
+Application Data. If you use our application(s), we also may collect the following information if you choose to provide us with access or permission:
+Geolocation Information. We may request access or permission to track location-based information from your mobile device, either continuously or while you are using our mobile application(s), to provide certain location-based services. If you wish to change our access or permissions, you may do so in your device's settings.
+Mobile Device Access. We may request access or permission to certain features from your mobile device, including your mobile device's camera, storage, and other features. If you wish to change our access or permissions, you may do so in your device's settings.
+This information is primarily needed to maintain the security and operation of our application(s), for troubleshooting, and for our internal analytics and reporting purposes.
+
+All personal information that you provide to us must be true, complete, and accurate, and you must notify us of any changes to such personal information.
+
+Information automatically collected
+
+In Short: Some information — such as your Internet Protocol (IP) address and/or browser and device characteristics — is collected automatically when you visit our Services.
+
+We automatically collect certain information when you visit, use, or navigate the Services. This information does not reveal your specific identity (like your name or contact information) but may include device and usage information, such as your IP address, browser and device characteristics, operating system, language preferences, referring URLs, device name, country, location, information about how and when you use our Services, and other technical information. This information is primarily needed to maintain the security and operation of our Services, and for our internal analytics and reporting purposes.
+
+The information we collect includes:
+Log and Usage Data. Log and usage data is service-related, diagnostic, usage, and performance information our servers automatically collect when you access or use our Services and which we record in log files. Depending on how you interact with us, this log data may include your IP address, device information, browser type, and settings and information about your activity in the Services (such as the date/time stamps associated with your usage, pages and files viewed, searches, and other actions you take such as which features you use), device event information (such as system activity, error reports (sometimes called "crash dumps"), and hardware settings).
+Device Data. We collect device data such as information about your computer, phone, tablet, or other device you use to access the Services. Depending on the device used, this device data may include information such as your IP address (or proxy server), device and application identification numbers, location, browser type, hardware model, Internet service provider and/or mobile carrier, operating system, and system configuration information.
+Location Data. We collect location data such as information about your device's location, which can be either precise or imprecise. How much information we collect depends on the type and settings of the device you use to access the Services. For example, we may use GPS and other technologies to collect geolocation data that tells us your current location (based on your IP address). You can opt out of allowing us to collect this information either by refusing access to the information or by disabling your Location setting on your device. However, if you choose to opt out, you may not be able to use certain aspects of the Services.
+2. HOW DO WE PROCESS YOUR INFORMATION?
+
+In Short: We process your information to provide, improve, and administer our Services, communicate with you, for security and fraud prevention, and to comply with law. We may also process your information for other purposes with your consent.
+
+We process your personal information for a variety of reasons, depending on how you interact with our Services, including:
+To facilitate account creation and authentication and otherwise manage user accounts. We may process your information so you can create and log in to your account, as well as keep your account in working order.
+
+
+
+
+To save or protect an individual's vital interest. We may process your information when necessary to save or protect an individual's vital interest, such as to prevent harm.
+
+3. WHAT LEGAL BASES DO WE RELY ON TO PROCESS YOUR INFORMATION?
+
+In Short: We only process your personal information when we believe it is necessary and we have a valid legal reason (i.e., legal basis) to do so under applicable law, like with your consent, to comply with laws, to provide you with services to enter into or fulfill our contractual obligations, to protect your rights, or to fulfill our legitimate business interests.
+
+If you are located in the EU or UK, this section applies to you.
+
+The General Data Protection Regulation (GDPR) and UK GDPR require us to explain the valid legal bases we rely on in order to process your personal information. As such, we may rely on the following legal bases to process your personal information:
+Consent. We may process your information if you have given us permission (i.e., consent) to use your personal information for a specific purpose. You can withdraw your consent at any time. Click here to learn more.
+Legal Obligations. We may process your information where we believe it is necessary for compliance with our legal obligations, such as to cooperate with a law enforcement body or regulatory agency, exercise or defend our legal rights, or disclose your information as evidence in litigation in which we are involved.
+Vital Interests. We may process your information where we believe it is necessary to protect your vital interests or the vital interests of a third party, such as situations involving potential threats to the safety of any person.
+
+If you are located in Canada, this section applies to you.
+
+We may process your information if you have given us specific permission (i.e., express consent) to use your personal information for a specific purpose, or in situations where your permission can be inferred (i.e., implied consent). You can withdraw your consent at any time. Click here to learn more.
+
+In some exceptional cases, we may be legally permitted under applicable law to process your information without your consent, including, for example:
+If collection is clearly in the interests of an individual and consent cannot be obtained in a timely way
+For investigations and fraud detection and prevention
+For business transactions provided certain conditions are met
+If it is contained in a witness statement and the collection is necessary to assess, process, or settle an insurance claim
+For identifying injured, ill, or deceased persons and communicating with next of kin
+If we have reasonable grounds to believe an individual has been, is, or may be victim of financial abuse
+If it is reasonable to expect collection and use with consent would compromise the availability or the accuracy of the information and the collection is reasonable for purposes related to investigating a breach of an agreement or a contravention of the laws of Canada or a province
+If disclosure is required to comply with a subpoena, warrant, court order, or rules of the court relating to the production of records
+If it was produced by an individual in the course of their employment, business, or profession and the collection is consistent with the purposes for which the information was produced
+If the collection is solely for journalistic, artistic, or literary purposes
+If the information is publicly available and is specified by the regulations
+
+4. WHEN AND WITH WHOM DO WE SHARE YOUR PERSONAL INFORMATION?
+
+In Short: We may share information in specific situations described in this section and/or with the following third parties.
+
+We may need to share your personal information in the following situations:
+Business Transfers. We may share or transfer your information in connection with, or during negotiations of, any merger, sale of company assets, financing, or acquisition of all or a portion of our business to another company.
+
+5. WHAT IS OUR STANCE ON THIRD-PARTY WEBSITES?
+
+In Short: We are not responsible for the safety of any information that you share with third parties that we may link to or who advertise on our Services, but are not affiliated with, our Services.
+
+The Services may link to third-party websites, online services, or mobile applications and/or contain advertisements from third parties that are not affiliated with us and which may link to other websites, services, or applications. Accordingly, we do not make any guarantee regarding any such third parties, and we will not be liable for any loss or damage caused by the use of such third-party websites, services, or applications. The inclusion of a link towards a third-party website, service, or application does not imply an endorsement by us. We cannot guarantee the safety and privacy of data you provide to any third parties. Any data collected by third parties is not covered by this privacy notice. We are not responsible for the content or privacy and security practices and policies of any third parties, including other websites, services, or applications that may be linked to or from the Services. You should review the policies of such third parties and contact them directly to respond to your questions.
+
+6. HOW LONG DO WE KEEP YOUR INFORMATION?
+
+In Short: We keep your information for as long as necessary to fulfill the purposes outlined in this privacy notice unless otherwise required by law.
+
+We will only keep your personal information for as long as it is necessary for the purposes set out in this privacy notice, unless a longer retention period is required or permitted by law (such as tax, accounting, or other legal requirements). No purpose in this notice will require us keeping your personal information for longer than the period of time in which users have an account with us.
+
+When we have no ongoing legitimate business need to process your personal information, we will either delete or anonymize such information, or, if this is not possible (for example, because your personal information has been stored in backup archives), then we will securely store your personal information and isolate it from any further processing until deletion is possible.
+
+7. HOW DO WE KEEP YOUR INFORMATION SAFE?
+
+In Short: We aim to protect your personal information through a system of organizational and technical security measures.
+
+We have implemented appropriate and reasonable technical and organizational security measures designed to protect the security of any personal information we process. However, despite our safeguards and efforts to secure your information, no electronic transmission over the Internet or information storage technology can be guaranteed to be 100% secure, so we cannot promise or guarantee that hackers, cybercriminals, or other unauthorized third parties will not be able to defeat our security and improperly collect, access, steal, or modify your information. Although we will do our best to protect your personal information, transmission of personal information to and from our Services is at your own risk. You should only access the Services within a secure environment.
+
+8. WHAT ARE YOUR PRIVACY RIGHTS?
+
+In Short: In some regions, such as the European Economic Area (EEA), United Kingdom (UK), and Canada, you have rights that allow you greater access to and control over your personal information. You may review, change, or terminate your account at any time.
+
+In some regions (like the EEA, UK, and Canada), you have certain rights under applicable data protection laws. These may include the right (i) to request access and obtain a copy of your personal information, (ii) to request rectification or erasure; (iii) to restrict the processing of your personal information; and (iv) if applicable, to data portability. In certain circumstances, you may also have the right to object to the processing of your personal information. You can make such a request by contacting us by using the contact details provided in the section "HOW CAN YOU CONTACT US ABOUT THIS NOTICE?" below.
+
+We will consider and act upon any request in accordance with applicable data protection laws.
+ 
+If you are located in the EEA or UK and you believe we are unlawfully processing your personal information, you also have the right to complain to your local data protection supervisory authority. You can find their contact details here: https://ec.europa.eu/justice/data-protection/bodies/authorities/index_en.htm.
+
+If you are located in Switzerland, the contact details for the data protection authorities are available here: https://www.edoeb.admin.ch/edoeb/en/home.html.
+
+Withdrawing your consent: If we are relying on your consent to process your personal information, which may be express and/or implied consent depending on the applicable law, you have the right to withdraw your consent at any time. You can withdraw your consent at any time by contacting us by using the contact details provided in the section "HOW CAN YOU CONTACT US ABOUT THIS NOTICE?" below.
+
+However, please note that this will not affect the lawfulness of the processing before its withdrawal nor, when applicable law allows, will it affect the processing of your personal information conducted in reliance on lawful processing grounds other than consent.
+
+Account Information
+
+If you would at any time like to review or change the information in your account or terminate your account, you can:
+Contact us using the contact information provided.
+Upon your request to terminate your account, we will deactivate or delete your account and information from our active databases. However, we may retain some information in our files to prevent fraud, troubleshoot problems, assist with any investigations, enforce our legal terms and/or comply with applicable legal requirements.
+
+If you have questions or comments about your privacy rights, you may email us at %{contactEmail}.
+
+9. CONTROLS FOR DO-NOT-TRACK FEATURES
+
+Most web browsers and some mobile operating systems and mobile applications include a Do-Not-Track ("DNT") feature or setting you can activate to signal your privacy preference not to have data about your online browsing activities monitored and collected. At this stage no uniform technology standard for recognizing and implementing DNT signals has been finalized. As such, we do not currently respond to DNT browser signals or any other mechanism that automatically communicates your choice not to be tracked online. If a standard for online tracking is adopted that we must follow in the future, we will inform you about that practice in a revised version of this privacy notice.
+
+10. DO CALIFORNIA RESIDENTS HAVE SPECIFIC PRIVACY RIGHTS?
+
+In Short: Yes, if you are a resident of California, you are granted specific rights regarding access to your personal information.
+
+California Civil Code Section 1798.83, also known as the "Shine The Light" law, permits our users who are California residents to request and obtain from us, once a year and free of charge, information about categories of personal information (if any) we disclosed to third parties for direct marketing purposes and the names and addresses of all third parties with which we shared personal information in the immediately preceding calendar year. If you are a California resident and would like to make such a request, please submit your request in writing to us using the contact information provided below.
+
+If you are under 18 years of age, reside in California, and have a registered account with Services, you have the right to request removal of unwanted data that you publicly post on the Services. To request removal of such data, please contact us using the contact information provided below and include the email address associated with your account and a statement that you reside in California. We will make sure the data is not publicly displayed on the Services, but please be aware that the data may not be completely or comprehensively removed from all our systems (e.g., backups, etc.).
+
+CCPA Privacy Notice
+
+The California Code of Regulations defines a "resident" as:
+
+(1) every individual who is in the State of California for other than a temporary or transitory purpose and
+(2) every individual who is domiciled in the State of California who is outside the State of California for a temporary or transitory purpose
+
+All other individuals are defined as "non-residents."
+
+If this definition of "resident" applies to you, we must adhere to certain rights and obligations regarding your personal information.
+
+What categories of personal information do we collect?
+
+We have collected the following categories of personal information in the past twelve (12) months:
+
+Category  Examples  Collected
+A. Identifiers
+Contact details, such as real name, alias, postal address, telephone or mobile contact number, unique personal identifier, online identifier, Internet Protocol address, email address, and account name
+
+YES
+
+B. Personal information categories listed in the California Customer Records statute
+Name, contact information, education, employment, employment history, and financial information
+
+NO
+
+C. Protected classification characteristics under California or federal law
+Gender and date of birth
+
+NO
+
+D. Commercial information
+Transaction information, purchase history, financial details, and payment information
+
+NO
+
+E. Biometric information
+Fingerprints and voiceprints
+
+NO
+
+F. Internet or other similar network activity
+Browsing history, search history, online behavior, interest data, and interactions with our and other websites, applications, systems, and advertisements
+
+NO
+
+G. Geolocation data
+Device location
+
+YES
+
+H. Audio, electronic, visual, thermal, olfactory, or similar information
+Images and audio, video or call recordings created in connection with our business activities
+
+YES
+
+I. Professional or employment-related information
+Business contact details in order to provide you our Services at a business level or job title, work history, and professional qualifications if you apply for a job with us
+
+NO
+
+J. Education Information
+Student records and directory information
+
+NO
+
+K. Inferences drawn from other personal information
+Inferences drawn from any of the collected personal information listed above to create a profile or summary about, for example, an individual's preferences and characteristics
+
+NO
+
+L. Sensitive Personal Information   
+NO
+
+
+We will use and retain the collected personal information as needed to provide the Services or for:
+Category A - As long as the user has an account with us
+Category G - As long as the user has an account with us
+Category H - As long as the user has an account with us
+We may also collect other personal information outside of these categories through instances where you interact with us in person, online, or by phone or mail in the context of:
+Receiving help through our customer support channels;
+Participation in customer surveys or contests; and
+Facilitation in the delivery of our Services and to respond to your inquiries.
+How do we use and share your personal information?
+
+More information about our data collection and sharing practices can be found in this privacy notice.
+
+You may contact us by email at %{contactEmail}, or by referring to the contact details at the bottom of this document.
+
+If you are using an authorized agent to exercise your right to opt out we may deny a request if the authorized agent does not submit proof that they have been validly authorized to act on your behalf.
+
+Will your information be shared with anyone else?
+
+We may disclose your personal information with our service providers pursuant to a written contract between us and each service provider. Each service provider is a for-profit entity that processes the information on our behalf, following the same strict privacy protection obligations mandated by the CCPA.
+
+We may use your personal information for our own business purposes, such as for undertaking internal research for technological development and demonstration. This is not considered to be "selling" of your personal information.
+
+%{WEB_LINK} has not disclosed, sold, or shared any personal information to third parties for a business or commercial purpose in the preceding twelve (12) months. %{WEB_LINK} will not sell or share personal information in the future belonging to website visitors, users, and other consumers.
+
+Your rights with respect to your personal data
+
+Right to request deletion of the data — Request to delete
+
+You can ask for the deletion of your personal information. If you ask us to delete your personal information, we will respect your request and delete your personal information, subject to certain exceptions provided by law, such as (but not limited to) the exercise by another consumer of his or her right to free speech, our compliance requirements resulting from a legal obligation, or any processing that may be required to protect against illegal activities.
+
+Right to be informed — Request to know
+
+Depending on the circumstances, you have a right to know:
+whether we collect and use your personal information;
+the categories of personal information that we collect;
+the purposes for which the collected personal information is used;
+whether we sell or share personal information to third parties;
+the categories of personal information that we sold, shared, or disclosed for a business purpose;
+the categories of third parties to whom the personal information was sold, shared, or disclosed for a business purpose;
+the business or commercial purpose for collecting, selling, or sharing personal information; and
+the specific pieces of personal information we collected about you.
+In accordance with applicable law, we are not obligated to provide or delete consumer information that is de-identified in response to a consumer request or to re-identify individual data to verify a consumer request.
+
+Right to Non-Discrimination for the Exercise of a Consumer's Privacy Rights
+
+We will not discriminate against you if you exercise your privacy rights.
+
+Right to Limit Use and Disclosure of Sensitive Personal Information
+
+We do not process consumer's sensitive personal information.
+
+Verification process
+
+Upon receiving your request, we will need to verify your identity to determine you are the same person about whom we have the information in our system. These verification efforts require us to ask you to provide information so that we can match it with information you have previously provided us. For instance, depending on the type of request you submit, we may ask you to provide certain information so that we can match the information you provide with the information we already have on file, or we may contact you through a communication method (e.g., phone or email) that you have previously provided to us. We may also use other verification methods as the circumstances dictate.
+
+We will only use personal information provided in your request to verify your identity or authority to make the request. To the extent possible, we will avoid requesting additional information from you for the purposes of verification. However, if we cannot verify your identity from the information already maintained by us, we may request that you provide additional information for the purposes of verifying your identity and for security or fraud-prevention purposes. We will delete such additionally provided information as soon as we finish verifying you.
+
+Other privacy rights
+You may object to the processing of your personal information.
+You may request correction of your personal data if it is incorrect or no longer relevant, or ask to restrict the processing of the information.
+You can designate an authorized agent to make a request under the CCPA on your behalf. We may deny a request from an authorized agent that does not submit proof that they have been validly authorized to act on your behalf in accordance with the CCPA.
+You may request to opt out from future selling or sharing of your personal information to third parties. Upon receiving an opt-out request, we will act upon the request as soon as feasibly possible, but no later than fifteen (15) days from the date of the request submission.
+To exercise these rights, you can contact us by email at %{contactEmail}, or by referring to the contact details at the bottom of this document. If you have a complaint about how we handle your data, we would like to hear from you.
+
+11. DO VIRGINIA RESIDENTS HAVE SPECIFIC PRIVACY RIGHTS?
+
+In Short: Yes, if you are a resident of Virginia, you may be granted specific rights regarding access to and use of your personal information.
+
+Virginia CDPA Privacy Notice
+
+Under the Virginia Consumer Data Protection Act (CDPA):
+
+"Consumer" means a natural person who is a resident of the Commonwealth acting only in an individual or household context. It does not include a natural person acting in a commercial or employment context.
+
+"Personal data" means any information that is linked or reasonably linkable to an identified or identifiable natural person. "Personal data" does not include de-identified data or publicly available information.
+
+"Sale of personal data" means the exchange of personal data for monetary consideration.
+
+If this definition "consumer" applies to you, we must adhere to certain rights and obligations regarding your personal data.
+
+The information we collect, use, and disclose about you will vary depending on how you interact with %{WEB_LINK} and our Services. To find out more, please visit the following links:
+Personal data we collect
+How we use your personal data
+When and with whom we share your personal data
+Your rights with respect to your personal data
+Right to be informed whether or not we are processing your personal data
+Right to access your personal data
+Right to correct inaccuracies in your personal data
+Right to request deletion of your personal data
+Right to obtain a copy of the personal data you previously shared with us
+Right to opt out of the processing of your personal data if it is used for targeted advertising, the sale of personal data, or profiling in furtherance of decisions that produce legal or similarly significant effects ("profiling")
+%{WEB_LINK} has not sold any personal data to third parties for business or commercial purposes. %{WEB_LINK} will not sell personal data in the future belonging to website visitors, users, and other consumers.
+
+Exercise your rights provided under the Virginia CDPA
+
+More information about our data collection and sharing practices can be found in this privacy notice.
+
+You may contact us by email at %{contactEmail}, by visiting our data subject request form, or by referring to the contact details at the bottom of this document.
+
+If you are using an authorized agent to exercise your rights, we may deny a request if the authorized agent does not submit proof that they have been validly authorized to act on your behalf.
+
+Verification process
+
+We may request that you provide additional information reasonably necessary to verify you and your consumer's request. If you submit the request through an authorized agent, we may need to collect additional information to verify your identity before processing your request.
+
+Upon receiving your request, we will respond without undue delay, but in all cases, within forty-five (45) days of receipt. The response period may be extended once by forty-five (45) additional days when reasonably necessary. We will inform you of any such extension within the initial 45-day response period, together with the reason for the extension.
+
+Right to appeal
+
+If we decline to take action regarding your request, we will inform you of our decision and reasoning behind it. If you wish to appeal our decision, please email us at %{contactEmail}. Within sixty (60) days of receipt of an appeal, we will inform you in writing of any action taken or not taken in response to the appeal, including a written explanation of the reasons for the decisions. If your appeal if denied, you may contact the Attorney General to submit a complaint.
+
+12. DO WE MAKE UPDATES TO THIS NOTICE?
+
+In Short: Yes, we will update this notice as necessary to stay compliant with relevant laws.
+
+We may update this privacy notice from time to time. The updated version will be indicated by an updated "Revised" date and the updated version will be effective as soon as it is accessible. If we make material changes to this privacy notice, we may notify you either by prominently posting a notice of such changes or by directly sending you a notification. We encourage you to review this privacy notice frequently to be informed of how we are protecting your information.
+
+13. HOW CAN YOU CONTACT US ABOUT THIS NOTICE?
+
+If you have questions or comments about this notice, you may email us at %{contactEmail} or by post to:
+
+%{WEB_LINK}
+50 Old Toh Tuck Rd
+Singapore, Singapore 597657
+Singapore
+
+14. HOW CAN YOU REVIEW, UPDATE, OR DELETE THE DATA WE COLLECT FROM YOU?
+
+Based on the applicable laws of your country, you may have the right to request access to the personal information we collect from you, change that information, or delete it. To request to review, update, or delete your personal information, please submit a request form by clicking here.
+This privacy policy was created using Termly's Privacy Policy Generator.
+
+  `,
+    general_sla_content: `
+
+  TERMS AND CONDITIONS
+
+Last updated February 03, 2023
+
+
+
+TABLE OF CONTENTS
+
+1. AGREEMENT TO TERMS
+2. INTELLECTUAL PROPERTY RIGHTS
+3. USER REPRESENTATIONS
+4. USER REGISTRATION
+5. PROHIBITED ACTIVITIES
+6. USER GENERATED CONTRIBUTIONS
+7. CONTRIBUTION LICENSE
+8. GUIDELINES FOR REVIEWS
+9. MOBILE APPLICATION LICENSE
+10. SUBMISSIONS
+11. ADVERTISERS
+12. SITE MANAGEMENT
+13. PRIVACY POLICY
+14. COPYRIGHT INFRINGEMENTS
+15. TERM AND TERMINATION
+16. MODIFICATIONS AND INTERRUPTIONS
+17. GOVERNING LAW
+18. DISPUTE RESOLUTION
+19. CORRECTIONS
+20. DISCLAIMER
+21. LIMITATIONS OF LIABILITY
+22. INDEMNIFICATION
+23. USER DATA
+24. ELECTRONIC COMMUNICATIONS, TRANSACTIONS, AND SIGNATURES
+25. CALIFORNIA USERS AND RESIDENTS
+26. MISCELLANEOUS
+27. CONTACT US
+
+
+1. AGREEMENT TO TERMS
+
+These Terms of Use constitute a legally binding agreement made between you, whether personally or on behalf of an entity ("you") and %{WEB_LINK} ("Company," "we," "us," or "our"), concerning your access to and use of the %{WEB_LINK} website as well as any other media form, media channel, mobile website or mobile application related, linked, or otherwise connected thereto (collectively, the "Site"). We are registered in Singapore and have our registered office at 50 Old Toh Tuck Rd, Singapore, Singapore 597657. You agree that by accessing the Site, you have read, understood, and agreed to be bound by all of these Terms of Use. IF YOU DO NOT AGREE WITH ALL OF THESE TERMS OF USE, THEN YOU ARE EXPRESSLY PROHIBITED FROM USING THE SITE AND YOU MUST DISCONTINUE USE IMMEDIATELY.
+
+Supplemental terms and conditions or documents that may be posted on the Site from time to time are hereby expressly incorporated herein by reference. We reserve the right, in our sole discretion, to make changes or modifications to these Terms of Use from time to time. We will alert you about any changes by updating the "Last updated" date of these Terms of Use, and you waive any right to receive specific notice of each such change. Please ensure that you check the applicable Terms every time you use our Site so that you understand which Terms apply. You will be subject to, and will be deemed to have been made aware of and to have accepted, the changes in any revised Terms of Use by your continued use of the Site after the date such revised Terms of Use are posted.
+
+The information provided on the Site is not intended for distribution to or use by any person or entity in any jurisdiction or country where such distribution or use would be contrary to law or regulation or which would subject us to any registration requirement within such jurisdiction or country. Accordingly, those persons who choose to access the Site from other locations do so on their own initiative and are solely responsible for compliance with local laws, if and to the extent local laws are applicable.
+
+The Site is not tailored to comply with industry-specific regulations (Health Insurance Portability and Accountability Act (HIPAA), Federal Information Security Management Act (FISMA), etc.), so if your interactions would be subjected to such laws, you may not use this Site. You may not use the Site in a way that would violate the Gramm-Leach-Bliley Act (GLBA).
+
+The Site is intended for users who are at least 13 years of age. All users who are minors in the jurisdiction in which they reside (generally under the age of 18) must have the permission of, and be directly supervised by, their parent or guardian to use the Site. If you are a minor, you must have your parent or guardian read and agree to these Terms of Use prior to you using the Site.
+
+
+2. INTELLECTUAL PROPERTY RIGHTS
+
+Unless otherwise indicated, the Site is our proprietary property and all source code, databases, functionality, software, website designs, audio, video, text, photographs, and graphics on the Site (collectively, the "Content") and the trademarks, service marks, and logos contained therein (the "Marks") are owned or controlled by us or licensed to us, and are protected by copyright and trademark laws and various other intellectual property rights and unfair competition laws of the United States, international copyright laws, and international conventions. The Content and the Marks are provided on the Site "AS IS" for your information and personal use only. Except as expressly provided in these Terms of Use, no part of the Site and no Content or Marks may be copied, reproduced, aggregated, republished, uploaded, posted, publicly displayed, encoded, translated, transmitted, distributed, sold, licensed, or otherwise exploited for any commercial purpose whatsoever, without our express prior written permission.
+
+Provided that you are eligible to use the Site, you are granted a limited license to access and use the Site and to download or print a copy of any portion of the Content to which you have properly gained access solely for your personal, non-commercial use. We reserve all rights not expressly granted to you in and to the Site, the Content and the Marks.
+
+
+3. USER REPRESENTATIONS
+
+By using the Site, you represent and warrant that: (1) all registration information you submit will be true, accurate, current, and complete; (2) you will maintain the accuracy of such information and promptly update such registration information as necessary; (3) you have the legal capacity and you agree to comply with these Terms of Use; (4) you are not under the age of 13; (5) you are not a minor in the jurisdiction in which you reside, or if a minor, you have received parental permission to use the Site; (6) you will not access the Site through automated or non-human means, whether through a bot, script, or otherwise; (7) you will not use the Site for any illegal or unauthorized purpose; and (8) your use of the Site will not violate any applicable law or regulation.
+
+If you provide any information that is untrue, inaccurate, not current, or incomplete, we have the right to suspend or terminate your account and refuse any and all current or future use of the Site (or any portion thereof).
+
+
+4. USER REGISTRATION
+    
+You may be required to register with the Site. You agree to keep your password confidential and will be responsible for all use of your account and password. We reserve the right to remove, reclaim, or change a username you select if we determine, in our sole discretion, that such username is inappropriate, obscene, or otherwise objectionable.
+
+
+5. PROHIBITED ACTIVITIES
+
+You may not access or use the Site for any purpose other than that for which we make the Site available. The Site may not be used in connection with any commercial endeavors except those that are specifically endorsed or approved by us.
+
+As a user of the Site, you agree not to:
+Systematically retrieve data or other content from the Site to create or compile, directly or indirectly, a collection, compilation, database, or directory without written permission from us.
+Trick, defraud, or mislead us and other users, especially in any attempt to learn sensitive account information such as user passwords.
+Circumvent, disable, or otherwise interfere with security-related features of the Site, including features that prevent or restrict the use or copying of any Content or enforce limitations on the use of the Site and/or the Content contained therein.
+Disparage, tarnish, or otherwise harm, in our opinion, us and/or the Site.
+Use any information obtained from the Site in order to harass, abuse, or harm another person.
+Make improper use of our support services or submit false reports of abuse or misconduct.
+Use the Site in a manner inconsistent with any applicable laws or regulations.
+Engage in unauthorized framing of or linking to the Site.
+Upload or transmit (or attempt to upload or to transmit) viruses, Trojan horses, or other material, including excessive use of capital letters and spamming (continuous posting of repetitive text), that interferes with any party's uninterrupted use and enjoyment of the Site or modifies, impairs, disrupts, alters, or interferes with the use, features, functions, operation, or maintenance of the Site.
+Engage in any automated use of the system, such as using scripts to send comments or messages, or using any data mining, robots, or similar data gathering and extraction tools.
+Delete the copyright or other proprietary rights notice from any Content.
+Attempt to impersonate another user or person or use the username of another user.
+Upload or transmit (or attempt to upload or to transmit) any material that acts as a passive or active information collection or transmission mechanism, including without limitation, clear graphics interchange formats ("gifs"), 1×1 pixels, web bugs, cookies, or other similar devices (sometimes referred to as "spyware" or "passive collection mechanisms" or "pcms").
+Interfere with, disrupt, or create an undue burden on the Site or the networks or services connected to the Site.
+Harass, annoy, intimidate, or threaten any of our employees or agents engaged in providing any portion of the Site to you.
+Attempt to bypass any measures of the Site designed to prevent or restrict access to the Site, or any portion of the Site.
+Copy or adapt the Site's software, including but not limited to Flash, PHP, HTML, JavaScript, or other code.
+Except as permitted by applicable law, decipher, decompile, disassemble, or reverse engineer any of the software comprising or in any way making up a part of the Site.
+Except as may be the result of standard search engine or Internet browser usage, use, launch, develop, or distribute any automated system, including without limitation, any spider, robot, cheat utility, scraper, or offline reader that accesses the Site, or using or launching any unauthorized script or other software.
+Use a buying agent or purchasing agent to make purchases on the Site.
+Make any unauthorized use of the Site, including collecting usernames and/or email addresses of users by electronic or other means for the purpose of sending unsolicited email, or creating user accounts by automated means or under false pretenses.
+Use the Site as part of any effort to compete with us or otherwise use the Site and/or the Content for any revenue-generating endeavor or commercial enterprise.
+Use the Site to advertise or offer to sell goods and services.
+
+
+6. USER GENERATED CONTRIBUTIONS
+
+The Site may invite you to chat, contribute to, or participate in blogs, message boards, online forums, and other functionality, and may provide you with the opportunity to create, submit, post, display, transmit, perform, publish, distribute, or broadcast content and materials to us or on the Site, including but not limited to text, writings, video, audio, photographs, graphics, comments, suggestions, or personal information or other material (collectively, "Contributions"). Contributions may be viewable by other users of the Site and through third-party websites. As such, any Contributions you transmit may be treated as non-confidential and non-proprietary. When you create or make available any Contributions, you thereby represent and warrant that:
+The creation, distribution, transmission, public display, or performance, and the accessing, downloading, or copying of your Contributions do not and will not infringe the proprietary rights, including but not limited to the copyright, patent, trademark, trade secret, or moral rights of any third party.
+You are the creator and owner of or have the necessary licenses, rights, consents, releases, and permissions to use and to authorize us, the Site, and other users of the Site to use your Contributions in any manner contemplated by the Site and these Terms of Use.
+You have the written consent, release, and/or permission of each and every identifiable individual person in your Contributions to use the name or likeness of each and every such identifiable individual person to enable inclusion and use of your Contributions in any manner contemplated by the Site and these Terms of Use.
+Your Contributions are not false, inaccurate, or misleading.
+Your Contributions are not unsolicited or unauthorized advertising, promotional materials, pyramid schemes, chain letters, spam, mass mailings, or other forms of solicitation.
+Your Contributions are not obscene, lewd, lascivious, filthy, violent, harassing, libelous, slanderous, or otherwise objectionable (as determined by us).
+Your Contributions do not ridicule, mock, disparage, intimidate, or abuse anyone.
+Your Contributions are not used to harass or threaten (in the legal sense of those terms) any other person and to promote violence against a specific person or class of people.
+Your Contributions do not violate any applicable law, regulation, or rule.
+Your Contributions do not violate the privacy or publicity rights of any third party.
+Your Contributions do not violate any applicable law concerning child pornography, or otherwise intended to protect the health or well-being of minors.
+Your Contributions do not include any offensive comments that are connected to race, national origin, gender, sexual preference, or physical handicap.
+Your Contributions do not otherwise violate, or link to material that violates, any provision of these Terms of Use, or any applicable law or regulation.
+Any use of the Site in violation of the foregoing violates these Terms of Use and may result in, among other things, termination or suspension of your rights to use the Site.
+
+
+7. CONTRIBUTION LICENSE
+
+By posting your Contributions to any part of the Site, you automatically grant, and you represent and warrant that you have the right to grant, to us an unrestricted, unlimited, irrevocable, perpetual, non-exclusive, transferable, royalty-free, fully-paid, worldwide right, and license to host, use, copy, reproduce, disclose, sell, resell, publish, broadcast, retitle, archive, store, cache, publicly perform, publicly display, reformat, translate, transmit, excerpt (in whole or in part), and distribute such Contributions (including, without limitation, your image and voice) for any purpose, commercial, advertising, or otherwise, and to prepare derivative works of, or incorporate into other works, such Contributions, and grant and authorize sublicenses of the foregoing. The use and distribution may occur in any media formats and through any media channels.
+
+This license will apply to any form, media, or technology now known or hereafter developed, and includes our use of your name, company name, and franchise name, as applicable, and any of the trademarks, service marks, trade names, logos, and personal and commercial images you provide. You waive all moral rights in your Contributions, and you warrant that moral rights have not otherwise been asserted in your Contributions.
+
+We do not assert any ownership over your Contributions. You retain full ownership of all of your Contributions and any intellectual property rights or other proprietary rights associated with your Contributions. We are not liable for any statements or representations in your Contributions provided by you in any area on the Site. You are solely responsible for your Contributions to the Site and you expressly agree to exonerate us from any and all responsibility and to refrain from any legal action against us regarding your Contributions.
+
+We have the right, in our sole and absolute discretion, (1) to edit, redact, or otherwise change any Contributions; (2) to re-categorize any Contributions to place them in more appropriate locations on the Site; and (3) to prescreen or delete any Contributions at any time and for any reason, without notice. We have no obligation to monitor your Contributions.
+
+
+8. GUIDELINES FOR REVIEWS
+
+We may provide you areas on the Site to leave reviews or ratings. When posting a review, you must comply with the following criteria: (1) you should have firsthand experience with the person/entity being reviewed; (2) your reviews should not contain offensive profanity, or abusive, racist, offensive, or hate language; (3) your reviews should not contain discriminatory references based on religion, race, gender, national origin, age, marital status, sexual orientation, or disability; (4) your reviews should not contain references to illegal activity; (5) you should not be affiliated with competitors if posting negative reviews; (6) you should not make any conclusions as to the legality of conduct; (7) you may not post any false or misleading statements; and (8) you may not organize a campaign encouraging others to post reviews, whether positive or negative.
+
+We may accept, reject, or remove reviews in our sole discretion. We have absolutely no obligation to screen reviews or to delete reviews, even if anyone considers reviews objectionable or inaccurate. Reviews are not endorsed by us, and do not necessarily represent our opinions or the views of any of our affiliates or partners. We do not assume liability for any review or for any claims, liabilities, or losses resulting from any review. By posting a review, you hereby grant to us a perpetual, non-exclusive, worldwide, royalty-free, fully-paid, assignable, and sublicensable right and license to reproduce, modify, translate, transmit by any means, display, perform, and/or distribute all content relating to reviews.
+
+
+9. MOBILE APPLICATION LICENSE
+
+Use License
+
+If you access the Site via a mobile application, then we grant you a revocable, non-exclusive, non-transferable, limited right to install and use the mobile application on wireless electronic devices owned or controlled by you, and to access and use the mobile application on such devices strictly in accordance with the terms and conditions of this mobile application license contained in these Terms of Use. You shall not: (1) except as permitted by applicable law, decompile, reverse engineer, disassemble, attempt to derive the source code of, or decrypt the application; (2) make any modification, adaptation, improvement, enhancement, translation, or derivative work from the application; (3) violate any applicable laws, rules, or regulations in connection with your access or use of the application; (4) remove, alter, or obscure any proprietary notice (including any notice of copyright or trademark) posted by us or the licensors of the application; (5) use the application for any revenue generating endeavor, commercial enterprise, or other purpose for which it is not designed or intended; (6) make the application available over a network or other environment permitting access or use by multiple devices or users at the same time; (7) use the application for creating a product, service, or software that is, directly or indirectly, competitive with or in any way a substitute for the application; (8) use the application to send automated queries to any website or to send any unsolicited commercial e-mail; or (9) use any proprietary information or any of our interfaces or our other intellectual property in the design, development, manufacture, licensing, or distribution of any applications, accessories, or devices for use with the application.
+
+Apple and Android Devices
+
+The following terms apply when you use a mobile application obtained from either the Apple Store or Google Play (each an "App Distributor") to access the Site: (1) the license granted to you for our mobile application is limited to a non-transferable license to use the application on a device that utilizes the Apple iOS or Android operating systems, as applicable, and in accordance with the usage rules set forth in the applicable App Distributor's terms of service; (2) we are responsible for providing any maintenance and support services with respect to the mobile application as specified in the terms and conditions of this mobile application license contained in these Terms of Use or as otherwise required under applicable law, and you acknowledge that each App Distributor has no obligation whatsoever to furnish any maintenance and support services with respect to the mobile application; (3) in the event of any failure of the mobile application to conform to any applicable warranty, you may notify the applicable App Distributor, and the App Distributor, in accordance with its terms and policies, may refund the purchase price, if any, paid for the mobile application, and to the maximum extent permitted by applicable law, the App Distributor will have no other warranty obligation whatsoever with respect to the mobile application; (4) you represent and warrant that (i) you are not located in a country that is subject to a U.S. government embargo, or that has been designated by the U.S. government as a "terrorist supporting" country and (ii) you are not listed on any U.S. government list of prohibited or restricted parties; (5) you must comply with applicable third-party terms of agreement when using the mobile application, e.g., if you have a VoIP application, then you must not be in violation of their wireless data service agreement when using the mobile application; and (6) you acknowledge and agree that the App Distributors are third-party beneficiaries of the terms and conditions in this mobile application license contained in these Terms of Use, and that each App Distributor will have the right (and will be deemed to have accepted the right) to enforce the terms and conditions in this mobile application license contained in these Terms of Use against you as a third-party beneficiary thereof.
+
+
+10. SUBMISSIONS
+
+You acknowledge and agree that any questions, comments, suggestions, ideas, feedback, or other information regarding the Site ("Submissions") provided by you to us are non-confidential and shall become our sole property. We shall own exclusive rights, including all intellectual property rights, and shall be entitled to the unrestricted use and dissemination of these Submissions for any lawful purpose, commercial or otherwise, without acknowledgment or compensation to you. You hereby waive all moral rights to any such Submissions, and you hereby warrant that any such Submissions are original with you or that you have the right to submit such Submissions. You agree there shall be no recourse against us for any alleged or actual infringement or misappropriation of any proprietary right in your Submissions.
+
+
+11. ADVERTISERS
+
+We allow advertisers to display their advertisements and other information in certain areas of the Site, such as sidebar advertisements or banner advertisements. If you are an advertiser, you shall take full responsibility for any advertisements you place on the Site and any services provided on the Site or products sold through those advertisements. Further, as an advertiser, you warrant and represent that you possess all rights and authority to place advertisements on the Site, including, but not limited to, intellectual property rights, publicity rights, and contractual rights. We simply provide the space to place such advertisements, and we have no other relationship with advertisers.
+
+
+12. SITE MANAGEMENT
+
+We reserve the right, but not the obligation, to: (1) monitor the Site for violations of these Terms of Use; (2) take appropriate legal action against anyone who, in our sole discretion, violates the law or these Terms of Use, including without limitation, reporting such user to law enforcement authorities; (3) in our sole discretion and without limitation, refuse, restrict access to, limit the availability of, or disable (to the extent technologically feasible) any of your Contributions or any portion thereof; (4) in our sole discretion and without limitation, notice, or liability, to remove from the Site or otherwise disable all files and content that are excessive in size or are in any way burdensome to our systems; and (5) otherwise manage the Site in a manner designed to protect our rights and property and to facilitate the proper functioning of the Site.
+
+
+13. PRIVACY POLICY
+
+We care about data privacy and security. Please review our Privacy Policy: %{WEB_LINK}/privacy/index.html. By using the Site, you agree to be bound by our Privacy Policy, which is incorporated into these Terms of Use. Please be advised the Site is hosted in Singapore. If you access the Site from any other region of the world with laws or other requirements governing personal data collection, use, or disclosure that differ from applicable laws in Singapore, then through your continued use of the Site, you are transferring your data to Singapore, and you agree to have your data transferred to and processed in Singapore. Further, we do not knowingly accept, request, or solicit information from children or knowingly market to children. Therefore, in accordance with the U.S. Children's Online Privacy Protection Act, if we receive actual knowledge that anyone under the age of 13 has provided personal information to us without the requisite and verifiable parental consent, we will delete that information from the Site as quickly as is reasonably practical.
+
+
+14. COPYRIGHT INFRINGEMENTS
+
+We respect the intellectual property rights of others. If you believe that any material available on or through the Site infringes upon any copyright you own or control, please immediately notify us using the contact information provided below (a "Notification"). A copy of your Notification will be sent to the person who posted or stored the material addressed in the Notification. Please be advised that pursuant to applicable law you may be held liable for damages if you make material misrepresentations in a Notification. Thus, if you are not sure that material located on or linked to by the Site infringes your copyright, you should consider first contacting an attorney.
+
+
+15. TERM AND TERMINATION
+
+These Terms of Use shall remain in full force and effect while you use the Site. WITHOUT LIMITING ANY OTHER PROVISION OF THESE TERMS OF USE, WE RESERVE THE RIGHT TO, IN OUR SOLE DISCRETION AND WITHOUT NOTICE OR LIABILITY, DENY ACCESS TO AND USE OF THE SITE (INCLUDING BLOCKING CERTAIN IP ADDRESSES), TO ANY PERSON FOR ANY REASON OR FOR NO REASON, INCLUDING WITHOUT LIMITATION FOR BREACH OF ANY REPRESENTATION, WARRANTY, OR COVENANT CONTAINED IN THESE TERMS OF USE OR OF ANY APPLICABLE LAW OR REGULATION. WE MAY TERMINATE YOUR USE OR PARTICIPATION IN THE SITE OR DELETE YOUR ACCOUNT AND ANY CONTENT OR INFORMATION THAT YOU POSTED AT ANY TIME, WITHOUT WARNING, IN OUR SOLE DISCRETION.
+
+If we terminate or suspend your account for any reason, you are prohibited from registering and creating a new account under your name, a fake or borrowed name, or the name of any third party, even if you may be acting on behalf of the third party. In addition to terminating or suspending your account, we reserve the right to take appropriate legal action, including without limitation pursuing civil, criminal, and injunctive redress.
+
+
+16. MODIFICATIONS AND INTERRUPTIONS
+
+We reserve the right to change, modify, or remove the contents of the Site at any time or for any reason at our sole discretion without notice. However, we have no obligation to update any information on our Site. We also reserve the right to modify or discontinue all or part of the Site without notice at any time. We will not be liable to you or any third party for any modification, price change, suspension, or discontinuance of the Site.
+
+We cannot guarantee the Site will be available at all times. We may experience hardware, software, or other problems or need to perform maintenance related to the Site, resulting in interruptions, delays, or errors. We reserve the right to change, revise, update, suspend, discontinue, or otherwise modify the Site at any time or for any reason without notice to you. You agree that we have no liability whatsoever for any loss, damage, or inconvenience caused by your inability to access or use the Site during any downtime or discontinuance of the Site. Nothing in these Terms of Use will be construed to obligate us to maintain and support the Site or to supply any corrections, updates, or releases in connection therewith.
+
+
+17. GOVERNING LAW
+
+These Terms shall be governed by and defined following the laws of Singapore. %{WEB_LINK} and yourself irrevocably consent that the courts of Singapore shall have exclusive jurisdiction to resolve any dispute which may arise in connection with these terms.
+
+
+18. DISPUTE RESOLUTION
+
+Informal Negotiations
+
+To expedite resolution and control the cost of any dispute, controversy, or claim related to these Terms of Use (each "Dispute" and collectively, the "Disputes") brought by either you or us (individually, a "Party" and collectively, the "Parties"), the Parties agree to first attempt to negotiate any Dispute (except those Disputes expressly provided below) informally for at least ninety (90) days before initiating arbitration. Such informal negotiations commence upon written notice from one Party to the other Party.
+
+Binding Arbitration
+
+Any dispute arising out of or in connection with this contract, including any question regarding its existence, validity, or termination, shall be referred to and finally resolved by the International Commercial Arbitration Court under the European Arbitration Chamber (Belgium, Brussels, Avenue Louise, 146) according to the Rules of this ICAC, which, as a result of referring to it, is considered as the part of this clause. The number of arbitrators shall be three (3). The seat, or legal place, of arbitration shall be Singapore, Singapore. The language of the proceedings shall be English. The governing law of the contract shall be the substantive law of Singapore.
+
+Restrictions
+
+The Parties agree that any arbitration shall be limited to the Dispute between the Parties individually. To the full extent permitted by law, (a) no arbitration shall be joined with any other proceeding; (b) there is no right or authority for any Dispute to be arbitrated on a class-action basis or to utilize class action procedures; and (c) there is no right or authority for any Dispute to be brought in a purported representative capacity on behalf of the general public or any other persons.
+
+Exceptions to Informal Negotiations and Arbitration
+
+The Parties agree that the following Disputes are not subject to the above provisions concerning informal negotiations and binding arbitration: (a) any Disputes seeking to enforce or protect, or concerning the validity of, any of the intellectual property rights of a Party; (b) any Dispute related to, or arising from, allegations of theft, piracy, invasion of privacy, or unauthorized use; and (c) any claim for injunctive relief. If this provision is found to be illegal or unenforceable, then neither Party will elect to arbitrate any Dispute falling within that portion of this provision found to be illegal or unenforceable and such Dispute shall be decided by a court of competent jurisdiction within the courts listed for jurisdiction above, and the Parties agree to submit to the personal jurisdiction of that court.
+
+
+19. CORRECTIONS
+
+There may be information on the Site that contains typographical errors, inaccuracies, or omissions, including descriptions, pricing, availability, and various other information. We reserve the right to correct any errors, inaccuracies, or omissions and to change or update the information on the Site at any time, without prior notice.
+
+
+20. DISCLAIMER
+
+THE SITE IS PROVIDED ON AN AS-IS AND AS-AVAILABLE BASIS. YOU AGREE THAT YOUR USE OF THE SITE AND OUR SERVICES WILL BE AT YOUR SOLE RISK. TO THE FULLEST EXTENT PERMITTED BY LAW, WE DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, IN CONNECTION WITH THE SITE AND YOUR USE THEREOF, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. WE MAKE NO WARRANTIES OR REPRESENTATIONS ABOUT THE ACCURACY OR COMPLETENESS OF THE SITE'S CONTENT OR THE CONTENT OF ANY WEBSITES LINKED TO THE SITE AND WE WILL ASSUME NO LIABILITY OR RESPONSIBILITY FOR ANY (1) ERRORS, MISTAKES, OR INACCURACIES OF CONTENT AND MATERIALS, (2) PERSONAL INJURY OR PROPERTY DAMAGE, OF ANY NATURE WHATSOEVER, RESULTING FROM YOUR ACCESS TO AND USE OF THE SITE, (3) ANY UNAUTHORIZED ACCESS TO OR USE OF OUR SECURE SERVERS AND/OR ANY AND ALL PERSONAL INFORMATION AND/OR FINANCIAL INFORMATION STORED THEREIN, (4) ANY INTERRUPTION OR CESSATION OF TRANSMISSION TO OR FROM THE SITE, (5) ANY BUGS, VIRUSES, TROJAN HORSES, OR THE LIKE WHICH MAY BE TRANSMITTED TO OR THROUGH THE SITE BY ANY THIRD PARTY, AND/OR (6) ANY ERRORS OR OMISSIONS IN ANY CONTENT AND MATERIALS OR FOR ANY LOSS OR DAMAGE OF ANY KIND INCURRED AS A RESULT OF THE USE OF ANY CONTENT POSTED, TRANSMITTED, OR OTHERWISE MADE AVAILABLE VIA THE SITE. WE DO NOT WARRANT, ENDORSE, GUARANTEE, OR ASSUME RESPONSIBILITY FOR ANY PRODUCT OR SERVICE ADVERTISED OR OFFERED BY A THIRD PARTY THROUGH THE SITE, ANY HYPERLINKED WEBSITE, OR ANY WEBSITE OR MOBILE APPLICATION FEATURED IN ANY BANNER OR OTHER ADVERTISING, AND WE WILL NOT BE A PARTY TO OR IN ANY WAY BE RESPONSIBLE FOR MONITORING ANY TRANSACTION BETWEEN YOU AND ANY THIRD-PARTY PROVIDERS OF PRODUCTS OR SERVICES. AS WITH THE PURCHASE OF A PRODUCT OR SERVICE THROUGH ANY MEDIUM OR IN ANY ENVIRONMENT, YOU SHOULD USE YOUR BEST JUDGMENT AND EXERCISE CAUTION WHERE APPROPRIATE.
+
+
+21. LIMITATIONS OF LIABILITY
+
+IN NO EVENT WILL WE OR OUR DIRECTORS, EMPLOYEES, OR AGENTS BE LIABLE TO YOU OR ANY THIRD PARTY FOR ANY DIRECT, INDIRECT, CONSEQUENTIAL, EXEMPLARY, INCIDENTAL, SPECIAL, OR PUNITIVE DAMAGES, INCLUDING LOST PROFIT, LOST REVENUE, LOSS OF DATA, OR OTHER DAMAGES ARISING FROM YOUR USE OF THE SITE, EVEN IF WE HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. NOTWITHSTANDING ANYTHING TO THE CONTRARY CONTAINED HEREIN, OUR LIABILITY TO YOU FOR ANY CAUSE WHATSOEVER AND REGARDLESS OF THE FORM OF THE ACTION, WILL AT ALL TIMES BE LIMITED TO THE AMOUNT PAID, IF ANY, BY YOU TO US DURING THE SIX (6) MONTH PERIOD PRIOR TO ANY CAUSE OF ACTION ARISING. CERTAIN US STATE LAWS AND INTERNATIONAL LAWS DO NOT ALLOW LIMITATIONS ON IMPLIED WARRANTIES OR THE EXCLUSION OR LIMITATION OF CERTAIN DAMAGES. IF THESE LAWS APPLY TO YOU, SOME OR ALL OF THE ABOVE DISCLAIMERS OR LIMITATIONS MAY NOT APPLY TO YOU, AND YOU MAY HAVE ADDITIONAL RIGHTS.
+
+
+22. INDEMNIFICATION
+
+You agree to defend, indemnify, and hold us harmless, including our subsidiaries, affiliates, and all of our respective officers, agents, partners, and employees, from and against any loss, damage, liability, claim, or demand, including reasonable attorneys' fees and expenses, made by any third party due to or arising out of: (1) your Contributions; (2) use of the Site; (3) breach of these Terms of Use; (4) any breach of your representations and warranties set forth in these Terms of Use; (5) your violation of the rights of a third party, including but not limited to intellectual property rights; or (6) any overt harmful act toward any other user of the Site with whom you connected via the Site. Notwithstanding the foregoing, we reserve the right, at your expense, to assume the exclusive defense and control of any matter for which you are required to indemnify us, and you agree to cooperate, at your expense, with our defense of such claims. We will use reasonable efforts to notify you of any such claim, action, or proceeding which is subject to this indemnification upon becoming aware of it.
+
+
+23. USER DATA
+
+We will maintain certain data that you transmit to the Site for the purpose of managing the performance of the Site, as well as data relating to your use of the Site. Although we perform regular routine backups of data, you are solely responsible for all data that you transmit or that relates to any activity you have undertaken using the Site. You agree that we shall have no liability to you for any loss or corruption of any such data, and you hereby waive any right of action against us arising from any such loss or corruption of such data.
+
+
+24. ELECTRONIC COMMUNICATIONS, TRANSACTIONS, AND SIGNATURES
+
+Visiting the Site, sending us emails, and completing online forms constitute electronic communications. You consent to receive electronic communications, and you agree that all agreements, notices, disclosures, and other communications we provide to you electronically, via email and on the Site, satisfy any legal requirement that such communication be in writing. YOU HEREBY AGREE TO THE USE OF ELECTRONIC SIGNATURES, CONTRACTS, ORDERS, AND OTHER RECORDS, AND TO ELECTRONIC DELIVERY OF NOTICES, POLICIES, AND RECORDS OF TRANSACTIONS INITIATED OR COMPLETED BY US OR VIA THE SITE. You hereby waive any rights or requirements under any statutes, regulations, rules, ordinances, or other laws in any jurisdiction which require an original signature or delivery or retention of non-electronic records, or to payments or the granting of credits by any means other than electronic means.
+
+
+25. CALIFORNIA USERS AND RESIDENTS
+
+If any complaint with us is not satisfactorily resolved, you can contact the Complaint Assistance Unit of the Division of Consumer Services of the California Department of Consumer Affairs in writing at 1625 North Market Blvd., Suite N 112, Sacramento, California 95834 or by telephone at (800) 952-5210 or (916) 445-1254.
+
+
+26. MISCELLANEOUS
+
+These Terms of Use and any policies or operating rules posted by us on the Site or in respect to the Site constitute the entire agreement and understanding between you and us. Our failure to exercise or enforce any right or provision of these Terms of Use shall not operate as a waiver of such right or provision. These Terms of Use operate to the fullest extent permissible by law. We may assign any or all of our rights and obligations to others at any time. We shall not be responsible or liable for any loss, damage, delay, or failure to act caused by any cause beyond our reasonable control. If any provision or part of a provision of these Terms of Use is determined to be unlawful, void, or unenforceable, that provision or part of the provision is deemed severable from these Terms of Use and does not affect the validity and enforceability of any remaining provisions. There is no joint venture, partnership, employment or agency relationship created between you and us as a result of these Terms of Use or use of the Site. You agree that these Terms of Use will not be construed against us by virtue of having drafted them. You hereby waive any and all defenses you may have based on the electronic form of these Terms of Use and the lack of signing by the parties hereto to execute these Terms of Use.
+
+
+27. CONTACT US
+
+In order to resolve a complaint regarding the Site or to receive further information regarding use of the Site, please contact us at:
+
+%{WEB_LINK}
+50 Old Toh Tuck Rd
+Singapore, Singapore 597657
+Singapore
+%{contactEmail}
+
+  `,
+    'general_eula_content': `
+END USER LICENSE AGREEMENT
+
+Last updated February 03, 2025
+
+  %{appName} is licensed to You (End-User) by %{WEB_LINK}, located and registered at 2485 Patton Lane, Raleigh, Raleigh 27610, Raleigh ("Licensor"), for use only under the terms of this License Agreement.
+
+By downloading the Licensed Application from Apple's software distribution platform ("App Store") and Google's software distribution platform ("Play Store"), and any update thereto (as permitted by this License Agreement), You indicate that You agree to be bound by all of the terms and conditions of this License Agreement, and that You accept this License Agreement. App Store and Play Store are referred to in this License Agreement as "Services."
+
+The parties of this License Agreement acknowledge that the Services are not a Party to this License Agreement and are not bound by any provisions or obligations with regard to the Licensed Application, such as warranty, liability, maintenance and support thereof. %{WEB_LINK}, not the Services, is solely responsible for the Licensed Application and the content thereof.
+
+This License Agreement may not provide for usage rules for the Licensed Application that are in conflict with the latest Apple Media Services Terms and Conditions and Google Play Terms of Service ("Usage Rules"). %{WEB_LINK} acknowledges that it had the opportunity to review the Usage Rules and this License Agreement is not conflicting with them.
+
+%{appName} when purchased or downloaded through the Services, is licensed to You for use only under the terms of this License Agreement. The Licensor reserves all rights not expressly granted to You. %{appName} is to be used on devices that operate with Apple's operating systems ("iOS" and "Mac OS") or Google's operating system ("Android").
+
+
+TABLE OF CONTENTS
+
+1. THE APPLICATION
+2. SCOPE OF LICENSE
+3. TECHNICAL REQUIREMENTS
+4. MAINTENANCE AND SUPPORT
+5. USE OF DATA
+6. USER-GENERATED CONTRIBUTIONS
+7. CONTRIBUTION LICENSE
+8. LIABILITY
+9. WARRANTY
+10. PRODUCT CLAIMS
+11. LEGAL COMPLIANCE
+12. CONTACT INFORMATION
+13. TERMINATION
+14. THIRD-PARTY TERMS OF AGREEMENTS AND BENEFICIARY
+15. INTELLECTUAL PROPERTY RIGHTS
+16. APPLICABLE LAW
+17. MISCELLANEOUS
+
+
+1. THE APPLICATION
+
+%{appName} ("Licensed Application") is a piece of software created to watch video, publish comment, collect video and comment — and customized for iOS and Android mobile devices ("Devices"). It is used to watch video.
+
+The Licensed Application is not tailored to comply with industry-specific regulations (Health Insurance Portability and Accountability Act (HIPAA), Federal Information Security Management Act (FISMA), etc.), so if your interactions would be subjected to such laws, you may not use this Licensed Application. You may not use the Licensed Application in a way that would violate the Gramm-Leach-Bliley Act (GLBA).
+
+
+2. SCOPE OF LICENSE
+
+2.1  You are given a non-transferable, non-exclusive, non-sublicensable license to install and use the Licensed Application on any Devices that You (End-User) own or control and as permitted by the Usage Rules, with the exception that such Licensed Application may be accessed and used by other accounts associated with You (End-User, The Purchaser) via Family Sharing or volume purchasing.
+
+2.2  This license will also govern any updates of the Licensed Application provided by Licensor that replace, repair, and/or supplement the first Licensed Application, unless a separate license is provided for such update, in which case the terms of that new license will govern.
+
+2.3  You may not share or make the Licensed Application available to third parties (unless to the degree allowed by the Usage Rules, and with %{WEB_LINK}'s prior written consent), sell, rent, lend, lease or otherwise redistribute the Licensed Application.
+
+2.4  You may not reverse engineer, translate, disassemble, integrate, decompile, remove, modify, combine, create derivative works or updates of, adapt, or attempt to derive the source code of the Licensed Application, or any part thereof (except with %{WEB_LINK}'s prior written consent).
+
+2.5  You may not copy (excluding when expressly authorized by this license and the Usage Rules) or alter the Licensed Application or portions thereof. You may create and store copies only on devices that You own or control for backup keeping under the terms of this license, the Usage Rules, and any other terms and conditions that apply to the device or software used. You may not remove any intellectual property notices. You acknowledge that no unauthorized third parties may gain access to these copies at any time. If you sell your Devices to a third party, you must remove the Licensed Application from the Devices before doing so.
+
+2.6  Violations of the obligations mentioned above, as well as the attempt of such infringement, may be subject to prosecution and damages.
+
+2.7  Licensor reserves the right to modify the terms and conditions of licensing.
+
+2.8  Nothing in this license should be interpreted to restrict third-party terms. When using the Licensed Application, You must ensure that You comply with applicable third-party terms and conditions.
+
+
+3. TECHNICAL REQUIREMENTS
+
+3.1  The Licensed Application requires a firmware version 1.0.0 or higher. Licensor recommends using the latest version of the firmware.
+
+3.2  Licensor attempts to keep the Licensed Application updated so that it complies with modified/new versions of the firmware and new hardware. You are not granted rights to claim such an update.
+
+3.3  You acknowledge that it is Your responsibility to confirm and determine that the app end-user device on which You intend to use the Licensed Application satisfies the technical specifications mentioned above.
+
+3.4  Licensor reserves the right to modify the technical specifications as it sees appropriate at any time.
+
+
+4. MAINTENANCE AND SUPPORT
+
+4.1  The Licensor is solely responsible for providing any maintenance and support services for this Licensed Application. You can reach the Licensor at the email address listed in the App Store or Play Store Overview for this Licensed Application.
+
+4.2  %{WEB_LINK} and the End-User acknowledge that the Services have no obligation whatsoever to furnish any maintenance and support services with respect to the Licensed Application.
+
+
+5. USE OF DATA
+
+You acknowledge that Licensor will be able to access and adjust Your downloaded Licensed Application content and Your personal information, and that Licensor's use of such material and information is subject to Your legal agreements with Licensor and Licensor's privacy policy: https://%{WEB_LINK}/privacy/index.htm.
+
+You acknowledge that the Licensor may periodically collect and use technical data and related information about your device, system, and application software, and peripherals, offer product support, facilitate the software updates, and for purposes of providing other services to you (if any) related to the Licensed Application. Licensor may also use this information to improve its products or to provide services or technologies to you, as long as it is in a form that does not personally identify you.
+
+
+6. USER-GENERATED CONTRIBUTIONS
+
+The Licensed Application may invite you to chat, contribute to, or participate in blogs, message boards, online forums, and other functionality, and may provide you with the opportunity to create, submit, post, display, transmit, perform, publish, distribute, or broadcast content and materials to us or in the Licensed Application, including but not limited to text, writings, video, audio, photographs, graphics, comments, suggestions, or personal information or other material (collectively, "Contributions"). Contributions may be viewable by other users of the Licensed Application and through third-party websites or applications. As such, any Contributions you transmit may be treated as non-confidential and non-proprietary. When you create or make available any Contributions, you thereby represent and warrant that:
+
+1. The creation, distribution, transmission, public display, or performance, and the accessing, downloading, or copying of your Contributions do not and will not infringe the proprietary rights, including but not limited to the copyright, patent, trademark, trade secret, or moral rights of any third party.
+2. You are the creator and owner of or have the necessary licenses, rights, consents, releases, and permissions to use and to authorize us, the Licensed Application, and other users of the Licensed Application to use your Contributions in any manner contemplated by the Licensed Application and this License Agreement.
+3. You have the written consent, release, and/or permission of each and every identifiable individual person in your Contributions to use the name or likeness or each and every such identifiable individual person to enable inclusion and use of your Contributions in any manner contemplated by the Licensed Application and this License Agreement.
+4. Your Contributions are not false, inaccurate, or misleading.
+5. Your Contributions are not unsolicited or unauthorized advertising, promotional materials, pyramid schemes, chain letters, spam, mass mailings, or other forms of solicitation.
+6. Your Contributions are not obscene, lewd, lascivious, filthy, violent, harassing, libelous, slanderous, or otherwise objectionable (as determined by us).
+7. Your Contributions do not ridicule, mock, disparage, intimidate, or abuse anyone.
+8. Your Contributions are not used to harass or threaten (in the legal sense of those terms) any other person and to promote violence against a specific person or class of people.
+9. Your Contributions do not violate any applicable law, regulation, or rule.
+10. Your Contributions do not violate the privacy or publicity rights of any third party.
+11. Your Contributions do not violate any applicable law concerning child pornography, or otherwise intended to protect the health or well-being of minors.
+12. Your Contributions do not include any offensive comments that are connected to race, national origin, gender, sexual preference, or physical handicap.
+13. Your Contributions do not otherwise violate, or link to material that violates, any provision of this License Agreement, or any applicable law or regulation.
+
+Any use of the Licensed Application in violation of the foregoing violates this License Agreement and may result in, among other things, termination or suspension of your rights to use the Licensed Application.
+
+
+7. CONTRIBUTION LICENSE
+
+By posting your Contributions to any part of the Licensed Application or making Contributions accessible to the Licensed Application by linking your account from the Licensed Application to any of your social networking accounts, you automatically grant, and you represent and warrant that you have the right to grant, to us an unrestricted, unlimited, irrevocable, perpetual, non-exclusive, transferable, royalty-free, fully-paid, worldwide right, and license to host, use copy, reproduce, disclose, sell, resell, publish, broad cast, retitle, archive, store, cache, publicly display, reformat, translate, transmit, excerpt (in whole or in part), and distribute such Contributions (including, without limitation, your image and voice) for any purpose, commercial advertising, or otherwise, and to prepare derivative works of, or incorporate in other works, such as Contributions, and grant and authorize sublicenses of the foregoing. The use and distribution may occur in any media formats and through any media channels.
+
+This license will apply to any form, media, or technology now known or hereafter developed, and includes our use of your name, company name, and franchise name, as applicable, and any of the trademarks, service marks, trade names, logos, and personal and commercial images you provide. You waive all moral rights in your Contributions, and you warrant that moral rights have not otherwise been asserted in your Contributions.
+
+We do not assert any ownership over your Contributions. You retain full ownership of all of your Contributions and any intellectual property rights or other proprietary rights associated with your Contributions. We are not liable for any statements or representations in your Contributions provided by you in any area in the Licensed Application. You are solely responsible for your Contributions to the Licensed Application and you expressly agree to exonerate us from any and all responsibility and to refrain from any legal action against us regarding your Contributions.
+
+We have the right, in our sole and absolute discretion, (1) to edit, redact, or otherwise change any Contributions; (2) to recategorize any Contributions to place them in more appropriate locations in the Licensed Application; and (3) to prescreen or delete any Contributions at any time and for any reason, without notice. We have no obligation to monitor your Contributions.
+
+
+8. LIABILITY
+
+8.1  Licensor's responsibility in the case of violation of obligations and tort shall be limited to intent and gross negligence. Only in case of a breach of essential contractual duties (cardinal obligations), Licensor shall also be liable in case of slight negligence. In any case, liability shall be limited to the foreseeable, contractually typical damages. The limitation mentioned above does not apply to injuries to life, limb, or health.
+
+8.2  Licensor takes no accountability or responsibility for any damages caused due to a breach of duties according to Section 2 of this License Agreement. To avoid data loss, You are required to make use of backup functions of the Licensed Application to the extent allowed by applicable third-party terms and conditions of use. You are aware that in case of alterations or manipulations of the Licensed Application, You will not have access to the Licensed Application.
+
+
+9. WARRANTY
+
+9.1  Licensor warrants that the Licensed Application is free of spyware, trojan horses, viruses, or any other malware at the time of Your download. Licensor warrants that the Licensed Application works as described in the user documentation.
+
+9.2  No warranty is provided for the Licensed Application that is not executable on the device, that has been unauthorizedly modified, handled inappropriately or culpably, combined or installed with inappropriate hardware or software, used with inappropriate accessories, regardless if by Yourself or by third parties, or if there are any other reasons outside of %{WEB_LINK}'s sphere of influence that affect the executability of the Licensed Application.
+
+9.3  You are required to inspect the Licensed Application immediately after installing it and notify %{WEB_LINK} about issues discovered without delay by email provided in Contact Information. The defect report will be taken into consideration and further investigated if it has been emailed within a period of ninety (90) days after discovery.
+
+9.4  If we confirm that the Licensed Application is defective, %{WEB_LINK} reserves a choice to remedy the situation either by means of solving the defect or substitute delivery.
+
+9.5  In the event of any failure of the Licensed Application to conform to any applicable warranty, You may notify the Services Store Operator, and Your Licensed Application purchase price will be refunded to You. To the maximum extent permitted by applicable law, the Services Store Operator will have no other warranty obligation whatsoever with respect to the Licensed Application, and any other losses, claims, damages, liabilities, expenses, and costs attributable to any negligence to adhere to any warranty.
+
+9.6  If the user is an entrepreneur, any claim based on faults expires after a statutory period of limitation amounting to twelve (12) months after the Licensed Application was made available to the user. The statutory periods of limitation given by law apply for users who are consumers.
+   
+
+10. PRODUCT CLAIMS
+
+%{WEB_LINK} and the End-User acknowledge that %{WEB_LINK}, and not the Services, is responsible for addressing any claims of the End-User or any third party relating to the Licensed Application or the End-User's possession and/or use of that Licensed Application, including, but not limited to:
+
+(i) product liability claims;
+   
+(ii) any claim that the Licensed Application fails to conform to any applicable legal or regulatory requirement; and
+
+(iii) claims arising under consumer protection, privacy, or similar legislation, including in connection with Your Licensed Application's use of the HealthKit and HomeKit.
+
+
+11. LEGAL COMPLIANCE
+
+You represent and warrant that You are not located in a country that is subject to a US Government embargo, or that has been designated by the US Government as a "terrorist supporting" country; and that You are not listed on any US Government list of prohibited or restricted parties.
+
+
+12. CONTACT INFORMATION
+
+For general inquiries, complaints, questions or claims concerning the Licensed Application, please contact:
+       
+admin
+2485 Patton Lane
+Raleigh, Raleigh 27610
+Raleigh
+support@%{WEB_LINK}
+
+
+13. TERMINATION
+
+The license is valid until terminated by %{WEB_LINK} or by You. Your rights under this license will terminate automatically and without notice from %{WEB_LINK} if You fail to adhere to any term(s) of this license. Upon License termination, You shall stop all use of the Licensed Application, and destroy all copies, full or partial, of the Licensed Application.
+      
+
+14. THIRD-PARTY TERMS OF AGREEMENTS AND BENEFICIARY
+
+%{WEB_LINK} represents and warrants that %{WEB_LINK} will comply with applicable third-party terms of agreement when using Licensed Application.
+
+In Accordance with Section 9 of the "Instructions for Minimum Terms of Developer's End-User License Agreement," both Apple and Google and their subsidiaries shall be third-party beneficiaries of this End User License Agreement and — upon Your acceptance of the terms and conditions of this License Agreement, both Apple and Google will have the right (and will be deemed to have accepted the right) to enforce this End User License Agreement against You as a third-party beneficiary thereof.
+
+
+15. INTELLECTUAL PROPERTY RIGHTS
+
+%{WEB_LINK} and the End-User acknowledge that, in the event of any third-party claim that the Licensed Application or the End-User's possession and use of that Licensed Application infringes on the third party's intellectual property rights, %{WEB_LINK}, and not the Services, will be solely responsible for the investigation, defense, settlement, and discharge or any such intellectual property infringement claims.
+
+
+16. APPLICABLE LAW
+
+This License Agreement is governed by the laws of Raleigh excluding its conflicts of law rules.
+
+
+17. MISCELLANEOUS
+
+17.1  If any of the terms of this agreement should be or become invalid, the validity of the remaining provisions shall not be affected. Invalid terms will be replaced by valid ones formulated in a way that will achieve the primary purpose.
+               
+17.2  Collateral agreements, changes and amendments are only valid if laid down in writing. The preceding clause can only be waived in writing.`,
+    // アプリダウンロードモーダル関連テキスト
+    download_app_title: 'アプリをダウンロードして完全コンテンツを視聴',
+    download_app_desc: 'アプリをインストールすると、すべてのHD動画を広告なしで視聴でき、オフラインキャッシュもサポートしています',
+    download_app_btn: '今すぐダウンロード',
+    download_app_cancel: 'キャンセル',
+    download_app_short_title: 'アプリをダウンロードしてショートドラマを視聴',
+    download_app_short_desc: 'アプリをインストールすると、豊富なショートドラマを無制限に視聴でき、オフラインキャッシュもサポートしています',
+    download_app_detail_title: 'アプリをダウンロードして完全な動画を視聴',
+    download_app_detail_desc: 'アプリをインストールすると、完全な動画をスムーズに視聴でき、オフラインキャッシュ、HD品質、広告なしをサポートしています'
+};
+const __TURBOPACK__default__export__ = ja;
+if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
+    __turbopack_context__.k.registerExports(module, globalThis.$RefreshHelpers$);
+}
+}}),
+"[project]/src/app/i18n/client.ts [app-client] (ecmascript)": ((__turbopack_context__) => {
+"use strict";
+
+var { g: global, __dirname, k: __turbopack_refresh__, m: module } = __turbopack_context__;
+{
+__turbopack_context__.s({
+    "DEFAULT_LOCALE": (()=>DEFAULT_LOCALE),
+    "SUPPORTED_LOCALES": (()=>SUPPORTED_LOCALES),
+    "getTranslationClient": (()=>getTranslationClient)
+});
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$i18n$2f$locales$2f$cn$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/app/i18n/locales/cn.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$i18n$2f$locales$2f$en$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/app/i18n/locales/en.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$i18n$2f$locales$2f$tw$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/app/i18n/locales/tw.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$i18n$2f$locales$2f$ko$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/app/i18n/locales/ko.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$i18n$2f$locales$2f$ja$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/app/i18n/locales/ja.js [app-client] (ecmascript)");
+;
+;
+;
+;
+;
+;
+const SUPPORTED_LOCALES = [
+    'cn',
+    'en',
+    'tw',
+    'ko',
+    'ja'
+];
+const DEFAULT_LOCALE = 'cn';
+// 语言资源映射
+const resources = {
+    cn: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$i18n$2f$locales$2f$cn$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"],
+    en: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$i18n$2f$locales$2f$en$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"],
+    tw: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$i18n$2f$locales$2f$tw$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"],
+    ko: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$i18n$2f$locales$2f$ko$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"],
+    ja: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$i18n$2f$locales$2f$ja$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"]
+};
+const getTranslationClient = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cache"])((locale = DEFAULT_LOCALE)=>{
+    // 确保语言有效
+    const safeLocale = SUPPORTED_LOCALES.includes(locale) ? locale : DEFAULT_LOCALE;
+    const translations = resources[safeLocale];
+    return {
+        t: (key)=>{
+            const resource = translations;
+            return resource[key] || key;
+        }
+    };
+});
+if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
+    __turbopack_context__.k.registerExports(module, globalThis.$RefreshHelpers$);
+}
+}}),
+"[project]/src/app/components/LocaleInitializer.tsx [app-client] (ecmascript)": ((__turbopack_context__) => {
+"use strict";
+
+var { g: global, __dirname, k: __turbopack_refresh__, m: module } = __turbopack_context__;
+{
+__turbopack_context__.s({
+    "default": (()=>LocaleInitializer)
+});
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$store$2f$useAppStore$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/app/store/useAppStore.ts [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$i18n$2f$client$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/app/i18n/client.ts [app-client] (ecmascript)");
+var _s = __turbopack_context__.k.signature();
+'use client';
+;
+;
+;
+function LocaleInitializer() {
+    _s();
+    const { updateSettings } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$store$2f$useAppStore$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"])();
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "LocaleInitializer.useEffect": ()=>{
+            // 从cookie中获取语言设置
+            const getCookieLocale = {
+                "LocaleInitializer.useEffect.getCookieLocale": ()=>{
+                    if (typeof document === 'undefined') return __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$i18n$2f$client$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DEFAULT_LOCALE"];
+                    const cookies = document.cookie.split(';');
+                    for (const cookie of cookies){
+                        const [name, value] = cookie.trim().split('=');
+                        if (name === 'NEXT_LOCALE' && value) {
+                            return __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$i18n$2f$client$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SUPPORTED_LOCALES"].includes(value) ? value : __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$i18n$2f$client$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DEFAULT_LOCALE"];
+                        }
+                    }
+                    return __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$i18n$2f$client$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DEFAULT_LOCALE"];
+                }
+            }["LocaleInitializer.useEffect.getCookieLocale"];
+            // 获取当前语言
+            const currentLocale = getCookieLocale();
+            // 更新到全局状态
+            updateSettings({
+                language: currentLocale
+            });
+            // 监听cookie变化（简单实现，每秒检查一次）
+            const intervalId = setInterval({
+                "LocaleInitializer.useEffect.intervalId": ()=>{
+                    const newLocale = getCookieLocale();
+                    if (newLocale !== __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$store$2f$useAppStore$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].getState().settings.language) {
+                        updateSettings({
+                            language: newLocale
+                        });
+                    }
+                }
+            }["LocaleInitializer.useEffect.intervalId"], 1000);
+            return ({
+                "LocaleInitializer.useEffect": ()=>clearInterval(intervalId)
+            })["LocaleInitializer.useEffect"];
+        }
+    }["LocaleInitializer.useEffect"], [
+        updateSettings
+    ]);
+    // 不渲染任何内容，仅执行副作用
+    return null;
+}
+_s(LocaleInitializer, "fLUb6JWaB+DUG8DPos7maH9uc5U=", false, function() {
+    return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$store$2f$useAppStore$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"]
+    ];
+});
+_c = LocaleInitializer;
+var _c;
+__turbopack_context__.k.register(_c, "LocaleInitializer");
+if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
+    __turbopack_context__.k.registerExports(module, globalThis.$RefreshHelpers$);
+}
+}}),
+}]);
+
+//# sourceMappingURL=src_app_4c4f758a._.js.map
